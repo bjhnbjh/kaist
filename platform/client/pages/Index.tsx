@@ -19,7 +19,7 @@ import { useVideoUpload } from "@/hooks/useVideoUpload";
  *
  * 이 컴포넌트는 동영상 객체 탐지 시스템의 전체 화면을 구성합니다.
  * 사용자가 동영상을 업로드하고, AI가 객체를 탐지하며,
- * 결과를 관리할 수 있는 인터페이스를 제공합니다.
+ * 결과를 관리할 수 있는 인터페이스를 제공��니다.
  */
 export default function Index() {
   const [deleteConfirmed, setDeleteConfirmed] = useState(false);
@@ -43,7 +43,7 @@ export default function Index() {
     detectionProgress, // 객체 탐지 진행률 (0-100%)
     panelAnimating, // 패널이 애니메이션 중인지 여부
     panelClosing, // 패널이 닫히는 중인지 여부
-    hasRunDetection, // 객체 탐지를 한 번이라도 실행했는지 여부
+    hasRunDetection, // ��체 탐지를 한 번이라도 실행했는지 여부
 
     // === 함수들 ===
     // 사용자의 행동에 따라 실행되는 함수들입니다
@@ -119,7 +119,7 @@ export default function Index() {
             uploads={uploads} // 업로드 목록 배열을 전달
             onVideoSelect={handleVideoSelect} // 동영상 선택 함수를 전달
             selectedVideoId={selectedVideoId} // 현재 선택된 동영상 ID를 전달
-            adminPanelVisible={adminPanelVisible} // 관리자 패널 표시 여부를 전달
+            adminPanelVisible={adminPanelVisible} // 관리자 패널 표시 ��부를 전달
             onDeleteVideo={deleteVideo} // 동영상 삭제 함수를 전달
           />
         </div>
@@ -158,6 +158,7 @@ export default function Index() {
         onClose={() => setShowVideoPlayer(false)} // 모달 닫기 - 화살표 함수 사용
         video={selectedVideo} // 재생할 동영상 정보
         detectedObjects={detectedObjects} // 탐지된 객체 목록
+        hasRunDetection={hasRunDetection} // 탐지 실행 여부 추가
         onDownloadWebVTT={downloadWebVTT} // WebVTT 다운로드 함수
         onRunObjectDetection={runObjectDetection} // 객체 탐지 함수
         onAddNewObject={addNewObjectToVideo} // 새 객체 추가 함수
@@ -249,5 +250,5 @@ export default function Index() {
  * - HTML은 웹페이지의 구조를 만드는 언어입니다
  * - React는 HTML을 JavaScript로 동적으로 만들 수 있게 해주는 도구입니다
  * - JSX는 HTML과 JavaScript를 섞어서 쓸 수 있는 특별한 문법입니다
- * - 컴포넌트는 레고 블록처럼 조립해서 큰 애플리케이션을 만드는 작은 UI 조각입니다
+ * - 컴포넌트는 레고 블록처럼 조립해서 큰 애플리���이션을 만드는 작은 UI 조각입니다
  */
