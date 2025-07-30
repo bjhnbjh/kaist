@@ -213,7 +213,11 @@ export function useVideoUpload() {
         return () => clearTimeout(timeoutId);
       } else {
         setSelectedVideoId(videoId);
-        setHasRunDetection(false);
+        // 해당 비디오에 이미 탐지된 객체가 있으면 hasRunDetection을 true로 설정
+        const video = videos.find(v => v.id === videoId);
+        const hasDetectedObjects = video && video.detectedObjects.length > 0;
+        setHasRunDetection(hasDetectedObjects);
+
         if (!adminPanelVisible) {
           setPanelAnimating(true);
           setAdminPanelVisible(true);
