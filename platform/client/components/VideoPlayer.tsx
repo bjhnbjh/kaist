@@ -556,7 +556,7 @@ export default function VideoPlayer({
   const handleBackToObjectList = () => {
     setSelectedObjectId(null);
     setIsEditing(false);
-    // showObjectList true로 유지하여 "탐지된 객체" 버튼 활성화 상태 유지
+    // showObjectList true로 유지하여 "탐지�� 객체" 버튼 활성화 상태 유지
   };
 
   // 삭제 확인 모달 관련 핸들러들
@@ -596,7 +596,7 @@ export default function VideoPlayer({
     setDeleteConfirmed(false);
   };
 
-  // 객체 이름 가져오기 함수 - 실제 객체 이���을 그대로 사용
+  // 객체 이름 가져오기 함수 - 실제 객체 이������ 그대로 사용
   const getObjectDisplayName = (object: DetectedObject) => {
     return object.name;
   };
@@ -1316,7 +1316,7 @@ export default function VideoPlayer({
                     <div style={{
                       display: "flex",
                       flexDirection: "column",
-                      gap: "12px",
+                      gap: "8px",
                     }}>
                       {displayObjects.map((object) => (
                         <div
@@ -1923,7 +1923,7 @@ export default function VideoPlayer({
                     <div style={{ fontSize: "0.85rem" }}>
                       "탐지된 객체" 버튼을 클릭하여
                       <br />
-                      객체 목록을 확인해���세요
+                      객체 목록을 확��해���세요
                     </div>
                   </div>
                 )}
