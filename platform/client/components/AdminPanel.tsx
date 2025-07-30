@@ -194,12 +194,32 @@ const AdminPanel = memo(function AdminPanel({
               </div>
             </div>
           ) : (
-            <div className="objects-grid">
+            <div
+              className="objects-grid"
+              style={{
+                maxHeight: '240px',
+                overflowY: 'auto',
+                border: '2px solid #e2e8f0',
+                borderRadius: '8px',
+                padding: '12px',
+                backgroundColor: '#f8fafc'
+              }}
+            >
               {filteredObjects.map((object) => (
                 <div key={object.id} className="object-item">
                   <div className="object-indicator" />
                   <div className="object-info">
                     <div className="object-name">{object.name}</div>
+                  </div>
+                </div>
+              ))}
+
+              {/* 스크롤 테스트를 위한 추가 더미 객체들 */}
+              {filteredObjects.length > 0 && Array.from({length: 8}, (_, i) => (
+                <div key={`dummy-${i}`} className="object-item" style={{opacity: 0.3}}>
+                  <div className="object-indicator" />
+                  <div className="object-info">
+                    <div className="object-name">스크롤 테스트 객체 {i+1}</div>
                   </div>
                 </div>
               ))}
