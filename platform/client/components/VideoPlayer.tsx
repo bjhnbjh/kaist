@@ -483,7 +483,7 @@ export default function VideoPlayer({
     onDownloadWebVTT();
 
     // 저장 및 다운로드 완료 메시지 표시
-    toast.success("저장 및 WebVTT 다운로드가 완료되었습니다.");
+    toast.success("���장 및 WebVTT 다운로드가 완료되었습니다.");
 
     console.log("저장 후 비디오 정보:", {
       duration: currentDuration,
@@ -556,7 +556,7 @@ export default function VideoPlayer({
   const handleBackToObjectList = () => {
     setSelectedObjectId(null);
     setIsEditing(false);
-    // showObjectList true로 유지하여 "탐지된 객체" 버튼 활성화 상태 유지
+    // showObjectList true로 유지하여 "탐지�� 객체" 버튼 활성화 상태 유지
   };
 
   // 삭제 확인 모달 관련 핸들러들
@@ -596,7 +596,7 @@ export default function VideoPlayer({
     setDeleteConfirmed(false);
   };
 
-  // 객체 이름 가져오기 함수 - 실제 객체 이름을 그대로 사용
+  // 객체 이름 가져오기 함수 - 실제 객체 이������ 그대로 사용
   const getObjectDisplayName = (object: DetectedObject) => {
     return object.name;
   };
@@ -649,7 +649,7 @@ export default function VideoPlayer({
       setShowDeleteConfirmModal(false);
       setObjectToDelete(null);
       setDeleteConfirmed(false);
-      // 초기에는 객체 목록을 닫은 상태로 시작
+      // ��기에는 객체 목록을 닫은 상태로 시작
       setShowObjectList(false);
 
       if (videoDuration === 0) {
@@ -987,7 +987,7 @@ export default function VideoPlayer({
               >
                 {isErasing
                   ? "🗑️ 지우개 모드 - 그려진 영역을 클릭하여 삭제하세요"
-                  : "🎨 그리기 모드 활성화 - 마우스로 드래그하여 영역을 그려보세요"}
+                  : "🎨 그���기 모드 활성화 - 마우스로 드래그하여 영역을 그려보세요"}
               </div>
             )}
           </div>
@@ -1046,9 +1046,12 @@ export default function VideoPlayer({
                 border: "1px solid #e5e7eb",
                 display: "flex",
                 flexDirection: "column",
-                height: "800px",
+                height: "85vh",
+                maxHeight: "900px",
                 animation: "slideInRight 0.3s ease-out",
                 transform: "translateX(0)",
+                overflowY: "auto",
+                overflowX: "hidden",
               }}
             >
               <div
@@ -1257,16 +1260,33 @@ export default function VideoPlayer({
                 style={{
                   flex: 1,
                   overflowY: "auto",
-                  maxHeight: "350px", // 필요시 조정
-                  minHeight: "0",
+                  maxHeight: "65vh",
+                  minHeight: "400px",
                   display: "block",
                   paddingRight: "8px",
                   border: "1px solid #e2e8f0",
                   borderRadius: "6px",
                   padding: "12px",
                   marginBottom: "12px",
-                  scrollbarWidth: "thin",
-                  scrollbarColor: "#cbd5e0 #f7fafc",
+                  scrollbarWidth: "thick",
+                  scrollbarColor: "#5fbeeb #f1f5f9",
+                  WebkitOverflowScrolling: "touch",
+                  // WebKit 브라우저용 스크롤바 스타일
+                  "::-webkit-scrollbar": {
+                    width: "12px",
+                  },
+                  "::-webkit-scrollbar-track": {
+                    background: "#f1f5f9",
+                    borderRadius: "6px",
+                  },
+                  "::-webkit-scrollbar-thumb": {
+                    background: "#5fbeeb",
+                    borderRadius: "6px",
+                    border: "2px solid #f1f5f9",
+                  },
+                  "::-webkit-scrollbar-thumb:hover": {
+                    background: "#3da8d4",
+                  },
                 }}
               >
                 {showObjectList && !selectedObjectId ? (
@@ -1296,7 +1316,7 @@ export default function VideoPlayer({
                     <div style={{
                       display: "flex",
                       flexDirection: "column",
-                      gap: "12px",
+                      gap: "8px",
                     }}>
                       {displayObjects.map((object) => (
                         <div
@@ -1307,7 +1327,7 @@ export default function VideoPlayer({
                               : "#f8fafc",
                             border: `1px solid ${selectedObjectIds.includes(object.id) ? "#fecaca" : "#e2e8f0"}`,
                             borderRadius: "6px",
-                            padding: "12px",
+                            padding: "8px",
                             display: "flex",
                             alignItems: "center",
                             gap: "12px",
@@ -1448,7 +1468,7 @@ export default function VideoPlayer({
                                 gap: "6px",
                               }}
                             >
-                              ✅ {selectedObjectIds.length}개 객체가 선택됨
+                              ✅ {selectedObjectIds.length}개 객체가 선택���
                             </span>
                           </div>
                           <button
@@ -1843,7 +1863,7 @@ export default function VideoPlayer({
                                 transition: "all 0.2s ease",
                               }}
                             >
-                              {isEditing ? "수정완료" : "수정"}
+                              {isEditing ? "수���완료" : "수정"}
                             </button>
                             <button
                               onClick={() => {
@@ -1852,7 +1872,7 @@ export default function VideoPlayer({
                                 }
                               }}
                               style={{
-                                background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+                                background: "#ef4444",
                                 border: "none",
                                 borderRadius: "6px",
                                 padding: "10px 16px",
@@ -1866,11 +1886,16 @@ export default function VideoPlayer({
                                 justifyContent: "center",
                                 gap: "6px",
                                 transition: "all 0.2s ease",
-                                boxShadow: "0 2px 4px rgba(239, 68, 68, 0.2)",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = "#dc2626";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = "#ef4444";
                               }}
                             >
                               <Trash2 style={{ width: 16, height: 16 }} />
-                              이 객체 삭제
+                              삭제
                             </button>
                           </div>
                         </div>
@@ -1898,7 +1923,7 @@ export default function VideoPlayer({
                     <div style={{ fontSize: "0.85rem" }}>
                       "탐지된 객체" 버튼을 클릭하여
                       <br />
-                      객체 목록을 확인해보세요
+                      객체 목록을 확��해���세요
                     </div>
                   </div>
                 )}
@@ -1950,10 +1975,9 @@ export default function VideoPlayer({
                       }
                     }}
                     style={{
-                      background:
-                        "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
+                      background: "#ef4444",
                       border: "none",
-                      borderRadius: "8px",
+                      borderRadius: "6px",
                       padding: "12px 16px",
                       color: "white",
                       fontSize: "0.9rem",
@@ -1964,22 +1988,17 @@ export default function VideoPlayer({
                       justifyContent: "center",
                       gap: "8px",
                       transition: "all 0.2s ease",
-                      boxShadow: "0 2px 4px rgba(220, 38, 38, 0.2)",
                       width: "100%",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "translateY(-1px)";
-                      e.currentTarget.style.boxShadow =
-                        "0 4px 8px rgba(220, 38, 38, 0.3)";
+                      e.currentTarget.style.background = "#dc2626";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow =
-                        "0 2px 4px rgba(220, 38, 38, 0.2)";
+                      e.currentTarget.style.background = "#ef4444";
                     }}
                   >
                     <Trash2 style={{ width: 16, height: 16 }} />
-                    선택된 객체 삭제
+                    삭제
                   </button>
                 </div>
               )}
@@ -1993,6 +2012,8 @@ export default function VideoPlayer({
         <div
           style={{
             position: "fixed",
+            top: 0,
+            left: 0,
             right: 0,
             bottom: 0,
             background: "rgba(0, 0, 0, 0.5)",
@@ -2118,7 +2139,7 @@ export default function VideoPlayer({
                   fontStyle: "italic",
                 }}
               >
-                ⚠️ 체크박스를 선택해야 삭제할 수 있습니다
+                ⚠️ 체크박스를 선택해야 ��제할 수 있습니다
               </div>
             )}
           </div>
