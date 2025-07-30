@@ -482,7 +482,7 @@ export default function VideoPlayer({
     // WebVTT 다운로드도 함께 실행
     onDownloadWebVTT();
 
-    // 저장 및 다운로드 완료 메시지 표시
+    // 저장 및 다운로드 완료 메시지 표��
     toast.success("���장 및 WebVTT 다운로드가 완료되었습니다.");
 
     console.log("저장 후 비디오 정보:", {
@@ -1260,8 +1260,8 @@ export default function VideoPlayer({
                 style={{
                   flex: 1,
                   overflowY: "auto",
-                  maxHeight: "450px",
-                  minHeight: "200px",
+                  maxHeight: "55vh",
+                  minHeight: "300px",
                   display: "block",
                   paddingRight: "8px",
                   border: "1px solid #e2e8f0",
@@ -1386,7 +1386,7 @@ export default function VideoPlayer({
                               e.stopPropagation();
                               setSelectedObjectId(object.id);
                               setEditedObjectName(object.name);
-                              setEditedCategory(object.category || "기타");
+                              setEditedCategory(object.category || "��타");
                               setEditedObjectCode(
                                 object.code ||
                                 `CODE_${object.id.slice(0, 8).toUpperCase()}`,
@@ -1549,7 +1549,7 @@ export default function VideoPlayer({
                             padding: "20px",
                             boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                             maxHeight: "60vh", // 고정 height 대신 maxHeight로 변경 (예: 60vh)
-                            minHeight: "320px", // 너무 작아지지 않게 최소값도 지정
+                            minHeight: "320px", // 너무 작아지지 않게 최소��도 지정
                             overflowY: "auto",
                             overflowX: "hidden",
                             scrollbarWidth: "thin",
@@ -1847,7 +1847,7 @@ export default function VideoPlayer({
                                 transition: "all 0.2s ease",
                               }}
                             >
-                              {isEditing ? "수���완료" : "수정"}
+                              {isEditing ? "수�����료" : "수정"}
                             </button>
                             <button
                               onClick={() => {
