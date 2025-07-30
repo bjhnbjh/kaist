@@ -1327,7 +1327,7 @@ export default function VideoPlayer({
                               : "#f8fafc",
                             border: `1px solid ${selectedObjectIds.includes(object.id) ? "#fecaca" : "#e2e8f0"}`,
                             borderRadius: "6px",
-                            padding: "12px",
+                            padding: "8px",
                             display: "flex",
                             alignItems: "center",
                             gap: "12px",
