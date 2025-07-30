@@ -482,8 +482,8 @@ export default function VideoPlayer({
     // WebVTT 다운로드도 함께 실행
     onDownloadWebVTT();
 
-    // 저장 및 다운로드 완료 ���시지 표시
-    toast.success("���장 및 WebVTT 다운로드가 완료되었습니다.");
+    // 저장 및 다운로드 완료 메시지 표시
+    toast.success("저장 및 WebVTT 다운로드가 완료되었습니다.");
 
     console.log("저장 후 비디오 정보:", {
       duration: currentDuration,
@@ -556,7 +556,7 @@ export default function VideoPlayer({
   const handleBackToObjectList = () => {
     setSelectedObjectId(null);
     setIsEditing(false);
-    // showObjectList true로 유지하여 "탐지�� 객체" 버튼 활성화 상태 유지
+    // showObjectList true로 유지하여 "탐지된 객체" 버튼 활성화 상태 유지
   };
 
   // 삭제 확인 모달 관련 핸들러들
@@ -596,7 +596,7 @@ export default function VideoPlayer({
     setDeleteConfirmed(false);
   };
 
-  // 객체 이름 가져오기 함수 - 실제 객체 이������ 그대로 사용
+  // 객체 이름 가져오기 함수 - 실제 객체 이름을 그대로 사용
   const getObjectDisplayName = (object: DetectedObject) => {
     return object.name;
   };
@@ -649,7 +649,7 @@ export default function VideoPlayer({
       setShowDeleteConfirmModal(false);
       setObjectToDelete(null);
       setDeleteConfirmed(false);
-      // ��기에는 객체 목록을 닫은 상태로 시작
+      // 초기에는 객체 목록을 닫은 상태로 시작
       setShowObjectList(false);
 
       if (videoDuration === 0) {
@@ -779,7 +779,7 @@ export default function VideoPlayer({
           </button>
         </div>
 
-        {/* ���인 컨텐츠 영역 */}
+        {/* 메인 컨텐츠 영역 */}
         <div
           style={{
             display: "flex",
@@ -846,7 +846,7 @@ export default function VideoPlayer({
               />
             </div>
 
-            {/* ��트롤 버튼들 */}
+            {/* 컨트롤 버튼들 */}
             <div
               style={{
                 display: "flex",
@@ -986,8 +986,8 @@ export default function VideoPlayer({
                 }}
               >
                 {isErasing
-                  ? "🗑️ 지우개 모드 - 그려진 영역을 클릭하여 삭제��세요"
-                  : "🎨 그���기 모드 활성화 - 마우스로 드래그하여 영역을 그려보세요"}
+                  ? "🗑️ 지우개 모드 - 그려진 영역을 클릭하여 삭제하세요"
+                  : "🎨 그리기 모드 활성화 - 마우스로 드래그하여 영역을 그려보세요"}
               </div>
             )}
           </div>
@@ -1138,7 +1138,7 @@ export default function VideoPlayer({
                   <BarChart3 style={{ width: 12, height: 12 }} />
                   {showObjectList || selectedObjectId
                     ? "객체 목록 닫기"
-                    : "탐지��� 객체"}
+                    : "탐지된 객체"}
                 </button>
               </div>
 
@@ -1268,7 +1268,7 @@ export default function VideoPlayer({
                   borderRadius: "6px",
                   padding: "12px",
                   marginBottom: "4px",
-                  scrollbarWidth: "thick",
+                  scrollbarWidth: "thin",
                   scrollbarColor: "#5fbeeb #f1f5f9",
                   WebkitOverflowScrolling: "touch",
                 }}
@@ -1376,7 +1376,7 @@ export default function VideoPlayer({
                             </div>
                             <div
                               style={{ fontSize: "0.8rem", color: "#6b7280" }}
-                            // 신뢰�� 삭제
+                            // 신뢰도 삭제
                             >
                             </div>
                           </div>
@@ -1452,12 +1452,12 @@ export default function VideoPlayer({
                                 gap: "6px",
                               }}
                             >
-                              ✅ {selectedObjectIds.length}개 객체가 선택���
+                              ✅ {selectedObjectIds.length}개 객체가 선택되었습니다
                             </span>
                           </div>
                           <button
                             onClick={() => {
-                              // 일괄 삭제를 위해 확인 모달을 열어서 전체 선택 삭제��� 처리
+                              // 일괄 삭제를 위해 확인 모달을 열어서 전체 선택 삭제 처리
                               if (selectedObjectIds.length > 0) {
                                 setObjectToDelete("BULK_DELETE");
                                 setShowDeleteConfirmModal(true);
@@ -1847,7 +1847,7 @@ export default function VideoPlayer({
                                 transition: "all 0.2s ease",
                               }}
                             >
-                              {isEditing ? "수���완료" : "수정"}
+                              {isEditing ? "수정완료" : "수정"}
                             </button>
                             <button
                               onClick={() => {
@@ -1907,7 +1907,7 @@ export default function VideoPlayer({
                     <div style={{ fontSize: "0.85rem" }}>
                       "탐지된 객체" 버튼을 클릭하여
                       <br />
-                      객체 목록을 확��해���세요
+                      객체 목록을 확인해주세요
                     </div>
                   </div>
                 )}
@@ -2123,7 +2123,7 @@ export default function VideoPlayer({
                   fontStyle: "italic",
                 }}
               >
-                ⚠️ 체크박스를 선택해야 ��제할 수 있습니다
+                ⚠️ 체크박스를 선택해야 삭제할 수 있습니다
               </div>
             )}
           </div>
