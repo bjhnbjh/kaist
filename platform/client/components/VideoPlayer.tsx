@@ -779,7 +779,7 @@ export default function VideoPlayer({
           </button>
         </div>
 
-        {/* 메인 컨텐츠 영역 */}
+        {/* ���인 컨텐츠 영역 */}
         <div
           style={{
             display: "flex",
@@ -1046,8 +1046,8 @@ export default function VideoPlayer({
                 border: "1px solid #e5e7eb",
                 display: "flex",
                 flexDirection: "column",
-                height: "85vh",
-                maxHeight: "900px",
+                height: "75vh",
+                maxHeight: "750px",
                 animation: "slideInRight 0.3s ease-out",
                 transform: "translateX(0)",
                 overflowY: "auto",
@@ -1260,14 +1260,14 @@ export default function VideoPlayer({
                 style={{
                   flex: 1,
                   overflowY: "auto",
-                  maxHeight: "65vh",
-                  minHeight: "400px",
+                  maxHeight: "55vh",
+                  minHeight: "250px",
                   display: "block",
                   paddingRight: "8px",
                   border: "1px solid #e2e8f0",
                   borderRadius: "6px",
                   padding: "12px",
-                  marginBottom: "12px",
+                  marginBottom: "4px",
                   scrollbarWidth: "thick",
                   scrollbarColor: "#5fbeeb #f1f5f9",
                   WebkitOverflowScrolling: "touch",
@@ -1300,7 +1300,7 @@ export default function VideoPlayer({
                     <div style={{
                       display: "flex",
                       flexDirection: "column",
-                      gap: "8px",
+                      gap: "6px",
                     }}>
                       {displayObjects.map((object) => (
                         <div
@@ -1376,7 +1376,7 @@ export default function VideoPlayer({
                             </div>
                             <div
                               style={{ fontSize: "0.8rem", color: "#6b7280" }}
-                            // 신뢰도 삭제
+                            // 신뢰�� 삭제
                             >
                             </div>
                           </div>
@@ -1546,10 +1546,10 @@ export default function VideoPlayer({
                             background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
                             border: "2px solid #e2e8f0",
                             borderRadius: "12px",
-                            padding: "20px",
+                            padding: "16px",
                             boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                            maxHeight: "60vh", // 고정 height 대신 maxHeight로 변경 (예: 60vh)
-                            minHeight: "320px", // 너무 작아지지 않게 최소값도 지정
+                            maxHeight: "50vh",
+                            minHeight: "280px",
                             overflowY: "auto",
                             overflowX: "hidden",
                             scrollbarWidth: "thin",
@@ -1559,7 +1559,7 @@ export default function VideoPlayer({
                           }}
                         >
                           {/* 이름 섹션 */}
-                          <div style={{ marginBottom: "20px" }}>
+                          <div style={{ marginBottom: "16px" }}>
                             <div
                               style={{
                                 fontSize: "0.9rem",
@@ -1643,7 +1643,7 @@ export default function VideoPlayer({
                           </div>
 
                           {/* 코드 섹션 */}
-                          <div style={{ marginBottom: "20px" }}>
+                          <div style={{ marginBottom: "16px" }}>
                             <div
                               style={{
                                 fontSize: "0.9rem",
@@ -1688,7 +1688,7 @@ export default function VideoPlayer({
                           </div>
 
                           {/* DL.reservoir domain 섹션 */}
-                          <div style={{ marginBottom: "20px" }}>
+                          <div style={{ marginBottom: "16px" }}>
                             <div
                               style={{
                                 fontSize: "0.9rem",
@@ -1763,7 +1763,7 @@ export default function VideoPlayer({
                           </div>
 
                           {/* 추가정보 섹션 */}
-                          <div style={{ marginBottom: "20px" }}>
+                          <div style={{ marginBottom: "16px" }}>
                             <div
                               style={{
                                 fontSize: "0.9rem",
@@ -1821,7 +1821,7 @@ export default function VideoPlayer({
                           </div>
 
                           {/* 수정 버튼 - 객체 정보 하단으로 이동 */}
-                          <div style={{ marginBottom: "20px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                          <div style={{ marginBottom: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
                             <button
                               onClick={() => {
                                 if (isEditing) {
