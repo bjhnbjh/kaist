@@ -1049,6 +1049,8 @@ export default function VideoPlayer({
                 height: "800px",
                 animation: "slideInRight 0.3s ease-out",
                 transform: "translateX(0)",
+                overflowY: "auto",
+                overflowX: "hidden",
               }}
             >
               <div
@@ -1843,7 +1845,7 @@ export default function VideoPlayer({
                                 transition: "all 0.2s ease",
                               }}
                             >
-                              {isEditing ? "수정완료" : "수정"}
+                              {isEditing ? "수���완료" : "수정"}
                             </button>
                             <button
                               onClick={() => {
