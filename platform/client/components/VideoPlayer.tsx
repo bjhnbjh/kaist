@@ -552,7 +552,7 @@ export default function VideoPlayer({
     setIsEditing(false);
   };
 
-  // 뒤로가기 핸들러 - 탐지된 객체 목록으로만 이동하고 버튼 활성화 상태 유지
+  // 뒤로가기 핸들러 - ��지된 객체 목록으로만 이동하고 버튼 활성화 상태 유지
   const handleBackToObjectList = () => {
     setSelectedObjectId(null);
     setIsEditing(false);
@@ -1457,7 +1457,7 @@ export default function VideoPlayer({
                           </div>
                           <button
                             onClick={() => {
-                              // 일괄 삭제를 위해 확인 ���달을 열어서 전체 선택 삭제로 처리
+                              // 일괄 삭제를 위해 확인 모달을 열어서 전체 선택 삭제로 처리
                               if (selectedObjectIds.length > 0) {
                                 setObjectToDelete("BULK_DELETE");
                                 setShowDeleteConfirmModal(true);
@@ -1546,10 +1546,10 @@ export default function VideoPlayer({
                             background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
                             border: "2px solid #e2e8f0",
                             borderRadius: "12px",
-                            padding: "20px",
+                            padding: "16px",
                             boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                            maxHeight: "60vh", // 고정 height 대신 maxHeight로 변경 (예: 60vh)
-                            minHeight: "320px", // 너무 작아지지 않게 최소값도 지정
+                            maxHeight: "50vh",
+                            minHeight: "280px",
                             overflowY: "auto",
                             overflowX: "hidden",
                             scrollbarWidth: "thin",
@@ -2093,7 +2093,7 @@ export default function VideoPlayer({
                   transition: "all 0.2s ease",
                 }}
               >
-                취소
+                취��
               </button>
               <button
                 onClick={confirmDelete}
