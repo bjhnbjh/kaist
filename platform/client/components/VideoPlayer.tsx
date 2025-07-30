@@ -1257,7 +1257,8 @@ export default function VideoPlayer({
                 style={{
                   flex: 1,
                   overflowY: "auto",
-                  overflowX: "hidden",
+                  maxHeight: "350px", // 필요시 조정
+                  minHeight: "0",
                   display: "block",
                   paddingRight: "8px",
                   border: "1px solid #e2e8f0",

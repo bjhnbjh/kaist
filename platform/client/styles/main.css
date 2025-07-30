@@ -709,7 +709,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  flex: 1;
+  flex: 0 1 auto;
   overflow-y: auto;
   padding-right: 8px;
   border: 1px solid #e2e8f0;
@@ -717,6 +717,7 @@ body {
   /* Firefox 스크롤바 스타일 */
   scrollbar-width: thick;
   scrollbar-color: #5fbeeb #f1f5f9;
+  max-height: 350px;
 }
 
 .objects-grid::-webkit-scrollbar {
@@ -909,6 +910,21 @@ body {
   max-height: 60vh;
   min-height: 320px;
   overflow-y: auto; /* 추가: 스크롤 가능하게 */
+}
+
+/* 관리자 패널 객체 목록 스크롤 제한 */
+.objects-list-scroll {
+  max-height: calc(5 * 48px); /* 객체 1개 높이(48px) × 5개 */
+  overflow-y: auto;
+  margin-bottom: 16px;
+  padding-right: 4px;
+}
+
+/* 삭제 버튼을 항상 아래에 */
+.objects-list-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0;
 }
 
 /* 반응형 디자인 */
