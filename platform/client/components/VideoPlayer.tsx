@@ -1260,14 +1260,14 @@ export default function VideoPlayer({
                 style={{
                   flex: 1,
                   overflowY: "auto",
-                  maxHeight: "65vh",
-                  minHeight: "400px",
+                  maxHeight: "55vh",
+                  minHeight: "250px",
                   display: "block",
                   paddingRight: "8px",
                   border: "1px solid #e2e8f0",
                   borderRadius: "6px",
                   padding: "12px",
-                  marginBottom: "12px",
+                  marginBottom: "4px",
                   scrollbarWidth: "thick",
                   scrollbarColor: "#5fbeeb #f1f5f9",
                   WebkitOverflowScrolling: "touch",
@@ -1457,7 +1457,7 @@ export default function VideoPlayer({
                           </div>
                           <button
                             onClick={() => {
-                              // 일괄 삭제를 위해 확인 모달을 열어서 전체 선택 삭제로 처리
+                              // 일괄 삭제를 위해 확인 ���달을 열어서 전체 선택 삭제로 처리
                               if (selectedObjectIds.length > 0) {
                                 setObjectToDelete("BULK_DELETE");
                                 setShowDeleteConfirmModal(true);
