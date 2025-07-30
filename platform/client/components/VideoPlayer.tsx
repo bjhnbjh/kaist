@@ -596,7 +596,7 @@ export default function VideoPlayer({
     setDeleteConfirmed(false);
   };
 
-  // 객체 이름 가져오기 함수 - 실제 객체 이름을 그대로 사용
+  // 객체 이름 가져오기 함수 - 실제 객체 이���을 그대로 사용
   const getObjectDisplayName = (object: DetectedObject) => {
     return object.name;
   };
@@ -1260,8 +1260,8 @@ export default function VideoPlayer({
                 style={{
                   flex: 1,
                   overflowY: "auto",
-                  maxHeight: "55vh",
-                  minHeight: "300px",
+                  maxHeight: "65vh",
+                  minHeight: "400px",
                   display: "block",
                   paddingRight: "8px",
                   border: "1px solid #e2e8f0",
@@ -1532,7 +1532,7 @@ export default function VideoPlayer({
                         🔍
                       </div>
                       <div style={{ fontWeight: "500", marginBottom: "4px" }}>
-                        ��지된 객체가 없습니다.
+                        탐지된 객체가 없습니다.
                       </div>
                       <div style={{ fontSize: "0.85rem" }}>
                         영역을 그려서 객체를 추가해보세요
