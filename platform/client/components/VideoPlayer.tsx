@@ -483,7 +483,7 @@ export default function VideoPlayer({
     onDownloadWebVTT();
 
     // 저장 및 다운로드 완료 메시지 표시
-    toast.success("저장 및 WebVTT 다운로드가 완료되었습니다.");
+    toast.success("���장 및 WebVTT 다운로드가 완료되었습니다.");
 
     console.log("저장 후 비디오 정보:", {
       duration: currentDuration,
@@ -649,7 +649,7 @@ export default function VideoPlayer({
       setShowDeleteConfirmModal(false);
       setObjectToDelete(null);
       setDeleteConfirmed(false);
-      // 초기에는 객체 목록을 닫은 상태로 시작
+      // ��기에는 객체 목록을 닫은 상태로 시작
       setShowObjectList(false);
 
       if (videoDuration === 0) {
@@ -987,7 +987,7 @@ export default function VideoPlayer({
               >
                 {isErasing
                   ? "🗑️ 지우개 모드 - 그려진 영역을 클릭하여 삭제하세요"
-                  : "🎨 그리기 모드 활성화 - 마우스로 드래그하여 영역을 그려보세요"}
+                  : "🎨 그���기 모드 활성화 - 마우스로 드래그하여 영역을 그려보세요"}
               </div>
             )}
           </div>
@@ -1259,8 +1259,8 @@ export default function VideoPlayer({
                 style={{
                   flex: 1,
                   overflowY: "auto",
-                  maxHeight: "350px", // 필요시 조정
-                  minHeight: "0",
+                  maxHeight: "450px",
+                  minHeight: "200px",
                   display: "block",
                   paddingRight: "8px",
                   border: "1px solid #e2e8f0",
@@ -1269,6 +1269,7 @@ export default function VideoPlayer({
                   marginBottom: "12px",
                   scrollbarWidth: "thin",
                   scrollbarColor: "#cbd5e0 #f7fafc",
+                  WebkitOverflowScrolling: "touch",
                 }}
               >
                 {showObjectList && !selectedObjectId ? (
@@ -1905,7 +1906,7 @@ export default function VideoPlayer({
                     <div style={{ fontSize: "0.85rem" }}>
                       "탐지된 객체" 버튼을 클릭하여
                       <br />
-                      객체 목록을 확인해보세요
+                      객체 목록을 확인해���세요
                     </div>
                   </div>
                 )}
