@@ -482,7 +482,7 @@ export default function VideoPlayer({
     // WebVTT 다운로드도 함께 실행
     onDownloadWebVTT();
 
-    // 저장 및 다운로드 완료 메시지 표시
+    // 저장 및 다운로드 완료 ���시지 표시
     toast.success("저장 및 WebVTT 다운로드가 완료되었습니다.");
 
     console.log("저장 후 비디오 정보:", {
@@ -1239,7 +1239,7 @@ export default function VideoPlayer({
                         gap: "4px",
                         transition: "background-color 0.2s ease",
                       }}
-                      title="탐지된 객체 목록으로 돌아가기"
+                      title="탐지된 객체 목록��로 돌아가기"
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = "#f3f4f6";
                       }}
@@ -1273,7 +1273,7 @@ export default function VideoPlayer({
               >
                 {showObjectList && !selectedObjectId ? (
                   !hasRunDetection ? (
-                    // 탐지 실행 전 안내문구
+                    // 탐지 실행 전 ���내문구
                     <div
                       style={{
                         display: "flex",
@@ -1854,7 +1854,7 @@ export default function VideoPlayer({
                                 }
                               }}
                               style={{
-                                background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+                                background: "#ef4444",
                                 border: "none",
                                 borderRadius: "6px",
                                 padding: "10px 16px",
@@ -1868,11 +1868,16 @@ export default function VideoPlayer({
                                 justifyContent: "center",
                                 gap: "6px",
                                 transition: "all 0.2s ease",
-                                boxShadow: "0 2px 4px rgba(239, 68, 68, 0.2)",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = "#dc2626";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = "#ef4444";
                               }}
                             >
                               <Trash2 style={{ width: 16, height: 16 }} />
-                              이 객체 삭제
+                              삭제
                             </button>
                           </div>
                         </div>
@@ -1952,10 +1957,9 @@ export default function VideoPlayer({
                       }
                     }}
                     style={{
-                      background:
-                        "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
+                      background: "#ef4444",
                       border: "none",
-                      borderRadius: "8px",
+                      borderRadius: "6px",
                       padding: "12px 16px",
                       color: "white",
                       fontSize: "0.9rem",
@@ -1966,22 +1970,17 @@ export default function VideoPlayer({
                       justifyContent: "center",
                       gap: "8px",
                       transition: "all 0.2s ease",
-                      boxShadow: "0 2px 4px rgba(220, 38, 38, 0.2)",
                       width: "100%",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "translateY(-1px)";
-                      e.currentTarget.style.boxShadow =
-                        "0 4px 8px rgba(220, 38, 38, 0.3)";
+                      e.currentTarget.style.background = "#dc2626";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow =
-                        "0 2px 4px rgba(220, 38, 38, 0.2)";
+                      e.currentTarget.style.background = "#ef4444";
                     }}
                   >
                     <Trash2 style={{ width: 16, height: 16 }} />
-                    선택된 객체 삭제
+                    삭제
                   </button>
                 </div>
               )}
