@@ -779,7 +779,7 @@ export default function VideoPlayer({
           </button>
         </div>
 
-        {/* 메인 컨텐츠 영역 */}
+        {/* ���인 컨텐츠 영역 */}
         <div
           style={{
             display: "flex",
@@ -1376,7 +1376,7 @@ export default function VideoPlayer({
                             </div>
                             <div
                               style={{ fontSize: "0.8rem", color: "#6b7280" }}
-                            // 신뢰도 삭제
+                            // 신뢰�� 삭제
                             >
                             </div>
                           </div>
@@ -1559,7 +1559,7 @@ export default function VideoPlayer({
                           }}
                         >
                           {/* 이름 섹션 */}
-                          <div style={{ marginBottom: "20px" }}>
+                          <div style={{ marginBottom: "16px" }}>
                             <div
                               style={{
                                 fontSize: "0.9rem",
@@ -1643,7 +1643,7 @@ export default function VideoPlayer({
                           </div>
 
                           {/* 코드 섹션 */}
-                          <div style={{ marginBottom: "20px" }}>
+                          <div style={{ marginBottom: "16px" }}>
                             <div
                               style={{
                                 fontSize: "0.9rem",
@@ -1688,7 +1688,7 @@ export default function VideoPlayer({
                           </div>
 
                           {/* DL.reservoir domain 섹션 */}
-                          <div style={{ marginBottom: "20px" }}>
+                          <div style={{ marginBottom: "16px" }}>
                             <div
                               style={{
                                 fontSize: "0.9rem",
@@ -1763,7 +1763,7 @@ export default function VideoPlayer({
                           </div>
 
                           {/* 추가정보 섹션 */}
-                          <div style={{ marginBottom: "20px" }}>
+                          <div style={{ marginBottom: "16px" }}>
                             <div
                               style={{
                                 fontSize: "0.9rem",
@@ -1821,7 +1821,7 @@ export default function VideoPlayer({
                           </div>
 
                           {/* 수정 버튼 - 객체 정보 하단으로 이동 */}
-                          <div style={{ marginBottom: "20px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                          <div style={{ marginBottom: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
                             <button
                               onClick={() => {
                                 if (isEditing) {
@@ -1902,7 +1902,7 @@ export default function VideoPlayer({
                       🔍
                     </div>
                     <div style={{ fontWeight: "500", marginBottom: "4px" }}>
-                      ��지된 객체 없음
+                      탐지된 객체 없음
                     </div>
                     <div style={{ fontSize: "0.85rem" }}>
                       "탐지된 객체" 버튼을 클릭하여
