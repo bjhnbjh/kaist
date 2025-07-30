@@ -717,7 +717,7 @@ body {
   /* Firefox 스크롤바 스타일 */
   scrollbar-width: thick;
   scrollbar-color: #5fbeeb #f1f5f9;
-  max-height: 350px;
+  max-height: 450px;
 }
 
 .objects-grid::-webkit-scrollbar {
@@ -907,7 +907,7 @@ body {
 /* 객체 상세 정보 컨테이너 강제 스크롤 */
 .object-detail-container {
   display: block !important;
-  max-height: 60vh;
+  max-height: 40vh;
   min-height: 320px;
   overflow-y: auto; /* 추가: 스크롤 가능하게 */
 }

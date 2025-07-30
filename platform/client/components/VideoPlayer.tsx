@@ -482,7 +482,7 @@ export default function VideoPlayer({
     // WebVTT 다운로드도 함께 실행
     onDownloadWebVTT();
 
-    // 저장 및 다운로드 완료 메시지 표시
+    // 저장 및 다운로드 완료 ���시지 표시
     toast.success("���장 및 WebVTT 다운로드가 완료되었습니다.");
 
     console.log("저장 후 비디오 정보:", {
@@ -986,7 +986,7 @@ export default function VideoPlayer({
                 }}
               >
                 {isErasing
-                  ? "🗑️ 지우개 모드 - 그려진 영역을 클릭하여 삭제하세요"
+                  ? "🗑️ 지우개 모드 - 그려진 영역을 클릭하여 삭제��세요"
                   : "🎨 그���기 모드 활성화 - 마우스로 드래그하여 영역을 그려보세요"}
               </div>
             )}
@@ -1260,7 +1260,7 @@ export default function VideoPlayer({
                 style={{
                   flex: 1,
                   overflowY: "auto",
-                  maxHeight: "55vh",
+                  maxHeight: "65vh",
                   minHeight: "250px",
                   display: "block",
                   paddingRight: "8px",
@@ -1457,7 +1457,7 @@ export default function VideoPlayer({
                           </div>
                           <button
                             onClick={() => {
-                              // 일괄 삭제를 위해 확인 모달을 열어서 전체 선택 삭제로 처리
+                              // 일괄 삭제를 위해 확인 모달을 열어서 전체 선택 삭제��� 처리
                               if (selectedObjectIds.length > 0) {
                                 setObjectToDelete("BULK_DELETE");
                                 setShowDeleteConfirmModal(true);
@@ -1548,7 +1548,7 @@ export default function VideoPlayer({
                             borderRadius: "12px",
                             padding: "16px",
                             boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                            maxHeight: "50vh",
+                            maxHeight: "40vh",
                             minHeight: "280px",
                             overflowY: "auto",
                             overflowX: "hidden",
