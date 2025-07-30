@@ -483,7 +483,7 @@ export default function VideoPlayer({
     onDownloadWebVTT();
 
     // 저장 및 다운로드 완료 메시지 표시
-    toast.success("���장 및 WebVTT 다운���드가 완료되었습니다.");
+    toast.success("���장 및 WebVTT 다운로드가 완료되었습니다.");
 
     console.log("저장 후 비디오 정보:", {
       duration: currentDuration,
@@ -649,7 +649,7 @@ export default function VideoPlayer({
       setShowDeleteConfirmModal(false);
       setObjectToDelete(null);
       setDeleteConfirmed(false);
-      // ��기��는 객체 목록을 닫은 상태로 시작
+      // ��기에는 객체 목록을 닫은 상태로 시작
       setShowObjectList(false);
 
       if (videoDuration === 0) {
@@ -987,7 +987,7 @@ export default function VideoPlayer({
               >
                 {isErasing
                   ? "🗑️ 지우개 모드 - 그려진 영역을 클릭하여 삭제하세요"
-                  : "🎨 그���기 모드 활성화 - ���우스로 드래그하여 영역을 그려보세요"}
+                  : "🎨 그���기 모드 활성화 - 마우스로 드래그하여 영역을 그려보세요"}
               </div>
             )}
           </div>
@@ -1300,7 +1300,7 @@ export default function VideoPlayer({
                     <div style={{
                       display: "flex",
                       flexDirection: "column",
-                      gap: "8px",
+                      gap: "6px",
                     }}>
                       {displayObjects.map((object) => (
                         <div
@@ -1412,7 +1412,7 @@ export default function VideoPlayer({
                               justifyContent: "center",
                               transition: "color 0.2s ease",
                             }}
-                            title="정보 보��"
+                            title="정보 보기"
                           >
                             <ChevronRight style={{ width: 16, height: 16 }} />
                           </button>
@@ -1633,7 +1633,7 @@ export default function VideoPlayer({
                                     color: "#475569",
                                   }}
                                 >
-                                  카테��리:{" "}
+                                  카테고리:{" "}
                                   {selectedObject.category ||
                                     editedCategory ||
                                     "기타"}
@@ -1902,7 +1902,7 @@ export default function VideoPlayer({
                       🔍
                     </div>
                     <div style={{ fontWeight: "500", marginBottom: "4px" }}>
-                      탐지된 객체 없음
+                      ��지된 객체 없음
                     </div>
                     <div style={{ fontSize: "0.85rem" }}>
                       "탐지된 객체" 버튼을 클릭하여
@@ -2070,7 +2070,7 @@ export default function VideoPlayer({
                   userSelect: "none",
                 }}
               >
-                상기 내용을 확인��습니다
+                상기 내용을 확인했습니다
               </label>
             </div>
 
