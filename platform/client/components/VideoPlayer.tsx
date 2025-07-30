@@ -482,7 +482,7 @@ export default function VideoPlayer({
     // WebVTT 다운로드도 함께 실행
     onDownloadWebVTT();
 
-    // 저장 및 다운로드 완료 ���시지 표시
+    // 저장 및 다운로드 완료 메시지 표시
     toast.success("저장 및 WebVTT 다운로드가 완료되었습니다.");
 
     console.log("저장 후 비디오 정보:", {
@@ -1239,7 +1239,7 @@ export default function VideoPlayer({
                         gap: "4px",
                         transition: "background-color 0.2s ease",
                       }}
-                      title="탐지된 객체 목록��로 돌아가기"
+                      title="탐지된 객체 목록으로 돌아가기"
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = "#f3f4f6";
                       }}
@@ -1273,7 +1273,7 @@ export default function VideoPlayer({
               >
                 {showObjectList && !selectedObjectId ? (
                   !hasRunDetection ? (
-                    // 탐지 실행 전 ���내문구
+                    // 탐지 실행 전 안내문구
                     <div
                       style={{
                         display: "flex",
@@ -1450,7 +1450,7 @@ export default function VideoPlayer({
                                 gap: "6px",
                               }}
                             >
-                              ✅ {selectedObjectIds.length}개 객체가 선택됨
+                              ✅ {selectedObjectIds.length}개 객체가 선택���
                             </span>
                           </div>
                           <button
@@ -1994,6 +1994,8 @@ export default function VideoPlayer({
         <div
           style={{
             position: "fixed",
+            top: 0,
+            left: 0,
             right: 0,
             bottom: 0,
             background: "rgba(0, 0, 0, 0.5)",
@@ -2119,7 +2121,7 @@ export default function VideoPlayer({
                   fontStyle: "italic",
                 }}
               >
-                ⚠️ 체크박스를 선택해야 삭제할 수 있습니다
+                ⚠️ 체크박스를 선택해야 ��제할 수 있습니다
               </div>
             )}
           </div>
