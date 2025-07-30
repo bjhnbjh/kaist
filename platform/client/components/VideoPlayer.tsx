@@ -846,7 +846,7 @@ export default function VideoPlayer({
               />
             </div>
 
-            {/* 컨트롤 버튼들 */}
+            {/* ��트롤 버튼들 */}
             <div
               style={{
                 display: "flex",
@@ -1138,7 +1138,7 @@ export default function VideoPlayer({
                   <BarChart3 style={{ width: 12, height: 12 }} />
                   {showObjectList || selectedObjectId
                     ? "객체 목록 닫기"
-                    : "탐지된 객체"}
+                    : "탐지��� 객체"}
                 </button>
               </div>
 
@@ -1271,22 +1271,6 @@ export default function VideoPlayer({
                   scrollbarWidth: "thick",
                   scrollbarColor: "#5fbeeb #f1f5f9",
                   WebkitOverflowScrolling: "touch",
-                  // WebKit 브라우저용 스크롤바 스타일
-                  "::-webkit-scrollbar": {
-                    width: "12px",
-                  },
-                  "::-webkit-scrollbar-track": {
-                    background: "#f1f5f9",
-                    borderRadius: "6px",
-                  },
-                  "::-webkit-scrollbar-thumb": {
-                    background: "#5fbeeb",
-                    borderRadius: "6px",
-                    border: "2px solid #f1f5f9",
-                  },
-                  "::-webkit-scrollbar-thumb:hover": {
-                    background: "#3da8d4",
-                  },
                 }}
               >
                 {showObjectList && !selectedObjectId ? (
