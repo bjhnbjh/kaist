@@ -538,16 +538,19 @@ export default function VideoPlayer({
         category?: string;
       } = {};
 
-      if (editedObjectName) updates.name = editedObjectName;
-      if (editedObjectCode) updates.code = editedObjectCode;
-      if (editedObjectInfo) updates.additionalInfo = editedObjectInfo;
-      if (editedDlReservoirDomain)
-        updates.dlReservoirDomain = editedDlReservoirDomain;
-      if (editedCategory) updates.category = editedCategory;
+      // 편집된 값이 있을 때만 업데이트에 포함
+      if (editedObjectName.trim()) updates.name = editedObjectName.trim();
+      if (editedObjectCode.trim()) updates.code = editedObjectCode.trim();
+      if (editedObjectInfo.trim()) updates.additionalInfo = editedObjectInfo.trim();
+      if (editedDlReservoirDomain.trim()) updates.dlReservoirDomain = editedDlReservoirDomain.trim();
+      if (editedCategory.trim()) updates.category = editedCategory.trim();
 
-      onUpdateObject(video.id, selectedObjectId, updates);
-      setHasObjectChanges(true);
-      toast.success(`객체 정보가 업데이트되었습니다.`);
+      // 업데이트가 있을 때만 콜백 호출
+      if (Object.keys(updates).length > 0) {
+        onUpdateObject(video.id, selectedObjectId, updates);
+        setHasObjectChanges(true);
+        toast.success(`객체 정보가 업데이트되었습니다.`);
+      }
     }
     setIsEditing(false);
   };
@@ -713,7 +716,7 @@ export default function VideoPlayer({
     return () => window.removeEventListener("resize", handleResize);
   }, [isOpen, canvasInitialized, initializeCanvas]);
 
-  // 1. displayObjects는 ��조건 detectedObjects만 사용
+  // 1. displayObjects는 무조건 detectedObjects만 사용
   const displayObjects = detectedObjects;
 
   if (!isOpen) return null;
@@ -1452,7 +1455,7 @@ export default function VideoPlayer({
                                 gap: "6px",
                               }}
                             >
-                              �� {selectedObjectIds.length}개 객체가 선택되었습니다
+                              ✅ {selectedObjectIds.length}개 객체가 선택되었습니다
                             </span>
                           </div>
                           <button
