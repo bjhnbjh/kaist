@@ -53,7 +53,7 @@ const DEFAULT_OBJECTS: Omit<DetectedObject, "id">[] = [
   },
 ];
 
-// 비디오 업로드��� 관리를 위한 커스텀 훅
+// 비디오 업로드와 관리를 위한 커스텀 훅
 export function useVideoUpload() {
   // 기본 상태들
   const [videos, setVideos] = useState<VideoInfo[]>([]);
@@ -236,7 +236,7 @@ export function useVideoUpload() {
     [adminPanelVisible],
   );
 
-  // 관리자 패널 닫기
+  // 관리자 패널 ��기
   const closeAdminPanel = useCallback(() => {
     setPanelClosing(true);
     setPanelAnimating(true);
@@ -399,6 +399,7 @@ export function useVideoUpload() {
         code: `CODE_${objectId.slice(0, 8).toUpperCase()}`,
         additionalInfo: "AI가 자동으로 탐지한 객체입니다.",
         dlReservoirDomain: "http://www.naver.com",
+        category: "기타",
       };
 
       setVideos((prev) =>
