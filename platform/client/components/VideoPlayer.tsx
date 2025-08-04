@@ -713,7 +713,7 @@ export default function VideoPlayer({
     return () => window.removeEventListener("resize", handleResize);
   }, [isOpen, canvasInitialized, initializeCanvas]);
 
-  // 1. displayObjects는 무조건 detectedObjects만 사용
+  // 1. displayObjects는 ��조건 detectedObjects만 사용
   const displayObjects = detectedObjects;
 
   if (!isOpen) return null;
@@ -992,7 +992,7 @@ export default function VideoPlayer({
             )}
           </div>
 
-          {/* 관리��� 패널 토글 버튼 */}
+          {/* 관리자 패널 토글 버튼 */}
           {!showAdminPanel && (
             <div
               style={{
@@ -1452,7 +1452,7 @@ export default function VideoPlayer({
                                 gap: "6px",
                               }}
                             >
-                              ✅ {selectedObjectIds.length}개 객체가 선택되었습니다
+                              �� {selectedObjectIds.length}개 객체가 선택되었습니다
                             </span>
                           </div>
                           <button
@@ -1617,10 +1617,11 @@ export default function VideoPlayer({
                                     background: "#ffffff",
                                   }}
                                 >
-                                  <option value="GTIN">GTIN</option>
-                                  <option value="GLN">GLN</option>
-                                  <option value="GIAI">GIAI</option>
-                                  <option value="GSIN">GSIN</option>
+                                  <option value="기타">기타 (00)</option>
+                                  <option value="GTIN">GTIN (01)</option>
+                                  <option value="GLN">GLN (02)</option>
+                                  <option value="GIAI">GIAI (03)</option>
+                                  <option value="GSIN">GSIN (04)</option>
                                 </select>
                               ) : (
                                 <div
