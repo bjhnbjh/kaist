@@ -53,7 +53,7 @@ const DEFAULT_OBJECTS: Omit<DetectedObject, "id">[] = [
   },
 ];
 
-// 비디오 업로드와 관리를 위한 커스텀 훅
+// 비디오 업로드��� 관리를 위한 커스텀 훅
 export function useVideoUpload() {
   // 기본 상태들
   const [videos, setVideos] = useState<VideoInfo[]>([]);
@@ -447,6 +447,7 @@ export function useVideoUpload() {
         code?: string;
         additionalInfo?: string;
         dlReservoirDomain?: string;
+        category?: string;
       },
     ) => {
       setVideos((prev) =>
