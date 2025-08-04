@@ -13,6 +13,7 @@ const DEFAULT_OBJECTS: Omit<DetectedObject, "id">[] = [
     code: "CODE_OBJ001",
     additionalInfo: "AI가 자동으로 탐지한 객체입니다.",
     dlReservoirDomain: "http://www.naver.com",
+    category: "기타",
   },
   {
     name: "Object(2)",
@@ -21,6 +22,7 @@ const DEFAULT_OBJECTS: Omit<DetectedObject, "id">[] = [
     code: "CODE_OBJ002",
     additionalInfo: "AI가 자동으로 탐지한 객체입니다.",
     dlReservoirDomain: "http://www.naver.com",
+    category: "기타",
   },
   {
     name: "Object(3)",
@@ -29,6 +31,7 @@ const DEFAULT_OBJECTS: Omit<DetectedObject, "id">[] = [
     code: "CODE_OBJ003",
     additionalInfo: "AI가 자동으로 탐지한 객체입니다.",
     dlReservoirDomain: "http://www.naver.com",
+    category: "기타",
   },
   {
     name: "Object(4)",
@@ -37,6 +40,7 @@ const DEFAULT_OBJECTS: Omit<DetectedObject, "id">[] = [
     code: "CODE_OBJ004",
     additionalInfo: "AI가 자동으로 탐지한 객체입니다.",
     dlReservoirDomain: "http://www.naver.com",
+    category: "기타",
   },
   {
     name: "Object(5)",
@@ -45,6 +49,7 @@ const DEFAULT_OBJECTS: Omit<DetectedObject, "id">[] = [
     code: "CODE_OBJ005",
     additionalInfo: "AI가 자동으로 탐지한 객체입니다.",
     dlReservoirDomain: "http://www.naver.com",
+    category: "기타",
   },
 ];
 
