@@ -538,16 +538,19 @@ export default function VideoPlayer({
         category?: string;
       } = {};
 
-      if (editedObjectName) updates.name = editedObjectName;
-      if (editedObjectCode) updates.code = editedObjectCode;
-      if (editedObjectInfo) updates.additionalInfo = editedObjectInfo;
-      if (editedDlReservoirDomain)
-        updates.dlReservoirDomain = editedDlReservoirDomain;
-      if (editedCategory) updates.category = editedCategory;
+      // 편집된 값이 있을 때만 업데이트에 포함
+      if (editedObjectName.trim()) updates.name = editedObjectName.trim();
+      if (editedObjectCode.trim()) updates.code = editedObjectCode.trim();
+      if (editedObjectInfo.trim()) updates.additionalInfo = editedObjectInfo.trim();
+      if (editedDlReservoirDomain.trim()) updates.dlReservoirDomain = editedDlReservoirDomain.trim();
+      if (editedCategory.trim()) updates.category = editedCategory.trim();
 
-      onUpdateObject(video.id, selectedObjectId, updates);
-      setHasObjectChanges(true);
-      toast.success(`객체 정보가 업데이트되었습니다.`);
+      // 업데이트가 있을 때만 콜백 호출
+      if (Object.keys(updates).length > 0) {
+        onUpdateObject(video.id, selectedObjectId, updates);
+        setHasObjectChanges(true);
+        toast.success(`객체 정보가 업데이트되었습니다.`);
+      }
     }
     setIsEditing(false);
   };
@@ -1617,10 +1620,11 @@ export default function VideoPlayer({
                                     background: "#ffffff",
                                   }}
                                 >
-                                  <option value="GTIN">GTIN</option>
-                                  <option value="GLN">GLN</option>
-                                  <option value="GIAI">GIAI</option>
-                                  <option value="GSIN">GSIN</option>
+                                  <option value="기타">기타 (00)</option>
+                                  <option value="GTIN">GTIN (01)</option>
+                                  <option value="GLN">GLN (02)</option>
+                                  <option value="GIAI">GIAI (03)</option>
+                                  <option value="GSIN">GSIN (04)</option>
                                 </select>
                               ) : (
                                 <div
@@ -1760,6 +1764,70 @@ export default function VideoPlayer({
                                   "http://www.naver.com"}
                               </div>
                             )}
+                          </div>
+
+                          {/* Final Link 섹션 - 편집 불가능 */}
+                          <div style={{ marginBottom: "16px" }}>
+                            <div
+                              style={{
+                                fontSize: "0.9rem",
+                                fontWeight: "600",
+                                color: "#334155",
+                                marginBottom: "8px",
+                              }}
+                            >
+                              🔗 Final Link
+                            </div>
+                            {(() => {
+                              // 카테고리별 고유번호 매핑
+                              const categoryCodeMap: {[key: string]: string} = {
+                                "GTIN": "01",
+                                "GLN": "02",
+                                "GIAI": "03",
+                                "GSIN": "04",
+                                "기타": "00"
+                              };
+
+                              const currentCategory = isEditing ? editedCategory : (selectedObject.category || "기타");
+                              const categoryCode = categoryCodeMap[currentCategory] || "00";
+                              const currentCode = isEditing ? editedObjectCode : (selectedObject.code || `CODE_${selectedObject.id.slice(0, 8).toUpperCase()}`);
+                              const currentDomain = isEditing ? editedDlReservoirDomain : (selectedObject.dlReservoirDomain || "http://www.naver.com");
+
+                              const finalLink = `${currentDomain}/${categoryCode}/${currentCode}`;
+
+                              return (
+                                <div
+                                  onClick={() => {
+                                    window.open(finalLink, "_blank");
+                                  }}
+                                  style={{
+                                    background: "#f0f9ff",
+                                    border: "2px solid #0ea5e9",
+                                    borderRadius: "4px",
+                                    padding: "8px",
+                                    fontSize: "0.85rem",
+                                    color: "#0369a1",
+                                    cursor: "pointer",
+                                    transition: "all 0.2s ease",
+                                    textDecoration: "underline",
+                                    fontWeight: "500",
+                                    wordBreak: "break-all",
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = "#e0f2fe";
+                                    e.currentTarget.style.borderColor = "#0284c7";
+                                    e.currentTarget.style.color = "#164e63";
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = "#f0f9ff";
+                                    e.currentTarget.style.borderColor = "#0ea5e9";
+                                    e.currentTarget.style.color = "#0369a1";
+                                  }}
+                                >
+                                  {finalLink}
+                                </div>
+                              );
+                            })()}
                           </div>
 
                           {/* 추가정보 섹션 */}
