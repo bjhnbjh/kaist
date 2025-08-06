@@ -457,7 +457,7 @@ export default function VideoPlayer({
     redrawCanvas();
   };
 
-  const saveDrawingsAndDownloadWebVTT = () => {
+  const saveDrawings = () => {
     const currentDuration = videoDuration;
     const currentFrames = totalFrames;
 
@@ -472,18 +472,15 @@ export default function VideoPlayer({
 
     if (addedObjects.length > 0) {
       toast.success(
-        `${addedObjects.length}개의 새로운 객체가 탐지되었습니다: ${addedObjects.join(", ")}`,
+        `${addedObjects.length}개의 새로운 객체가 탐��되었습니다: ${addedObjects.join(", ")}`,
       );
     }
 
     setDrawnAreas([]);
     setHasObjectChanges(false);
 
-    // WebVTT 다운로드도 함께 실행
-    onDownloadWebVTT();
-
-    // 저장 및 다운로드 완료 메시지 표시
-    toast.success("저장 및 WebVTT 다운로드가 완료되었습니다.");
+    // 저장 완료 메시지 표시
+    toast.success("저장이 완료되었습니다.");
 
     console.log("저장 후 비디오 정보:", {
       duration: currentDuration,
@@ -527,7 +524,7 @@ export default function VideoPlayer({
     setShowAdminPanel(!showAdminPanel);
   };
 
-  // 편집 완료 핸들러
+  // 편집 ��료 핸들러
   const handleEditComplete = () => {
     if (selectedObjectId && onUpdateObject && video) {
       const updates: {
@@ -901,30 +898,6 @@ export default function VideoPlayer({
                     네모박스
                   </button>
                   <button
-                    onClick={() => {
-                      setDrawingMode("free");
-                      setIsErasing(false);
-                    }}
-                    style={{
-                      padding: "8px 12px",
-                      borderRadius: "6px",
-                      border: "1px solid #d1d5db",
-                      fontWeight: "500",
-                      cursor: "pointer",
-                      background:
-                        drawingMode === "free" && !isErasing
-                          ? "#3b82f6"
-                          : "white",
-                      color:
-                        drawingMode === "free" && !isErasing
-                          ? "white"
-                          : "#374151",
-                      fontSize: "0.85rem",
-                    }}
-                  >
-                    자유그리기
-                  </button>
-                  <button
                     onClick={() => setIsErasing(!isErasing)}
                     style={{
                       padding: "8px 12px",
@@ -947,7 +920,7 @@ export default function VideoPlayer({
               )}
 
               <button
-                onClick={saveDrawingsAndDownloadWebVTT}
+                onClick={saveDrawings}
                 style={{
                   padding: "8px 16px",
                   borderRadius: "6px",
@@ -959,7 +932,7 @@ export default function VideoPlayer({
                   fontSize: "0.9rem",
                 }}
               >
-                최종저장 & WebVTT다운
+최종저장
               </button>
             </div>
 
