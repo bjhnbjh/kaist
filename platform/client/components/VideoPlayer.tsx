@@ -461,7 +461,7 @@ export default function VideoPlayer({
           };
           setDrawnAreas((prev) => [...prev, newArea]);
 
-          // 그리기 완료 시 API로 전송
+          // 그리기 완�� 시 API로 전송
           sendDrawingToApi(newArea);
         }
 
@@ -573,12 +573,66 @@ export default function VideoPlayer({
     }
   };
 
+  // 편집 데이터 DB 저장 API 호출
+  const saveDataToDb = async () => {
+    if (!video) return;
+
+    try {
+      const apiUrl = window.location.origin;
+
+      const saveData = {
+        videoId: video.id,
+        videoFileName: video.file.name,
+        objects: detectedObjects.map(obj => ({
+          id: obj.id,
+          name: obj.name,
+          code: obj.code,
+          additionalInfo: obj.additionalInfo,
+          dlReservoirDomain: obj.dlReservoirDomain,
+          category: obj.category,
+          confidence: obj.confidence,
+          selected: obj.selected
+        })),
+        drawings: drawnAreas.map(area => ({
+          id: area.id,
+          type: area.type,
+          color: area.color,
+          points: area.points,
+          startPoint: area.startPoint,
+          endPoint: area.endPoint
+        })),
+        duration: videoDuration,
+        totalFrames: totalFrames,
+        timestamp: Date.now()
+      };
+
+      const response = await fetch(`${apiUrl}/api/save-data`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(saveData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast.success('편집 데이터가 DB에 저장되었습니다.');
+        console.log('Save data API response:', result);
+      } else {
+        throw new Error('Save data API 전송 실패');
+      }
+    } catch (error) {
+      console.error('Save data API error:', error);
+      toast.error('편집 데이터 DB 저장 중 오류가 발생했습니다.');
+    }
+  };
+
   const saveDrawings = () => {
     const currentDuration = videoDuration;
     const currentFrames = totalFrames;
 
     // 그리기 영역이 있는 경우에만 객체 추가 (중복 방지)
-    // ��제로는 이미 sendDrawingToApi에서 처리되므로 여기서는 제거
+    // 실제로는 이미 sendDrawingToApi에서 처리되므로 여기서는 제거
     setDrawnAreas([]);
     setHasObjectChanges(false);
 
@@ -885,7 +939,7 @@ export default function VideoPlayer({
           </button>
         </div>
 
-        {/* 메�� 컨텐츠 영역 */}
+        {/* 메인 컨텐츠 영역 */}
         <div
           style={{
             display: "flex",
@@ -974,7 +1028,7 @@ export default function VideoPlayer({
                   fontSize: "0.9rem",
                 }}
               >
-                {isDrawing ? "그리기 종료" : "영역 그��기"}
+                {isDrawing ? "그리기 종료" : "영역 그리기"}
               </button>
 
               {isDrawing && (
@@ -1074,7 +1128,7 @@ export default function VideoPlayer({
             )}
           </div>
 
-          {/* 관리자 패널 토글 버튼 */}
+          {/* 관리�� 패널 토글 버튼 */}
           {!showAdminPanel && (
             <div
               style={{
@@ -1577,7 +1631,7 @@ export default function VideoPlayer({
                             }}
                           >
                             <Trash2 style={{ width: 16, height: 16 }} />
-                            선택된 객체 삭제
+                            선택된 객체 ���제
                           </button>
                         </div>
                       )}
@@ -1909,7 +1963,7 @@ export default function VideoPlayer({
                             })()}
                           </div>
 
-                          {/* 추가정보 섹�� */}
+                          {/* 추가정보 섹션 */}
                           <div style={{ marginBottom: "16px" }}>
                             <div
                               style={{
