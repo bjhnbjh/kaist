@@ -2246,7 +2246,12 @@ export default function VideoPlayer({
             zIndex: 2000,
             padding: "20px",
           }}
-          onClick={() => setShowInfoModal(false)}
+          onMouseDown={(e) => {
+            // 모달 배경 클릭 시에만 닫기 (드래그 방지)
+            if (e.target === e.currentTarget) {
+              setShowInfoModal(false);
+            }
+          }}
         >
           <div
             style={{
