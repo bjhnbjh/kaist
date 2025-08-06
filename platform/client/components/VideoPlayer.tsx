@@ -173,7 +173,7 @@ export default function VideoPlayer({
 
       if (response.ok) {
         const result = await response.json();
-        toast.success('그리기 데이터가 서버로 전송되었습니다.');
+        toast.success('그리기 데이터가 서버로 전송되���습니다.');
 
         // API 응답 후 정보 입력 모달 표시
         setModalObjectInfo({
@@ -461,7 +461,7 @@ export default function VideoPlayer({
           };
           setDrawnAreas((prev) => [...prev, newArea]);
 
-          // 그리기 완�� 시 API로 전송
+          // 그리기 완료 시 API로 전송
           sendDrawingToApi(newArea);
         }
 
@@ -619,7 +619,7 @@ export default function VideoPlayer({
         toast.success('편집 데이터가 DB에 저장되었습니다.');
         console.log('Save data API response:', result);
       } else {
-        throw new Error('Save data API 전송 실패');
+        throw new Error('Save data API ��송 실패');
       }
     } catch (error) {
       console.error('Save data API error:', error);
@@ -627,27 +627,34 @@ export default function VideoPlayer({
     }
   };
 
-  const saveDrawings = () => {
+  const saveDrawings = async () => {
     const currentDuration = videoDuration;
     const currentFrames = totalFrames;
 
-    // 그리기 영역이 있는 경우에만 객체 추가 (중복 방지)
-    // 실제로는 이미 sendDrawingToApi에서 처리되므로 여기서는 제거
-    setDrawnAreas([]);
-    setHasObjectChanges(false);
+    try {
+      // 1. 편집 데이터 DB 저장
+      await saveDataToDb();
 
-    // WebVTT API로 전송
-    sendWebVTTToApi();
+      // 2. WebVTT 파일 저장
+      await sendWebVTTToApi();
 
-    // 저장 완료 메시지 표시
-    toast.success("저장이 완료되었습니다.");
+      // 3. 그리기 영역 초기화
+      setDrawnAreas([]);
+      setHasObjectChanges(false);
 
-    console.log("저장 후 비디오 정보:", {
-      duration: currentDuration,
-      frames: currentFrames,
-      currentVideoDuration: videoDuration,
-      currentTotalFrames: totalFrames,
-    });
+      // 최종 저장 완료 메시지 표시
+      toast.success("모든 데이터가 저장되었습니다.");
+
+      console.log("저장 후 비디오 정보:", {
+        duration: currentDuration,
+        frames: currentFrames,
+        currentVideoDuration: videoDuration,
+        currentTotalFrames: totalFrames,
+      });
+    } catch (error) {
+      console.error('Save error:', error);
+      toast.error("저장 중 오류가 발생했습니다.");
+    }
   };
 
   const runObjectDetection = () => {
@@ -2446,7 +2453,7 @@ export default function VideoPlayer({
                   }}
                 />
 
-                {/* 카테고리 드롭다운 */}
+                {/* 카테고리 ��롭다운 */}
                 <div style={{ marginTop: "8px" }}>
                   <select
                     value={modalObjectInfo.category}
