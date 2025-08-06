@@ -119,15 +119,22 @@ export const handleVideoFileUpload: RequestHandler = (req, res) => {
       });
     }
 
+    // 클라이언트에서 전송된 메타데이터 추출
+    const duration = parseFloat(req.body.duration) || 0;
+    const width = req.body.width ? parseInt(req.body.width) : undefined;
+    const height = req.body.height ? parseInt(req.body.height) : undefined;
+
     const uploadData: UploadData = {
       id: `video-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       fileName: req.file.originalname,
       fileSize: req.file.size,
       fileType: req.file.mimetype,
-      duration: 0, // 클라이언트에서 추출된 duration을 받을 예정
+      duration: duration,
       timestamp: Date.now(),
       metadata: {
-        // 추후 비디오 메타데이터 추가
+        width: width,
+        height: height,
+        fps: undefined // 향후 필요시 추가
       }
     };
 
