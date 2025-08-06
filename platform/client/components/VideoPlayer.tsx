@@ -2618,7 +2618,7 @@ export default function VideoPlayer({
                     fontSize: "0.85rem",
                     resize: "none",
                   }}
-                  placeholder="추�� 정보를 입력하세요"
+                  placeholder="추�� 정보를 입력���세요"
                 />
               </div>
             </div>
@@ -2650,20 +2650,23 @@ export default function VideoPlayer({
               <button
                 onClick={() => {
                   if (modalObjectInfo && video && onAddNewObject) {
-                    // 그리기 영역을 새로운 객체로 추가
+                    // 그리기 영역을 새로운 객체로 추가 - 팝업창에서 입력한 이름 사용
                     const addedObjectName = onAddNewObject(video.id, modalObjectInfo.name);
 
-                    // 객체 정보 업데이트 (예: 마지막에 추가된 객체 찾기)
-                    const lastObject = detectedObjects[detectedObjects.length - 1];
-                    if (lastObject && onUpdateObject) {
-                      onUpdateObject(video.id, lastObject.id, {
-                        name: modalObjectInfo.name,
-                        code: modalObjectInfo.code,
-                        additionalInfo: modalObjectInfo.additionalInfo,
-                        dlReservoirDomain: modalObjectInfo.dlReservoirDomain,
-                        category: modalObjectInfo.category,
-                      });
-                    }
+                    // 방금 추가된 객체 찾기 (마지막 객체)
+                    setTimeout(() => {
+                      const updatedObjects = detectedObjects;
+                      const lastObject = updatedObjects[updatedObjects.length - 1];
+                      if (lastObject && onUpdateObject) {
+                        onUpdateObject(video.id, lastObject.id, {
+                          name: modalObjectInfo.name,
+                          code: modalObjectInfo.code,
+                          additionalInfo: modalObjectInfo.additionalInfo,
+                          dlReservoirDomain: modalObjectInfo.dlReservoirDomain,
+                          category: modalObjectInfo.category,
+                        });
+                      }
+                    }, 100);
 
                     toast.success('새로운 객체가 추가되었습니다.');
                     setShowInfoModal(false);
