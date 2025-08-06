@@ -176,8 +176,8 @@ export default function VideoPlayer({
         toast.success('그리기 데이터가 서버로 전송되었습니다.');
 
         // API 응답 후 정보 입력 모달 표시
-        // 그리기로 추가되는 객체는 1부터 시작
-        const nextObjectNumber = detectedObjects.length + 1;
+        // 그리기로 추가되는 객체는 totalObjectsCreated + 1로 번호 생성
+        const nextObjectNumber = video ? video.totalObjectsCreated + 1 : detectedObjects.length + 1;
         setModalObjectInfo({
           name: `Object(${nextObjectNumber})`,
           code: `CODE_${area.id.slice(0, 8).toUpperCase()}`,
@@ -618,7 +618,7 @@ export default function VideoPlayer({
 
       if (response.ok) {
         const result = await response.json();
-        toast.success('편집 데이터가 DB에 저장되었습니다.');
+        toast.success('편집 데이��가 DB에 저장되었습니다.');
         console.log('Save data API response:', result);
       } else {
         throw new Error('Save data API 전송 실패');
@@ -2618,7 +2618,7 @@ export default function VideoPlayer({
                     fontSize: "0.85rem",
                     resize: "none",
                   }}
-                  placeholder="추�� 정보를 입력���세요"
+                  placeholder="추�� 정보를 입력하세요"
                 />
               </div>
             </div>
