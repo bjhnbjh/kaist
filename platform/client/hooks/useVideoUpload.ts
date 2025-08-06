@@ -86,7 +86,7 @@ export function useVideoUpload() {
         fileName: file.name,
         fileSize: file.size,
         fileType: file.type,
-        duration: 0, // 실제��는 비디오에서 추출
+        duration: 0, // 실제로는 비디오에서 추출
         timestamp: Date.now(),
         metadata: {
           // 실제로는 비디오 메타데이터 추출
@@ -192,6 +192,10 @@ export function useVideoUpload() {
             };
 
             setVideos([newVideo]);
+
+            // API로 업로드 정보 전송
+            sendUploadToApi(file, uploadId);
+
             toast.success("동영상 업로드 및 처리가 완료되었습니다!");
           }, processingTime * 1000);
         } else {
@@ -387,7 +391,7 @@ export function useVideoUpload() {
               }),
             );
 
-            // 탐지 완료 후 selectedVideoId를 다시 설정하여 최신 selectedVideo를 강제로 ��영
+            // 탐지 완료 후 selectedVideoId를 다시 설정하여 최신 selectedVideo를 강제로 반영
             setSelectedVideoId(videoId);
 
             toast.success("객체 탐지가 완료되었습니다!");
