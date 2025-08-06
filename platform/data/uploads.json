@@ -1,0 +1,38 @@
+{
+  "uploads": [
+    {
+      "id": "video-1754468401405-fdex3wbhx",
+      "fileName": "첫번쨰 작품.mp4",
+      "fileSize": 6506422,
+      "fileType": "video/mp4",
+      "duration": 0,
+      "timestamp": 1754468406497,
+      "metadata": {},
+      "uploadedAt": "2025-08-06T08:20:08.848Z",
+      "status": "uploaded"
+    },
+    {
+      "id": "video-1754469291659-oyhdnhe8q",
+      "fileName": "첫번쨰 작품.mp4",
+      "fileSize": 6506422,
+      "fileType": "video/mp4",
+      "duration": 0,
+      "timestamp": 1754469296093,
+      "metadata": {},
+      "uploadedAt": "2025-08-06T08:34:58.450Z",
+      "status": "uploaded"
+    },
+    {
+      "id": "video-1754469454230-9wij3sni8",
+      "fileName": "첫번쨰 작품.mp4",
+      "fileSize": 6506422,
+      "fileType": "video/mp4",
+      "duration": 0,
+      "timestamp": 1754469459548,
+      "metadata": {},
+      "uploadedAt": "2025-08-06T08:37:41.945Z",
+      "status": "uploaded"
+    }
+  ],
+  "lastUpdated": "2025-08-06T08:37:41.945Z"
+}
