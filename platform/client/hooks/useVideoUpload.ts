@@ -4,54 +4,8 @@ import { toast } from "sonner";
 // 공통 타입 가져오기
 import type { DetectedObject, VideoInfo, UploadItem } from "@shared/types";
 
-// 기본 객체 데이터 (AI 탐지 시뮬레이션용)
-const DEFAULT_OBJECTS: Omit<DetectedObject, "id">[] = [
-  {
-    name: "Object(1)",
-    confidence: 0.95,
-    selected: false,
-    code: "CODE_OBJ001",
-    additionalInfo: "AI가 자동으로 탐지한 객체입니다.",
-    dlReservoirDomain: "http://www.naver.com",
-    category: "기타",
-  },
-  {
-    name: "Object(2)",
-    confidence: 0.87,
-    selected: false,
-    code: "CODE_OBJ002",
-    additionalInfo: "AI가 자동으로 탐지한 객체입니다.",
-    dlReservoirDomain: "http://www.naver.com",
-    category: "기타",
-  },
-  {
-    name: "Object(3)",
-    confidence: 0.92,
-    selected: false,
-    code: "CODE_OBJ003",
-    additionalInfo: "AI가 자동으로 탐지한 객체입니다.",
-    dlReservoirDomain: "http://www.naver.com",
-    category: "기타",
-  },
-  {
-    name: "Object(4)",
-    confidence: 0.78,
-    selected: false,
-    code: "CODE_OBJ004",
-    additionalInfo: "AI가 자동으로 탐지한 객체입니다.",
-    dlReservoirDomain: "http://www.naver.com",
-    category: "기타",
-  },
-  {
-    name: "Object(5)",
-    confidence: 0.84,
-    selected: false,
-    code: "CODE_OBJ005",
-    additionalInfo: "AI가 자동으로 탐지한 객체입니다.",
-    dlReservoirDomain: "http://www.naver.com",
-    category: "기타",
-  },
-];
+// 기본 객체 데이터 (목업 데이터 제거 - 그리기 데이터만 사용)
+const DEFAULT_OBJECTS: Omit<DetectedObject, "id">[] = [];
 
 // 비디오 업로드와 관리를 위한 커스텀 훅
 export function useVideoUpload() {
