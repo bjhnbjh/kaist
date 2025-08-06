@@ -745,7 +745,7 @@ export default function VideoPlayer({
         });
         setSelectedObjectIds([]);
         setHasObjectChanges(true);
-        toast.success(`${deleteCount}개 객체가 삭제되었습니다.`);
+        toast.success(`${deleteCount}개 ��체가 삭제되었습니다.`);
       } else {
         // 개별 객체 삭제 처리
         onDeleteObject(video.id, objectToDelete);
@@ -1132,7 +1132,7 @@ export default function VideoPlayer({
               >
                 {isErasing
                   ? "🗑️ 지우개 모드 - 그려진 영역을 클릭하여 삭제하세요"
-                  : "🎨 그리기 모드 활성화 - 마우스로 드래그하여 영역을 그려보세요"}
+                  : "🎨 그리기 모드 활성화 - 마우��로 드래그하여 영역을 그려보세요"}
               </div>
             )}
           </div>
@@ -2650,23 +2650,13 @@ export default function VideoPlayer({
               <button
                 onClick={() => {
                   if (modalObjectInfo && video && onAddNewObject) {
-                    // 그리기 영역을 새로운 객체로 추가 - 팝업창에서 입력한 이름 사용
-                    const addedObjectName = onAddNewObject(video.id, modalObjectInfo.name);
-
-                    // 방금 추가된 객체 찾기 (마지막 객체)
-                    setTimeout(() => {
-                      const updatedObjects = detectedObjects;
-                      const lastObject = updatedObjects[updatedObjects.length - 1];
-                      if (lastObject && onUpdateObject) {
-                        onUpdateObject(video.id, lastObject.id, {
-                          name: modalObjectInfo.name,
-                          code: modalObjectInfo.code,
-                          additionalInfo: modalObjectInfo.additionalInfo,
-                          dlReservoirDomain: modalObjectInfo.dlReservoirDomain,
-                          category: modalObjectInfo.category,
-                        });
-                      }
-                    }, 100);
+                    // 그리기 영역을 새로운 객체로 추가 - 팝업창에서 입력한 모든 정보 포함
+                    const addedObjectName = onAddNewObject(video.id, modalObjectInfo.name, {
+                      code: modalObjectInfo.code,
+                      additionalInfo: modalObjectInfo.additionalInfo,
+                      dlReservoirDomain: modalObjectInfo.dlReservoirDomain,
+                      category: modalObjectInfo.category,
+                    });
 
                     toast.success('새로운 객체가 추가되었습니다.');
                     setShowInfoModal(false);
