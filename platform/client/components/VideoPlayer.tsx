@@ -56,7 +56,12 @@ interface VideoPlayerProps {
   hasRunDetection: boolean; // 추가
   onDownloadWebVTT: () => void;
   onRunObjectDetection: (videoId: string) => void;
-  onAddNewObject: (videoId: string, objectName?: string) => string;
+  onAddNewObject: (videoId: string, objectName?: string, additionalData?: {
+    code?: string;
+    additionalInfo?: string;
+    dlReservoirDomain?: string;
+    category?: string;
+  }) => string;
   onDeleteObject?: (videoId: string, objectId: string) => void;
   onUpdateObject?: (
     videoId: string,
