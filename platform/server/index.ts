@@ -1,6 +1,10 @@
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
+import { handleDrawingSubmission } from "./routes/drawing";
+import { handleVideoUpload } from "./routes/upload";
+import { handleWebVTTSave } from "./routes/webvtt";
+import { handleSaveData } from "./routes/save-data";
 
 export function createServer() {
   const app = express();
@@ -16,6 +20,10 @@ export function createServer() {
   });
 
   app.get("/api/demo", handleDemo);
+  app.post("/api/drawing", handleDrawingSubmission);
+  app.post("/api/upload", handleVideoUpload);
+  app.post("/api/webvtt", handleWebVTTSave);
+  app.post("/api/save-data", handleSaveData);
 
   return app;
 }

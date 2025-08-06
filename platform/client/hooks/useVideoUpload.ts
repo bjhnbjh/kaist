@@ -4,54 +4,8 @@ import { toast } from "sonner";
 // 공통 타입 가져오기
 import type { DetectedObject, VideoInfo, UploadItem } from "@shared/types";
 
-// 기본 객체 데이터 (AI 탐지 시뮬레이션용)
-const DEFAULT_OBJECTS: Omit<DetectedObject, "id">[] = [
-  {
-    name: "Object(1)",
-    confidence: 0.95,
-    selected: false,
-    code: "CODE_OBJ001",
-    additionalInfo: "AI가 자동으로 탐지한 객체입니다.",
-    dlReservoirDomain: "http://www.naver.com",
-    category: "기타",
-  },
-  {
-    name: "Object(2)",
-    confidence: 0.87,
-    selected: false,
-    code: "CODE_OBJ002",
-    additionalInfo: "AI가 자동으로 탐지한 객체입니다.",
-    dlReservoirDomain: "http://www.naver.com",
-    category: "기타",
-  },
-  {
-    name: "Object(3)",
-    confidence: 0.92,
-    selected: false,
-    code: "CODE_OBJ003",
-    additionalInfo: "AI가 자동으로 탐지한 객체입니다.",
-    dlReservoirDomain: "http://www.naver.com",
-    category: "기타",
-  },
-  {
-    name: "Object(4)",
-    confidence: 0.78,
-    selected: false,
-    code: "CODE_OBJ004",
-    additionalInfo: "AI가 자동으로 탐지한 객체입니다.",
-    dlReservoirDomain: "http://www.naver.com",
-    category: "기타",
-  },
-  {
-    name: "Object(5)",
-    confidence: 0.84,
-    selected: false,
-    code: "CODE_OBJ005",
-    additionalInfo: "AI가 자동으로 탐지한 객체입니다.",
-    dlReservoirDomain: "http://www.naver.com",
-    category: "기타",
-  },
-];
+// 기본 객체 데이터 (목업 데이터 제거 - 그리기 데이터만 사용)
+const DEFAULT_OBJECTS: Omit<DetectedObject, "id">[] = [];
 
 // 비디오 업로드와 관리를 위한 커스텀 훅
 export function useVideoUpload() {
@@ -75,6 +29,44 @@ export function useVideoUpload() {
   // 현재 선택된 비디오 정보
   const selectedVideo = videos.find((v) => v.id === selectedVideoId) || null;
   const selectedVideoObjects = selectedVideo?.detectedObjects || [];
+
+  // API를 통한 업로드 정보 전송
+  const sendUploadToApi = useCallback(async (file: File, uploadId: string) => {
+    try {
+      const apiUrl = window.location.origin;
+
+      const uploadData = {
+        id: uploadId,
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        duration: 0, // 실제로는 비디오에서 추출
+        timestamp: Date.now(),
+        metadata: {
+          // 실제로는 비디오 메타데이터 추출
+        }
+      };
+
+      const response = await fetch(`${apiUrl}/api/upload`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(uploadData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Upload API response:', result);
+        toast.success('업��드 정보가 서버에 저장되었습니다.');
+      } else {
+        throw new Error('API 전송 실패');
+      }
+    } catch (error) {
+      console.error('Upload API error:', error);
+      toast.error('서버로 업로드 정보를 전송하는 중 오류가 발생했습니다.');
+    }
+  }, []);
 
   // 업로드 시뮬레이션 함수
   const simulateUpload = useCallback((file: File) => {
@@ -154,6 +146,10 @@ export function useVideoUpload() {
             };
 
             setVideos([newVideo]);
+
+            // API로 업로드 정보 전송
+            sendUploadToApi(file, uploadId);
+
             toast.success("동영상 업로드 및 처리가 완료되었습니다!");
           }, processingTime * 1000);
         } else {
@@ -383,7 +379,12 @@ export function useVideoUpload() {
 
   // 새 객체 추가
   const addNewObjectToVideo = useCallback(
-    (videoId: string, objectName?: string) => {
+    (videoId: string, objectName?: string, additionalData?: {
+      code?: string;
+      additionalInfo?: string;
+      dlReservoirDomain?: string;
+      category?: string;
+    }) => {
       const currentVideo = videos.find((v) => v.id === videoId);
       const nextObjectNumber = currentVideo
         ? currentVideo.totalObjectsCreated + 1
@@ -396,10 +397,10 @@ export function useVideoUpload() {
         name: finalObjectName,
         confidence: 0.85 + Math.random() * 0.15,
         selected: false,
-        code: `CODE_${objectId.slice(0, 8).toUpperCase()}`,
-        additionalInfo: "AI가 자동으로 탐지한 객체입니다.",
-        dlReservoirDomain: "http://www.naver.com",
-        category: "기타",
+        code: additionalData?.code || `CODE_${objectId.slice(0, 8).toUpperCase()}`,
+        additionalInfo: additionalData?.additionalInfo || "AI가 자동으로 탐지한 객체입니다.",
+        dlReservoirDomain: additionalData?.dlReservoirDomain || "http://www.naver.com",
+        category: additionalData?.category || "기타",
       };
 
       setVideos((prev) =>

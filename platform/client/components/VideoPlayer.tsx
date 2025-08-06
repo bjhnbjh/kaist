@@ -56,7 +56,12 @@ interface VideoPlayerProps {
   hasRunDetection: boolean; // 추가
   onDownloadWebVTT: () => void;
   onRunObjectDetection: (videoId: string) => void;
-  onAddNewObject: (videoId: string, objectName?: string) => string;
+  onAddNewObject: (videoId: string, objectName?: string, additionalData?: {
+    code?: string;
+    additionalInfo?: string;
+    dlReservoirDomain?: string;
+    category?: string;
+  }) => string;
   onDeleteObject?: (videoId: string, objectId: string) => void;
   onUpdateObject?: (
     videoId: string,
@@ -126,10 +131,78 @@ export default function VideoPlayer({
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [objectToDelete, setObjectToDelete] = useState<string | null>(null);
   const [deleteConfirmed, setDeleteConfirmed] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [modalObjectInfo, setModalObjectInfo] = useState<{
+    name: string;
+    code: string;
+    additionalInfo: string;
+    dlReservoirDomain: string;
+    category: string;
+  } | null>(null);
+  const [isApiLoading, setIsApiLoading] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // API URL 설정 (현재 서버 사용)
+  const getApiUrl = () => {
+    // 현재 페이지와 같은 도메인 사용
+    return window.location.origin;
+  };
+
+  // 그리기 완료시 API로 데이터 전송
+  const sendDrawingToApi = async (area: DrawnArea) => {
+    try {
+      setIsApiLoading(true);
+      const apiUrl = getApiUrl();
+
+      const drawingData = {
+        id: area.id,
+        type: area.type,
+        color: area.color,
+        points: area.points,
+        startPoint: area.startPoint,
+        endPoint: area.endPoint,
+        videoId: video?.id,
+        timestamp: Date.now()
+      };
+
+      const response = await fetch(`${apiUrl}/api/drawing`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(drawingData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast.success('그리기 데이터가 서버로 전송되었습니다.');
+
+        // API 응답 후 정보 입력 모달 표시
+        // 그리기로 추가되는 객체는 totalObjectsCreated + 1로 번호 생성
+        const nextObjectNumber = video ? video.totalObjectsCreated + 1 : detectedObjects.length + 1;
+        setModalObjectInfo({
+          name: `Object(${nextObjectNumber})`,
+          code: `CODE_${area.id.slice(0, 8).toUpperCase()}`,
+          additionalInfo: 'AI가 자동으로 탐지한 객체입니다.',
+          dlReservoirDomain: 'http://www.naver.com',
+          category: '기타'
+        });
+        setShowInfoModal(true);
+
+        return result;
+      } else {
+        throw new Error('API 전송 실패');
+      }
+    } catch (error) {
+      console.error('API 전송 오류:', error);
+      toast.error('서버로 데이터를 전송하는 중 오류가 발생했습니다.');
+    } finally {
+      setIsApiLoading(false);
+    }
+  };
 
   // 캔버스 초기화 함수
   const initializeCanvas = useCallback(() => {
@@ -365,6 +438,9 @@ export default function VideoPlayer({
               endPoint: normalizedEndPoint,
             };
             setDrawnAreas((prev) => [...prev, newArea]);
+
+            // 그리기 완료 시 API로 전송
+            sendDrawingToApi(newArea);
           }
 
           setRectangleStart(null);
@@ -391,6 +467,9 @@ export default function VideoPlayer({
             type: "path",
           };
           setDrawnAreas((prev) => [...prev, newArea]);
+
+          // 그리기 완료 시 API로 전송
+          sendDrawingToApi(newArea);
         }
 
         setCurrentPath([]);
@@ -457,40 +536,132 @@ export default function VideoPlayer({
     redrawCanvas();
   };
 
-  const saveDrawingsAndDownloadWebVTT = () => {
+  // WebVTT API로 데이터 전송
+  const sendWebVTTToApi = async () => {
+    if (!video) return;
+
+    try {
+      const apiUrl = window.location.origin;
+
+      const webvttData = {
+        videoId: video.id,
+        videoFileName: video.file.name,
+        objects: detectedObjects.map(obj => ({
+          id: obj.id,
+          name: obj.name,
+          code: obj.code,
+          additionalInfo: obj.additionalInfo,
+          dlReservoirDomain: obj.dlReservoirDomain,
+          category: obj.category,
+          confidence: obj.confidence
+        })),
+        duration: videoDuration,
+        timestamp: Date.now()
+      };
+
+      const response = await fetch(`${apiUrl}/api/webvtt`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webvttData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast.success('WebVTT 파일이 서버에 저장되었습니다.');
+        console.log('WebVTT API response:', result);
+      } else {
+        throw new Error('WebVTT API 전송 실패');
+      }
+    } catch (error) {
+      console.error('WebVTT API error:', error);
+      toast.error('WebVTT 서버 저장 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 편집 데이터 DB 저장 API 호출
+  const saveDataToDb = async () => {
+    if (!video) return;
+
+    try {
+      const apiUrl = window.location.origin;
+
+      const saveData = {
+        videoId: video.id,
+        videoFileName: video.file.name,
+        objects: detectedObjects.map(obj => ({
+          id: obj.id,
+          name: obj.name,
+          code: obj.code,
+          additionalInfo: obj.additionalInfo,
+          dlReservoirDomain: obj.dlReservoirDomain,
+          category: obj.category,
+          confidence: obj.confidence,
+          selected: obj.selected
+        })),
+        drawings: drawnAreas.map(area => ({
+          id: area.id,
+          type: area.type,
+          color: area.color,
+          points: area.points,
+          startPoint: area.startPoint,
+          endPoint: area.endPoint
+        })),
+        duration: videoDuration,
+        totalFrames: totalFrames,
+        timestamp: Date.now()
+      };
+
+      const response = await fetch(`${apiUrl}/api/save-data`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(saveData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast.success('편집 데이��가 DB에 저장되었습니다.');
+        console.log('Save data API response:', result);
+      } else {
+        throw new Error('Save data API 전송 실패');
+      }
+    } catch (error) {
+      console.error('Save data API error:', error);
+      toast.error('편집 데이터 DB 저장 중 오류가 발생했습니다.');
+    }
+  };
+
+  const saveDrawings = async () => {
     const currentDuration = videoDuration;
     const currentFrames = totalFrames;
 
-    const addedObjects: string[] = [];
-    drawnAreas.forEach((area, index) => {
-      const objectName = `Object(${detectedObjects.length + index + 1})`;
-      if (video && onAddNewObject) {
-        const addedObjectName = onAddNewObject(video.id, objectName);
-        addedObjects.push(addedObjectName);
-      }
-    });
+    try {
+      // 1. 편집 데이터 DB 저장
+      await saveDataToDb();
 
-    if (addedObjects.length > 0) {
-      toast.success(
-        `${addedObjects.length}개의 새로운 객체가 탐지되었습니다: ${addedObjects.join(", ")}`,
-      );
+      // 2. WebVTT 파일 저장
+      await sendWebVTTToApi();
+
+      // 3. 그리기 영역 초기화
+      setDrawnAreas([]);
+      setHasObjectChanges(false);
+
+      // 최종 저장 완료 메시지 표시
+      toast.success("모든 데이터가 저장되었습니다.");
+
+      console.log("저장 후 비디오 정보:", {
+        duration: currentDuration,
+        frames: currentFrames,
+        currentVideoDuration: videoDuration,
+        currentTotalFrames: totalFrames,
+      });
+    } catch (error) {
+      console.error('Save error:', error);
+      toast.error("저장 중 오류가 발생했습니다.");
     }
-
-    setDrawnAreas([]);
-    setHasObjectChanges(false);
-
-    // WebVTT 다운로드도 함께 실행
-    onDownloadWebVTT();
-
-    // 저장 및 다운로드 완료 메시지 표시
-    toast.success("저장 및 WebVTT 다운로드가 완료되었습니다.");
-
-    console.log("저장 후 비디오 정보:", {
-      duration: currentDuration,
-      frames: currentFrames,
-      currentVideoDuration: videoDuration,
-      currentTotalFrames: totalFrames,
-    });
   };
 
   const runObjectDetection = () => {
@@ -579,7 +750,7 @@ export default function VideoPlayer({
         });
         setSelectedObjectIds([]);
         setHasObjectChanges(true);
-        toast.success(`${deleteCount}개 객체가 삭제되었습니다.`);
+        toast.success(`${deleteCount}개 ��체가 삭제되었습니다.`);
       } else {
         // 개별 객체 삭제 처리
         onDeleteObject(video.id, objectToDelete);
@@ -901,30 +1072,6 @@ export default function VideoPlayer({
                     네모박스
                   </button>
                   <button
-                    onClick={() => {
-                      setDrawingMode("free");
-                      setIsErasing(false);
-                    }}
-                    style={{
-                      padding: "8px 12px",
-                      borderRadius: "6px",
-                      border: "1px solid #d1d5db",
-                      fontWeight: "500",
-                      cursor: "pointer",
-                      background:
-                        drawingMode === "free" && !isErasing
-                          ? "#3b82f6"
-                          : "white",
-                      color:
-                        drawingMode === "free" && !isErasing
-                          ? "white"
-                          : "#374151",
-                      fontSize: "0.85rem",
-                    }}
-                  >
-                    자유그리기
-                  </button>
-                  <button
                     onClick={() => setIsErasing(!isErasing)}
                     style={{
                       padding: "8px 12px",
@@ -947,7 +1094,7 @@ export default function VideoPlayer({
               )}
 
               <button
-                onClick={saveDrawingsAndDownloadWebVTT}
+                onClick={saveDrawings}
                 style={{
                   padding: "8px 16px",
                   borderRadius: "6px",
@@ -959,7 +1106,7 @@ export default function VideoPlayer({
                   fontSize: "0.9rem",
                 }}
               >
-                최종저장 & WebVTT다운
+최종저장
               </button>
             </div>
 
@@ -990,12 +1137,12 @@ export default function VideoPlayer({
               >
                 {isErasing
                   ? "🗑️ 지우개 모드 - 그려진 영역을 클릭하여 삭제하세요"
-                  : "🎨 그리기 모드 활성화 - 마우스로 드래그하여 영역을 그려보세요"}
+                  : "🎨 그리기 모드 활성화 - 마우��로 드래그하여 영역을 그려보세요"}
               </div>
             )}
           </div>
 
-          {/* 관리자 패널 토글 버튼 */}
+          {/* 관리�� 패널 토글 버튼 */}
           {!showAdminPanel && (
             <div
               style={{
@@ -1145,7 +1292,7 @@ export default function VideoPlayer({
                 </button>
               </div>
 
-              {/* 객체 탐지 진행도 */}
+              {/* 객�� 탐지 진행도 */}
               {isDetecting && (
                 <div
                   style={{
@@ -1243,7 +1390,7 @@ export default function VideoPlayer({
                         gap: "4px",
                         transition: "background-color 0.2s ease",
                       }}
-                      title="탐지된 객체 목록으로 돌아가기"
+                      title="탐��된 객체 목록으로 돌아가기"
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = "#f3f4f6";
                       }}
@@ -1498,7 +1645,7 @@ export default function VideoPlayer({
                             }}
                           >
                             <Trash2 style={{ width: 16, height: 16 }} />
-                            선택된 객체 삭제
+                            선택된 객체 ���제
                           </button>
                         </div>
                       )}
@@ -1571,7 +1718,7 @@ export default function VideoPlayer({
                                 marginBottom: "6px",
                               }}
                             >
-                              이름
+                              이��
                             </div>
                             {isEditing ? (
                               <input
@@ -2194,6 +2341,347 @@ export default function VideoPlayer({
                 ⚠️ 체크박스를 선택해야 삭제할 수 있습니다
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 정보 입력 모달 */}
+      {showInfoModal && modalObjectInfo && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.8)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2000,
+            padding: "20px",
+          }}
+          onMouseDown={(e) => {
+            // 모달 배경 클릭 시에만 닫기 (드래그 방지)
+            if (e.target === e.currentTarget) {
+              setShowInfoModal(false);
+            }
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              borderRadius: "12px",
+              padding: "24px",
+              maxWidth: "500px",
+              width: "100%",
+              maxHeight: "80vh",
+              overflow: "hidden",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+              display: "flex",
+              flexDirection: "column",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 헤더 */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "20px",
+                borderBottom: "1px solid #e5e7eb",
+                paddingBottom: "16px",
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: "600",
+                  color: "#1f2937",
+                  margin: 0,
+                }}
+              >
+                새 객체 정보 입력
+              </h3>
+              <button
+                onClick={() => setShowInfoModal(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "1.5rem",
+                  cursor: "pointer",
+                  color: "#6b7280",
+                  padding: "4px",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* 콘텐츠 */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
+                border: "2px solid #e2e8f0",
+                borderRadius: "12px",
+                padding: "20px",
+                overflowY: "auto",
+                maxHeight: "60vh",
+              }}
+            >
+              {/* 이름 섹션 */}
+              <div style={{ marginBottom: "16px" }}>
+                <div
+                  style={{
+                    fontSize: "0.9rem",
+                    fontWeight: "600",
+                    color: "#334155",
+                    marginBottom: "6px",
+                  }}
+                >
+                  이름
+                </div>
+                <input
+                  type="text"
+                  value={modalObjectInfo.name}
+                  onChange={(e) =>
+                    setModalObjectInfo({
+                      ...modalObjectInfo,
+                      name: e.target.value,
+                    })
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "4px",
+                    fontSize: "0.85rem",
+                  }}
+                />
+
+                {/* 카테고리 드롭다운 */}
+                <div style={{ marginTop: "8px" }}>
+                  <select
+                    value={modalObjectInfo.category}
+                    onChange={(e) =>
+                      setModalObjectInfo({
+                        ...modalObjectInfo,
+                        category: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: "100%",
+                      padding: "8px",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "4px",
+                      fontSize: "0.85rem",
+                      background: "#ffffff",
+                    }}
+                  >
+                    <option value="기타">기타 (00)</option>
+                    <option value="GTIN">GTIN (01)</option>
+                    <option value="GLN">GLN (02)</option>
+                    <option value="GIAI">GIAI (03)</option>
+                    <option value="GSIN">GSIN (04)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* 코드 섹션 */}
+              <div style={{ marginBottom: "16px" }}>
+                <div
+                  style={{
+                    fontSize: "0.9rem",
+                    fontWeight: "600",
+                    color: "#334155",
+                    marginBottom: "8px",
+                  }}
+                >
+                  🔧 코드
+                </div>
+                <input
+                  type="text"
+                  value={modalObjectInfo.code}
+                  onChange={(e) =>
+                    setModalObjectInfo({
+                      ...modalObjectInfo,
+                      code: e.target.value,
+                    })
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "4px",
+                    fontSize: "0.85rem",
+                    fontFamily: "monospace",
+                  }}
+                />
+              </div>
+
+              {/* DL.reservoir domain 섹션 */}
+              <div style={{ marginBottom: "16px" }}>
+                <div
+                  style={{
+                    fontSize: "0.9rem",
+                    fontWeight: "600",
+                    color: "#334155",
+                    marginBottom: "8px",
+                  }}
+                >
+                  🌐 DL.reservoir domain
+                </div>
+                <input
+                  type="text"
+                  value={modalObjectInfo.dlReservoirDomain}
+                  onChange={(e) =>
+                    setModalObjectInfo({
+                      ...modalObjectInfo,
+                      dlReservoirDomain: e.target.value,
+                    })
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "4px",
+                    fontSize: "0.85rem",
+                  }}
+                  placeholder="URL을 입력하세요"
+                />
+              </div>
+
+              {/* Final Link 섹션 - 읽기 전용 */}
+              <div style={{ marginBottom: "16px" }}>
+                <div
+                  style={{
+                    fontSize: "0.9rem",
+                    fontWeight: "600",
+                    color: "#334155",
+                    marginBottom: "8px",
+                  }}
+                >
+                  🔗 Final Link
+                </div>
+                {(() => {
+                  const categoryCodeMap: {[key: string]: string} = {
+                    "GTIN": "01",
+                    "GLN": "02",
+                    "GIAI": "03",
+                    "GSIN": "04",
+                    "기타": "00"
+                  };
+                  const categoryCode = categoryCodeMap[modalObjectInfo.category] || "00";
+                  const finalLink = `${modalObjectInfo.dlReservoirDomain}/${categoryCode}/${modalObjectInfo.code}`;
+
+                  return (
+                    <div
+                      style={{
+                        background: "#f0f9ff",
+                        border: "2px solid #0ea5e9",
+                        borderRadius: "4px",
+                        padding: "8px",
+                        fontSize: "0.85rem",
+                        color: "#0369a1",
+                        fontWeight: "500",
+                        wordBreak: "break-all",
+                      }}
+                    >
+                      {finalLink}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* 추가정보 섹션 */}
+              <div style={{ marginBottom: "16px" }}>
+                <div
+                  style={{
+                    fontSize: "0.9rem",
+                    fontWeight: "600",
+                    color: "#334155",
+                    marginBottom: "8px",
+                  }}
+                >
+                  💡 추가정보
+                </div>
+                <textarea
+                  value={modalObjectInfo.additionalInfo}
+                  onChange={(e) =>
+                    setModalObjectInfo({
+                      ...modalObjectInfo,
+                      additionalInfo: e.target.value,
+                    })
+                  }
+                  style={{
+                    width: "100%",
+                    height: "60px",
+                    padding: "8px",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "4px",
+                    fontSize: "0.85rem",
+                    resize: "none",
+                  }}
+                  placeholder="추�� 정보를 입력하세요"
+                />
+              </div>
+            </div>
+
+            {/* 버튼 영역 */}
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                marginTop: "20px",
+                justifyContent: "flex-end",
+              }}
+            >
+              <button
+                onClick={() => setShowInfoModal(false)}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  border: "1px solid #d1d5db",
+                  background: "white",
+                  color: "#374151",
+                  fontSize: "0.9rem",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                }}
+              >
+                취소
+              </button>
+              <button
+                onClick={() => {
+                  if (modalObjectInfo && video && onAddNewObject) {
+                    // 그리기 영역을 새로운 객체로 추가 - 팝업창에서 입력한 모든 정보 포함
+                    const addedObjectName = onAddNewObject(video.id, modalObjectInfo.name, {
+                      code: modalObjectInfo.code,
+                      additionalInfo: modalObjectInfo.additionalInfo,
+                      dlReservoirDomain: modalObjectInfo.dlReservoirDomain,
+                      category: modalObjectInfo.category,
+                    });
+
+                    toast.success('새로운 객체가 추가되었습니다.');
+                    setShowInfoModal(false);
+                    setModalObjectInfo(null);
+                  }
+                }}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  border: "none",
+                  background: "#10b981",
+                  color: "white",
+                  fontSize: "0.9rem",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                }}
+              >
+                저장
+              </button>
+            </div>
           </div>
         </div>
       )}
