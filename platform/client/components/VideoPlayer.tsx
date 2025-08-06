@@ -533,21 +533,8 @@ export default function VideoPlayer({
     const currentDuration = videoDuration;
     const currentFrames = totalFrames;
 
-    const addedObjects: string[] = [];
-    drawnAreas.forEach((area, index) => {
-      const objectName = `Object(${detectedObjects.length + index + 1})`;
-      if (video && onAddNewObject) {
-        const addedObjectName = onAddNewObject(video.id, objectName);
-        addedObjects.push(addedObjectName);
-      }
-    });
-
-    if (addedObjects.length > 0) {
-      toast.success(
-        `${addedObjects.length}개의 새로운 객체가 탐지되었습니다: ${addedObjects.join(", ")}`,
-      );
-    }
-
+    // 그리기 영역이 있는 경우에만 객체 추가 (중복 방지)
+    // 실제로는 이미 sendDrawingToApi에서 처리되므로 여기서는 제거
     setDrawnAreas([]);
     setHasObjectChanges(false);
 
@@ -1288,7 +1275,7 @@ export default function VideoPlayer({
                         gap: "4px",
                         transition: "background-color 0.2s ease",
                       }}
-                      title="탐지된 객체 목록으로 돌아가기"
+                      title="탐��된 객체 목록으로 돌아가기"
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = "#f3f4f6";
                       }}
@@ -2516,7 +2503,7 @@ export default function VideoPlayer({
                     fontSize: "0.85rem",
                     resize: "none",
                   }}
-                  placeholder="추가 정보를 입력하세요"
+                  placeholder="추�� 정보를 입력하세요"
                 />
               </div>
             </div>
