@@ -173,11 +173,13 @@ export default function VideoPlayer({
 
       if (response.ok) {
         const result = await response.json();
-        toast.success('그리기 데이터가 서버로 전송되���습니다.');
+        toast.success('그리기 데이터가 서버로 전송되었습니다.');
 
         // API 응답 후 정보 입력 모달 표시
+        // 그리기로 추가되는 객체는 1부터 시작
+        const nextObjectNumber = detectedObjects.length + 1;
         setModalObjectInfo({
-          name: `Object(${detectedObjects.length + 1})`,
+          name: `Object(${nextObjectNumber})`,
           code: `CODE_${area.id.slice(0, 8).toUpperCase()}`,
           additionalInfo: 'AI가 자동으로 탐지한 객체입니다.',
           dlReservoirDomain: 'http://www.naver.com',
@@ -619,7 +621,7 @@ export default function VideoPlayer({
         toast.success('편집 데이터가 DB에 저장되었습니다.');
         console.log('Save data API response:', result);
       } else {
-        throw new Error('Save data API ��송 실패');
+        throw new Error('Save data API 전송 실패');
       }
     } catch (error) {
       console.error('Save data API error:', error);
@@ -1285,7 +1287,7 @@ export default function VideoPlayer({
                 </button>
               </div>
 
-              {/* 객체 탐지 진행도 */}
+              {/* 객�� 탐지 진행도 */}
               {isDetecting && (
                 <div
                   style={{
@@ -2453,7 +2455,7 @@ export default function VideoPlayer({
                   }}
                 />
 
-                {/* 카테고리 ��롭다운 */}
+                {/* 카테고리 드롭다운 */}
                 <div style={{ marginTop: "8px" }}>
                   <select
                     value={modalObjectInfo.category}
