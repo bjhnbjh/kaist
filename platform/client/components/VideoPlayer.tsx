@@ -623,7 +623,7 @@ export default function VideoPlayer({
     setIsEditing(false);
   };
 
-  // 뒤로가기 핸들러 - 탐지된 객체 목록으로만 이동하고 버튼 활성화 상태 유지
+  // 뒤로가기 핸��러 - 탐지된 객체 목록으로만 이동하고 버튼 활성화 상태 유지
   const handleBackToObjectList = () => {
     setSelectedObjectId(null);
     setIsEditing(false);
@@ -2238,6 +2238,349 @@ export default function VideoPlayer({
                 ⚠️ 체크박스를 선택해야 삭제할 수 있습니다
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 정보 입력 모달 */}
+      {showInfoModal && modalObjectInfo && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.8)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2000,
+            padding: "20px",
+          }}
+          onClick={() => setShowInfoModal(false)}
+        >
+          <div
+            style={{
+              background: "white",
+              borderRadius: "12px",
+              padding: "24px",
+              maxWidth: "500px",
+              width: "100%",
+              maxHeight: "80vh",
+              overflow: "hidden",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+              display: "flex",
+              flexDirection: "column",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 헤더 */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "20px",
+                borderBottom: "1px solid #e5e7eb",
+                paddingBottom: "16px",
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: "600",
+                  color: "#1f2937",
+                  margin: 0,
+                }}
+              >
+                새 객체 정보 입력
+              </h3>
+              <button
+                onClick={() => setShowInfoModal(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "1.5rem",
+                  cursor: "pointer",
+                  color: "#6b7280",
+                  padding: "4px",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* 콘텐츠 */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
+                border: "2px solid #e2e8f0",
+                borderRadius: "12px",
+                padding: "20px",
+                overflowY: "auto",
+                maxHeight: "60vh",
+              }}
+            >
+              {/* 이름 섹션 */}
+              <div style={{ marginBottom: "16px" }}>
+                <div
+                  style={{
+                    fontSize: "0.9rem",
+                    fontWeight: "600",
+                    color: "#334155",
+                    marginBottom: "6px",
+                  }}
+                >
+                  이름
+                </div>
+                <input
+                  type="text"
+                  value={modalObjectInfo.name}
+                  onChange={(e) =>
+                    setModalObjectInfo({
+                      ...modalObjectInfo,
+                      name: e.target.value,
+                    })
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "4px",
+                    fontSize: "0.85rem",
+                  }}
+                />
+
+                {/* 카테고리 드롭다운 */}
+                <div style={{ marginTop: "8px" }}>
+                  <select
+                    value={modalObjectInfo.category}
+                    onChange={(e) =>
+                      setModalObjectInfo({
+                        ...modalObjectInfo,
+                        category: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: "100%",
+                      padding: "8px",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "4px",
+                      fontSize: "0.85rem",
+                      background: "#ffffff",
+                    }}
+                  >
+                    <option value="기타">기타 (00)</option>
+                    <option value="GTIN">GTIN (01)</option>
+                    <option value="GLN">GLN (02)</option>
+                    <option value="GIAI">GIAI (03)</option>
+                    <option value="GSIN">GSIN (04)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* 코드 섹션 */}
+              <div style={{ marginBottom: "16px" }}>
+                <div
+                  style={{
+                    fontSize: "0.9rem",
+                    fontWeight: "600",
+                    color: "#334155",
+                    marginBottom: "8px",
+                  }}
+                >
+                  🔧 코드
+                </div>
+                <input
+                  type="text"
+                  value={modalObjectInfo.code}
+                  onChange={(e) =>
+                    setModalObjectInfo({
+                      ...modalObjectInfo,
+                      code: e.target.value,
+                    })
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "4px",
+                    fontSize: "0.85rem",
+                    fontFamily: "monospace",
+                  }}
+                />
+              </div>
+
+              {/* DL.reservoir domain 섹션 */}
+              <div style={{ marginBottom: "16px" }}>
+                <div
+                  style={{
+                    fontSize: "0.9rem",
+                    fontWeight: "600",
+                    color: "#334155",
+                    marginBottom: "8px",
+                  }}
+                >
+                  🌐 DL.reservoir domain
+                </div>
+                <input
+                  type="text"
+                  value={modalObjectInfo.dlReservoirDomain}
+                  onChange={(e) =>
+                    setModalObjectInfo({
+                      ...modalObjectInfo,
+                      dlReservoirDomain: e.target.value,
+                    })
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "4px",
+                    fontSize: "0.85rem",
+                  }}
+                  placeholder="URL을 입력하세요"
+                />
+              </div>
+
+              {/* Final Link 섹션 - 읽기 전용 */}
+              <div style={{ marginBottom: "16px" }}>
+                <div
+                  style={{
+                    fontSize: "0.9rem",
+                    fontWeight: "600",
+                    color: "#334155",
+                    marginBottom: "8px",
+                  }}
+                >
+                  🔗 Final Link
+                </div>
+                {(() => {
+                  const categoryCodeMap: {[key: string]: string} = {
+                    "GTIN": "01",
+                    "GLN": "02",
+                    "GIAI": "03",
+                    "GSIN": "04",
+                    "기타": "00"
+                  };
+                  const categoryCode = categoryCodeMap[modalObjectInfo.category] || "00";
+                  const finalLink = `${modalObjectInfo.dlReservoirDomain}/${categoryCode}/${modalObjectInfo.code}`;
+
+                  return (
+                    <div
+                      style={{
+                        background: "#f0f9ff",
+                        border: "2px solid #0ea5e9",
+                        borderRadius: "4px",
+                        padding: "8px",
+                        fontSize: "0.85rem",
+                        color: "#0369a1",
+                        fontWeight: "500",
+                        wordBreak: "break-all",
+                      }}
+                    >
+                      {finalLink}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* 추가정보 섹션 */}
+              <div style={{ marginBottom: "16px" }}>
+                <div
+                  style={{
+                    fontSize: "0.9rem",
+                    fontWeight: "600",
+                    color: "#334155",
+                    marginBottom: "8px",
+                  }}
+                >
+                  💡 추가정보
+                </div>
+                <textarea
+                  value={modalObjectInfo.additionalInfo}
+                  onChange={(e) =>
+                    setModalObjectInfo({
+                      ...modalObjectInfo,
+                      additionalInfo: e.target.value,
+                    })
+                  }
+                  style={{
+                    width: "100%",
+                    height: "60px",
+                    padding: "8px",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "4px",
+                    fontSize: "0.85rem",
+                    resize: "none",
+                  }}
+                  placeholder="추가 정보를 입력하세요"
+                />
+              </div>
+            </div>
+
+            {/* 버튼 영역 */}
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                marginTop: "20px",
+                justifyContent: "flex-end",
+              }}
+            >
+              <button
+                onClick={() => setShowInfoModal(false)}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  border: "1px solid #d1d5db",
+                  background: "white",
+                  color: "#374151",
+                  fontSize: "0.9rem",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                }}
+              >
+                취소
+              </button>
+              <button
+                onClick={() => {
+                  if (modalObjectInfo && video && onAddNewObject) {
+                    // 그리기 영역을 새로운 객체로 추가
+                    const addedObjectName = onAddNewObject(video.id, modalObjectInfo.name);
+
+                    // 객체 정보 업데이트 (예: ���지막에 추가된 객체 찾기)
+                    const lastObject = detectedObjects[detectedObjects.length - 1];
+                    if (lastObject && onUpdateObject) {
+                      onUpdateObject(video.id, lastObject.id, {
+                        name: modalObjectInfo.name,
+                        code: modalObjectInfo.code,
+                        additionalInfo: modalObjectInfo.additionalInfo,
+                        dlReservoirDomain: modalObjectInfo.dlReservoirDomain,
+                        category: modalObjectInfo.category,
+                      });
+                    }
+
+                    toast.success('새로운 객체가 추가되었습니다.');
+                    setShowInfoModal(false);
+                    setModalObjectInfo(null);
+                  }
+                }}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  border: "none",
+                  background: "#10b981",
+                  color: "white",
+                  fontSize: "0.9rem",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                }}
+              >
+                저장
+              </button>
+            </div>
           </div>
         </div>
       )}
