@@ -23,6 +23,7 @@ export function createServer() {
   app.post("/api/drawing", handleDrawingSubmission);
   app.post("/api/upload", handleVideoUpload);
   app.post("/api/webvtt", handleWebVTTSave);
+  app.post("/api/save-data", handleSaveData);
 
   return app;
 }
