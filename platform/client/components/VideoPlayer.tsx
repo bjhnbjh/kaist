@@ -140,9 +140,10 @@ export default function VideoPlayer({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // API URL 설정 (환경변수 또는 기본값)
+  // API URL 설정 (현재 서버 사용)
   const getApiUrl = () => {
-    return process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '';
+    // 현재 페이지와 같은 도메인 사용
+    return window.location.origin;
   };
 
   // 그리기 완료시 API로 데이터 전송
@@ -623,7 +624,7 @@ export default function VideoPlayer({
     setIsEditing(false);
   };
 
-  // 뒤로가기 핸��러 - 탐지된 객체 목록으로만 이동하고 버튼 활성화 상태 유지
+  // 뒤로가기 핸들러 - 탐지된 객체 목록으로만 이동하고 버튼 활성화 상태 유지
   const handleBackToObjectList = () => {
     setSelectedObjectId(null);
     setIsEditing(false);
@@ -2550,7 +2551,7 @@ export default function VideoPlayer({
                     // 그리기 영역을 새로운 객체로 추가
                     const addedObjectName = onAddNewObject(video.id, modalObjectInfo.name);
 
-                    // 객체 정보 업데이트 (예: ���지막에 추가된 객체 찾기)
+                    // 객체 정보 업데이트 (예: 마지막에 추가된 객체 찾기)
                     const lastObject = detectedObjects[detectedObjects.length - 1];
                     if (lastObject && onUpdateObject) {
                       onUpdateObject(video.id, lastObject.id, {
