@@ -3,6 +3,7 @@ import cors from "cors";
 import { handleDemo } from "./routes/demo";
 import { handleDrawingSubmission } from "./routes/drawing";
 import { handleVideoUpload } from "./routes/upload";
+import { handleWebVTTSave } from "./routes/webvtt";
 
 export function createServer() {
   const app = express();
