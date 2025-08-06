@@ -7,6 +7,8 @@ export interface DetectedObject {
   name: string; // 객체 이름
   confidence: number; // AI가 판단한 신뢰도 (0~1 사이의 숫자)
   selected: boolean; // 사용자가 선택했는지 여부
+  startTime: number; // 객체가 나타나는 시작 시간 (초 단위)
+  endTime: number; // 객체가 사라지는 종료 시간 (초 단위)
   code?: string; // 객체 코드 (선택사항)
   additionalInfo?: string; // 추가 정보 (선택사항)
   dlReservoirDomain?: string; // 관련 웹사이트 도메인 (선택사항)
@@ -19,7 +21,7 @@ export interface VideoInfo {
   file: File; // 실제 비디오 파일 객체
   duration: number; // 비디오 길이 (초 단위)
   currentTime: number; // 현재 재생 시간 (초 단위)
-  detectedObjects: DetectedObject[]; // 이 비디오에서 탐지된 객체들
+  detectedObjects: DetectedObject[]; // �� 비디오에서 탐지된 객체들
   totalObjectsCreated: number; // 총 생성된 객체 수
   uploadDate: Date; // 업로드된 날짜와 시간
 }
