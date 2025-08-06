@@ -58,7 +58,7 @@ export function useVideoUpload() {
       if (response.ok) {
         const result = await response.json();
         console.log('Upload API response:', result);
-        toast.success('업로드 정보가 서버에 저장되었습니다.');
+        toast.success('업��드 정보가 서버에 저장되었습니다.');
       } else {
         throw new Error('API 전송 실패');
       }
@@ -379,7 +379,12 @@ export function useVideoUpload() {
 
   // 새 객체 추가
   const addNewObjectToVideo = useCallback(
-    (videoId: string, objectName?: string) => {
+    (videoId: string, objectName?: string, additionalData?: {
+      code?: string;
+      additionalInfo?: string;
+      dlReservoirDomain?: string;
+      category?: string;
+    }) => {
       const currentVideo = videos.find((v) => v.id === videoId);
       const nextObjectNumber = currentVideo
         ? currentVideo.totalObjectsCreated + 1
@@ -392,10 +397,10 @@ export function useVideoUpload() {
         name: finalObjectName,
         confidence: 0.85 + Math.random() * 0.15,
         selected: false,
-        code: `CODE_${objectId.slice(0, 8).toUpperCase()}`,
-        additionalInfo: "AI가 자동으로 탐지한 객체입니다.",
-        dlReservoirDomain: "http://www.naver.com",
-        category: "기타",
+        code: additionalData?.code || `CODE_${objectId.slice(0, 8).toUpperCase()}`,
+        additionalInfo: additionalData?.additionalInfo || "AI가 자동으로 탐지한 객체입니다.",
+        dlReservoirDomain: additionalData?.dlReservoirDomain || "http://www.naver.com",
+        category: additionalData?.category || "기타",
       };
 
       setVideos((prev) =>
