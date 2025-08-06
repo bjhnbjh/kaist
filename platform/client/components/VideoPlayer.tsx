@@ -126,10 +126,75 @@ export default function VideoPlayer({
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [objectToDelete, setObjectToDelete] = useState<string | null>(null);
   const [deleteConfirmed, setDeleteConfirmed] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [modalObjectInfo, setModalObjectInfo] = useState<{
+    name: string;
+    code: string;
+    additionalInfo: string;
+    dlReservoirDomain: string;
+    category: string;
+  } | null>(null);
+  const [isApiLoading, setIsApiLoading] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // API URL 설정 (환경변수 또는 기본값)
+  const getApiUrl = () => {
+    return process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '';
+  };
+
+  // 그리기 완료시 API로 데이터 전송
+  const sendDrawingToApi = async (area: DrawnArea) => {
+    try {
+      setIsApiLoading(true);
+      const apiUrl = getApiUrl();
+
+      const drawingData = {
+        id: area.id,
+        type: area.type,
+        color: area.color,
+        points: area.points,
+        startPoint: area.startPoint,
+        endPoint: area.endPoint,
+        videoId: video?.id,
+        timestamp: Date.now()
+      };
+
+      const response = await fetch(`${apiUrl}/api/drawing`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(drawingData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast.success('그리기 데이터가 서버로 전송되었습니다.');
+
+        // API 응답 후 정보 입력 모달 표시
+        setModalObjectInfo({
+          name: `Object(${detectedObjects.length + 1})`,
+          code: `CODE_${area.id.slice(0, 8).toUpperCase()}`,
+          additionalInfo: 'AI가 자동으로 탐지한 객체입니다.',
+          dlReservoirDomain: 'http://www.naver.com',
+          category: '기타'
+        });
+        setShowInfoModal(true);
+
+        return result;
+      } else {
+        throw new Error('API 전송 실패');
+      }
+    } catch (error) {
+      console.error('API 전송 오류:', error);
+      toast.error('서버로 데이터를 전송하는 중 오류가 발생했습니다.');
+    } finally {
+      setIsApiLoading(false);
+    }
+  };
 
   // 캔버스 초기화 함수
   const initializeCanvas = useCallback(() => {
@@ -365,6 +430,9 @@ export default function VideoPlayer({
               endPoint: normalizedEndPoint,
             };
             setDrawnAreas((prev) => [...prev, newArea]);
+
+            // 그리기 완료 시 API로 전송
+            sendDrawingToApi(newArea);
           }
 
           setRectangleStart(null);
@@ -391,6 +459,9 @@ export default function VideoPlayer({
             type: "path",
           };
           setDrawnAreas((prev) => [...prev, newArea]);
+
+          // 그리기 완료 시 API로 전송
+          sendDrawingToApi(newArea);
         }
 
         setCurrentPath([]);
@@ -472,7 +543,7 @@ export default function VideoPlayer({
 
     if (addedObjects.length > 0) {
       toast.success(
-        `${addedObjects.length}개의 새로운 객체가 탐��되었습니다: ${addedObjects.join(", ")}`,
+        `${addedObjects.length}개의 새로운 객체가 탐지되었습니다: ${addedObjects.join(", ")}`,
       );
     }
 
@@ -524,7 +595,7 @@ export default function VideoPlayer({
     setShowAdminPanel(!showAdminPanel);
   };
 
-  // 편집 ��료 핸들러
+  // 편집 완료 핸들러
   const handleEditComplete = () => {
     if (selectedObjectId && onUpdateObject && video) {
       const updates: {
@@ -1544,7 +1615,7 @@ export default function VideoPlayer({
                                 marginBottom: "6px",
                               }}
                             >
-                              이름
+                              이��
                             </div>
                             {isEditing ? (
                               <input
