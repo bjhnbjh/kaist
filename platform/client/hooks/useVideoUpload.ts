@@ -30,41 +30,58 @@ export function useVideoUpload() {
   const selectedVideo = videos.find((v) => v.id === selectedVideoId) || null;
   const selectedVideoObjects = selectedVideo?.detectedObjects || [];
 
-  // API를 통한 업로드 정보 전송
-  const sendUploadToApi = useCallback(async (file: File, uploadId: string) => {
+  // 비디오 메타데이터 추출 함수
+  const extractVideoMetadata = useCallback((file: File): Promise<{ duration: number, width?: number, height?: number }> => {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      
+      video.onloadedmetadata = () => {
+        resolve({
+          duration: video.duration || 0,
+          width: video.videoWidth || undefined,
+          height: video.videoHeight || undefined
+        });
+        URL.revokeObjectURL(video.src);
+      };
+      
+      video.onerror = () => {
+        console.warn('비디오 메타데이터 추출 실패');
+        resolve({ duration: 0 });
+        URL.revokeObjectURL(video.src);
+      };
+      
+      video.src = URL.createObjectURL(file);
+    });
+  }, []);
+
+  // 실제 파일 업로드 API
+  const uploadVideoFile = useCallback(async (file: File, uploadId: string, metadata: { duration: number, width?: number, height?: number }) => {
     try {
       const apiUrl = window.location.origin;
+      const formData = new FormData();
+      formData.append('video', file);
+      formData.append('duration', metadata.duration.toString());
+      if (metadata.width) formData.append('width', metadata.width.toString());
+      if (metadata.height) formData.append('height', metadata.height.toString());
 
-      const uploadData = {
-        id: uploadId,
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
-        duration: 0, // 실제로는 비디오에서 추출
-        timestamp: Date.now(),
-        metadata: {
-          // 실제로는 비디오 메타데이터 추출
-        }
-      };
-
-      const response = await fetch(`${apiUrl}/api/upload`, {
+      const response = await fetch(`${apiUrl}/api/upload-file`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(uploadData)
+        body: formData
       });
 
       if (response.ok) {
         const result = await response.json();
-        console.log('Upload API response:', result);
-        toast.success('업��드 정보가 서버에 저장되었습니다.');
+        console.log('Video file upload response:', result);
+        toast.success('비디오 파일이 서버에 성공적으로 저장되었습니다.');
+        return result;
       } else {
-        throw new Error('API 전송 실패');
+        throw new Error('파일 업로드 실패');
       }
     } catch (error) {
-      console.error('Upload API error:', error);
-      toast.error('서버로 업로드 정보를 전송하는 중 오류가 발생했습니다.');
+      console.error('Video file upload error:', error);
+      toast.error('비디오 파��� 업로드 중 오류가 발생했습니다.');
+      throw error;
     }
   }, []);
 
@@ -135,22 +152,37 @@ export function useVideoUpload() {
               ),
             );
 
-            const newVideo: VideoInfo = {
-              id: uploadId,
-              file,
-              duration: 0,
-              currentTime: 0,
-              detectedObjects: [],
-              totalObjectsCreated: 0,
-              uploadDate: new Date(),
-            };
+            // 비디오 메타데이터 추출 및 파일 업로드
+            extractVideoMetadata(file).then(async (metadata) => {
+              try {
+                // 실제 파일을 서버에 업로드
+                await uploadVideoFile(file, uploadId, metadata);
+                
+                const newVideo: VideoInfo = {
+                  id: uploadId,
+                  file,
+                  duration: metadata.duration,
+                  currentTime: 0,
+                  detectedObjects: [],
+                  totalObjectsCreated: 0,
+                  uploadDate: new Date(),
+                };
 
-            setVideos([newVideo]);
-
-            // API로 업로드 정보 전송
-            sendUploadToApi(file, uploadId);
-
-            toast.success("동영상 업로드 및 처리가 완료되었습니다!");
+                setVideos([newVideo]);
+                toast.success(`동영상 업로드 완료! (길이: ${Math.round(metadata.duration)}초)`);
+              } catch (error) {
+                console.error('Upload process failed:', error);
+                // 업로드 실패 시 상태를 에러로 변경
+                setUploads((prev) =>
+                  prev.map((upload) =>
+                    upload.id === uploadId
+                      ? { ...upload, status: "error" }
+                      : upload,
+                  ),
+                );
+                toast.error('비디오 파일 업로드에 실패했습니다.');
+              }
+            });
           }, processingTime * 1000);
         } else {
           const remainingTime = (baseUploadTime * (100 - progress)) / 100;
@@ -178,7 +210,7 @@ export function useVideoUpload() {
       clearInterval(uploadInterval);
       clearTimeout(processTimeoutId);
     };
-  }, []);
+  }, [extractVideoMetadata, uploadVideoFile]);
 
   // 파일 선택 처리
   const handleFileSelect = useCallback(
@@ -229,10 +261,10 @@ export function useVideoUpload() {
         }
       }
     },
-    [adminPanelVisible],
+    [adminPanelVisible, videos],
   );
 
-  // 관리자 패널 ��기
+  // 관리자 패널 닫기
   const closeAdminPanel = useCallback(() => {
     setPanelClosing(true);
     setPanelAnimating(true);
@@ -325,17 +357,23 @@ export function useVideoUpload() {
             setDetectionProgress(100);
             setHasRunDetection(true);
 
-            // 객체 추가
+            // 객체 추가 (시간 정보 포함)
             setVideos((prev) =>
               prev.map((video) => {
                 if (video.id !== videoId) return video;
                 if (video.detectedObjects.length > 0) return video;
+                
+                // 비디오 duration에 기반한 시간 설정
+                const videoDuration = video.duration || 60; // 기본값 60초
+                
                 return {
                   ...video,
                   detectedObjects: DEFAULT_OBJECTS.map((obj, index) => ({
                     ...obj,
                     id: `${videoId}-obj-${index}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                     name: `Object(${index + 1})`,
+                    startTime: Math.random() * (videoDuration * 0.3), // 비디오 앞부분에서 시작
+                    endTime: Math.random() * (videoDuration * 0.3) + (videoDuration * 0.7), // 비디오 뒷부분에서 끝
                   })),
                   totalObjectsCreated: Math.max(
                     video.totalObjectsCreated,
@@ -377,13 +415,15 @@ export function useVideoUpload() {
     }
   }, [selectedVideo]);
 
-  // 새 객체 추가
+  // 새 객체 ��가
   const addNewObjectToVideo = useCallback(
     (videoId: string, objectName?: string, additionalData?: {
       code?: string;
       additionalInfo?: string;
       dlReservoirDomain?: string;
       category?: string;
+      startTime?: number;
+      endTime?: number;
     }) => {
       const currentVideo = videos.find((v) => v.id === videoId);
       const nextObjectNumber = currentVideo
@@ -391,12 +431,19 @@ export function useVideoUpload() {
         : 1;
       const finalObjectName = objectName || `Object(${nextObjectNumber})`;
       const objectId = `${videoId}-new-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // 비디오 duration 기반 시간 설정
+      const videoDuration = currentVideo?.duration || 60;
+      const defaultStartTime = Math.random() * (videoDuration * 0.5);
+      const defaultEndTime = defaultStartTime + Math.random() * (videoDuration * 0.3) + 5;
 
       const newObject: DetectedObject = {
         id: objectId,
         name: finalObjectName,
         confidence: 0.85 + Math.random() * 0.15,
         selected: false,
+        startTime: additionalData?.startTime ?? defaultStartTime,
+        endTime: additionalData?.endTime ?? Math.min(defaultEndTime, videoDuration),
         code: additionalData?.code || `CODE_${objectId.slice(0, 8).toUpperCase()}`,
         additionalInfo: additionalData?.additionalInfo || "AI가 자동으로 탐지한 객체입니다.",
         dlReservoirDomain: additionalData?.dlReservoirDomain || "http://www.naver.com",
@@ -450,6 +497,8 @@ export function useVideoUpload() {
         additionalInfo?: string;
         dlReservoirDomain?: string;
         category?: string;
+        startTime?: number;
+        endTime?: number;
       },
     ) => {
       setVideos((prev) =>
