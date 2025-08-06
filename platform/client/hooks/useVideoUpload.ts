@@ -55,7 +55,7 @@ export function useVideoUpload() {
     });
   }, []);
 
-  // 실제 파일 업로드 API
+  // 실제 파일 업로�� API
   const uploadVideoFile = useCallback(async (file: File, uploadId: string, metadata: { duration: number, width?: number, height?: number }) => {
     try {
       const apiUrl = window.location.origin;
@@ -80,7 +80,7 @@ export function useVideoUpload() {
       }
     } catch (error) {
       console.error('Video file upload error:', error);
-      toast.error('비디오 파��� 업로드 중 오류가 발생했습니다.');
+      toast.error('비디오 파일 업로드 중 오류가 발생했습니다.');
       throw error;
     }
   }, []);
@@ -298,20 +298,38 @@ export function useVideoUpload() {
     toast.success("선택된 객체가 삭제되었습니다.");
   }, [selectedVideoId]);
 
+  // 시간을 WebVTT 형식으로 변환하는 함수
+  const formatTimeForVTT = useCallback((seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toFixed(3).padStart(6, '0')}`;
+  }, []);
+
   // WebVTT 파일 다운로드
   const downloadWebVTT = useCallback(() => {
     if (!selectedVideo) return;
 
-    const vttContent = `WEBVTT
+    const activeObjects = selectedVideo.detectedObjects.filter((obj) => !obj.selected);
 
-00:00:00.000 --> 00:00:10.000
-탐지된 객체: ${selectedVideo.detectedObjects
-      .filter((obj) => !obj.selected)
-      .map((obj) => obj.name)
-      .join(", ")}
+    let vttContent = 'WEBVTT\n\n';
 
-00:00:10.000 --> 00:00:20.000
-신뢰도 정보 포함`;
+    // 각 객체별로 시간 정보와 함께 VTT 항목 생성
+    activeObjects.forEach((obj, index) => {
+      const startTime = formatTimeForVTT(obj.startTime);
+      const endTime = formatTimeForVTT(obj.endTime);
+
+      vttContent += `${index + 1}\n`;
+      vttContent += `${startTime} --> ${endTime}\n`;
+      vttContent += `${obj.name} (신뢰도: ${(obj.confidence * 100).toFixed(1)}%)\n`;
+      if (obj.category) {
+        vttContent += `카테고리: ${obj.category}\n`;
+      }
+      if (obj.additionalInfo) {
+        vttContent += `${obj.additionalInfo}\n`;
+      }
+      vttContent += '\n';
+    });
 
     const blob = new Blob([vttContent], { type: "text/vtt" });
     const url = URL.createObjectURL(blob);
@@ -323,7 +341,7 @@ export function useVideoUpload() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     toast.success("WebVTT 파일이 다운로드되었습니다.");
-  }, [selectedVideo]);
+  }, [selectedVideo, formatTimeForVTT]);
 
   // 비디오 삭제
   const deleteVideo = useCallback(
@@ -415,7 +433,7 @@ export function useVideoUpload() {
     }
   }, [selectedVideo]);
 
-  // 새 객체 ��가
+  // 새 객체 추가
   const addNewObjectToVideo = useCallback(
     (videoId: string, objectName?: string, additionalData?: {
       code?: string;
@@ -526,7 +544,7 @@ export function useVideoUpload() {
     (upload) => upload.status === "completed",
   ).length;
 
-  // 외부로 노출할 상태와 함수들
+  // 외��로 노출할 상태와 함수들
   return {
     // 상태
     videos,
