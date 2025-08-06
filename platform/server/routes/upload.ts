@@ -1,4 +1,6 @@
 import { RequestHandler } from "express";
+import fs from "fs";
+import path from "path";
 
 interface UploadData {
   id: string;
@@ -14,21 +16,69 @@ interface UploadData {
   };
 }
 
+// 데이터 저장 디렉토리 설정
+const DATA_DIR = path.join(process.cwd(), 'data');
+const UPLOADS_FILE = path.join(DATA_DIR, 'uploads.json');
+
+// 디렉토리 및 파일 초기화 함수
+function initializeDataFiles() {
+  // data 디렉토리가 없으면 생성
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    console.log('Created data directory:', DATA_DIR);
+  }
+
+  // uploads.json 파일이 없으면 생성
+  if (!fs.existsSync(UPLOADS_FILE)) {
+    const initialData = {
+      uploads: [],
+      lastUpdated: new Date().toISOString()
+    };
+    fs.writeFileSync(UPLOADS_FILE, JSON.stringify(initialData, null, 2));
+    console.log('Created uploads.json file:', UPLOADS_FILE);
+  }
+}
+
+// 업로드 데이터를 파일에 저장
+function saveUploadData(uploadData: UploadData) {
+  initializeDataFiles();
+
+  // 기존 데이터 읽기
+  const fileContent = fs.readFileSync(UPLOADS_FILE, 'utf8');
+  const data = JSON.parse(fileContent);
+
+  // 새 업로드 데이터 추가
+  const uploadRecord = {
+    ...uploadData,
+    uploadedAt: new Date().toISOString(),
+    status: 'uploaded'
+  };
+
+  data.uploads.push(uploadRecord);
+  data.lastUpdated = new Date().toISOString();
+
+  // 파일에 저장
+  fs.writeFileSync(UPLOADS_FILE, JSON.stringify(data, null, 2));
+  console.log('Upload data saved to:', UPLOADS_FILE);
+
+  return uploadRecord;
+}
+
 export const handleVideoUpload: RequestHandler = (req, res) => {
   try {
     const uploadData: UploadData = req.body;
-    
-    // 업로드된 비디오 정보를 처리합니다
+
     console.log('Video upload received:', uploadData);
-    
-    // 실제 환경에서는 데이터베이스에 저장하거나 추가 처리를 수행할 수 있습니다
-    // 예: 비디오 메타데이터 추출, 썸네일 생성, 파일 검증 등
-    
+
+    // 로컬 파일에 저장
+    const savedData = saveUploadData(uploadData);
+
     const response = {
       success: true,
-      message: '비디오가 성공적으로 업로드되었습니다.',
+      message: '비디오가 성공적으로 업로드되어 로컬에 저장되었습니다.',
       videoId: uploadData.id,
-      uploadedAt: new Date().toISOString(),
+      uploadedAt: savedData.uploadedAt,
+      savedToFile: UPLOADS_FILE,
       processedData: {
         fileName: uploadData.fileName,
         fileSize: uploadData.fileSize,
@@ -36,7 +86,7 @@ export const handleVideoUpload: RequestHandler = (req, res) => {
         status: 'uploaded'
       }
     };
-    
+
     res.json(response);
   } catch (error) {
     console.error('Video upload error:', error);
