@@ -529,14 +529,61 @@ export default function VideoPlayer({
     redrawCanvas();
   };
 
+  // WebVTT API로 데이터 전송
+  const sendWebVTTToApi = async () => {
+    if (!video) return;
+
+    try {
+      const apiUrl = window.location.origin;
+
+      const webvttData = {
+        videoId: video.id,
+        videoFileName: video.file.name,
+        objects: detectedObjects.map(obj => ({
+          id: obj.id,
+          name: obj.name,
+          code: obj.code,
+          additionalInfo: obj.additionalInfo,
+          dlReservoirDomain: obj.dlReservoirDomain,
+          category: obj.category,
+          confidence: obj.confidence
+        })),
+        duration: videoDuration,
+        timestamp: Date.now()
+      };
+
+      const response = await fetch(`${apiUrl}/api/webvtt`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webvttData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast.success('WebVTT 파일이 서버에 저장되었습니다.');
+        console.log('WebVTT API response:', result);
+      } else {
+        throw new Error('WebVTT API 전송 실패');
+      }
+    } catch (error) {
+      console.error('WebVTT API error:', error);
+      toast.error('WebVTT 서버 저장 중 오류가 발생했습니다.');
+    }
+  };
+
   const saveDrawings = () => {
     const currentDuration = videoDuration;
     const currentFrames = totalFrames;
 
     // 그리기 영역이 있는 경우에만 객체 추가 (중복 방지)
-    // 실제로는 이미 sendDrawingToApi에서 처리되므로 여기서는 제거
+    // ��제로는 이미 sendDrawingToApi에서 처리되므로 여기서는 제거
     setDrawnAreas([]);
     setHasObjectChanges(false);
+
+    // WebVTT API로 전송
+    sendWebVTTToApi();
 
     // 저장 완료 메시지 표시
     toast.success("저장이 완료되었습니다.");
@@ -838,7 +885,7 @@ export default function VideoPlayer({
           </button>
         </div>
 
-        {/* 메인 컨텐츠 영역 */}
+        {/* 메�� 컨텐츠 영역 */}
         <div
           style={{
             display: "flex",
@@ -927,7 +974,7 @@ export default function VideoPlayer({
                   fontSize: "0.9rem",
                 }}
               >
-                {isDrawing ? "그리기 종료" : "영역 그리기"}
+                {isDrawing ? "그리기 종료" : "영역 그��기"}
               </button>
 
               {isDrawing && (
@@ -1862,7 +1909,7 @@ export default function VideoPlayer({
                             })()}
                           </div>
 
-                          {/* 추가정보 섹션 */}
+                          {/* 추가정보 섹�� */}
                           <div style={{ marginBottom: "16px" }}>
                             <div
                               style={{
