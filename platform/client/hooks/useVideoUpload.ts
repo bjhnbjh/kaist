@@ -76,6 +76,44 @@ export function useVideoUpload() {
   const selectedVideo = videos.find((v) => v.id === selectedVideoId) || null;
   const selectedVideoObjects = selectedVideo?.detectedObjects || [];
 
+  // API를 통한 업로드 정보 전송
+  const sendUploadToApi = useCallback(async (file: File, uploadId: string) => {
+    try {
+      const apiUrl = window.location.origin;
+
+      const uploadData = {
+        id: uploadId,
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        duration: 0, // 실제��는 비디오에서 추출
+        timestamp: Date.now(),
+        metadata: {
+          // 실제로는 비디오 메타데이터 추출
+        }
+      };
+
+      const response = await fetch(`${apiUrl}/api/upload`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(uploadData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Upload API response:', result);
+        toast.success('업로드 정보가 서버에 저장되었습니다.');
+      } else {
+        throw new Error('API 전송 실패');
+      }
+    } catch (error) {
+      console.error('Upload API error:', error);
+      toast.error('서버로 업로드 정보를 전송하는 중 오류가 발생했습니다.');
+    }
+  }, []);
+
   // 업로드 시뮬레이션 함수
   const simulateUpload = useCallback((file: File) => {
     const uploadId = `video-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -349,7 +387,7 @@ export function useVideoUpload() {
               }),
             );
 
-            // 탐지 완료 후 selectedVideoId를 다시 설정하여 최신 selectedVideo를 강제로 반영
+            // 탐지 완료 후 selectedVideoId를 다시 설정하여 최신 selectedVideo를 강제로 ��영
             setSelectedVideoId(videoId);
 
             toast.success("객체 탐지가 완료되었습니다!");
