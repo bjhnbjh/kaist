@@ -46,6 +46,7 @@ interface DetectedObject {
   additionalInfo?: string;
   dlReservoirDomain?: string;
   category?: string;
+  videoCurrentTime?: number;
 }
 
 interface VideoPlayerProps {
@@ -138,6 +139,7 @@ export default function VideoPlayer({
     additionalInfo: string;
     dlReservoirDomain: string;
     category: string;
+    videoCurrentTime: number;
   } | null>(null);
   const [isApiLoading, setIsApiLoading] = useState(false);
 
@@ -157,6 +159,9 @@ export default function VideoPlayer({
       setIsApiLoading(true);
       const apiUrl = getApiUrl();
 
+      // 현재 동영상 재생 시간 가져오기
+      const currentVideoTime = videoRef.current?.currentTime || 0;
+
       const drawingData = {
         id: area.id,
         type: area.type,
@@ -165,6 +170,7 @@ export default function VideoPlayer({
         startPoint: area.startPoint,
         endPoint: area.endPoint,
         videoId: video?.id,
+        videoCurrentTime: currentVideoTime,  // 실제 동영상 시간 추가
         timestamp: Date.now()
       };
 
@@ -188,7 +194,8 @@ export default function VideoPlayer({
           code: `CODE_${area.id.slice(0, 8).toUpperCase()}`,
           additionalInfo: 'AI가 자동으로 탐지한 객체입니다.',
           dlReservoirDomain: 'http://www.naver.com',
-          category: '기타'
+          category: '기타',
+          videoCurrentTime: currentVideoTime
         });
         setShowInfoModal(true);
 
@@ -468,7 +475,7 @@ export default function VideoPlayer({
           };
           setDrawnAreas((prev) => [...prev, newArea]);
 
-          // 그리기 완료 시 API로 전송
+          // 그리기 ��료 시 API로 전송
           sendDrawingToApi(newArea);
         }
 
@@ -536,7 +543,14 @@ export default function VideoPlayer({
     redrawCanvas();
   };
 
-  // WebVTT API로 데이터 전송
+  /**
+   * 📄 WebVTT 자막 파일 생성 API 호출
+   *
+   * 📝 수정 포인트:
+   * - API URL 변경: window.location.origin 수정
+   * - WebVTT 데이터 구조 변경: webvttData 객체 수정
+   * - 응답 처리 변경: response 처리 로직 수정
+   */
   const sendWebVTTToApi = async () => {
     if (!video) return;
 
@@ -553,7 +567,8 @@ export default function VideoPlayer({
           additionalInfo: obj.additionalInfo,
           dlReservoirDomain: obj.dlReservoirDomain,
           category: obj.category,
-          confidence: obj.confidence
+          confidence: obj.confidence,
+          videoCurrentTime: obj.videoCurrentTime || 0  // 각 객체의 실제 생성 시간 사용
         })),
         duration: videoDuration,
         timestamp: Date.now()
@@ -649,7 +664,7 @@ export default function VideoPlayer({
       setDrawnAreas([]);
       setHasObjectChanges(false);
 
-      // 최종 저장 완료 메시지 표시
+      // 최종 저장 완�� 메시지 표시
       toast.success("모든 데이터가 저장되었습니다.");
 
       console.log("저장 후 비디오 정보:", {
@@ -740,7 +755,7 @@ export default function VideoPlayer({
     setDeleteConfirmed(false);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (objectToDelete && deleteConfirmed && video && onDeleteObject) {
       if (objectToDelete === "BULK_DELETE") {
         // 일괄 삭제 처리
@@ -750,13 +765,19 @@ export default function VideoPlayer({
         });
         setSelectedObjectIds([]);
         setHasObjectChanges(true);
-        toast.success(`${deleteCount}개 ��체가 삭제되었습니다.`);
+        toast.success(`${deleteCount}개 객체가 삭제되었���니다.`);
+
+        // 즉시 서버에 저장
+        await saveDataToDb();
       } else {
         // 개별 객체 삭제 처리
         onDeleteObject(video.id, objectToDelete);
         setHasObjectChanges(true);
         handleBackToObjectList();
         toast.success("객체가 삭제되었습니다.");
+
+        // 즉시 서버에 저장
+        await saveDataToDb();
       }
       setShowDeleteConfirmModal(false);
       setObjectToDelete(null);
@@ -972,7 +993,7 @@ export default function VideoPlayer({
               position: "relative",
             }}
           >
-            {/* 비디오 컨테이너 */}
+            {/* 비디오 컨테��너 */}
             <div
               ref={containerRef}
               style={{
@@ -1020,7 +1041,7 @@ export default function VideoPlayer({
               />
             </div>
 
-            {/* 컨트롤 버튼들 */}
+            {/* ���트롤 버튼들 */}
             <div
               style={{
                 display: "flex",
@@ -1645,7 +1666,7 @@ export default function VideoPlayer({
                             }}
                           >
                             <Trash2 style={{ width: 16, height: 16 }} />
-                            선택된 객체 ���제
+                            선택된 객체 ����제
                           </button>
                         </div>
                       )}
@@ -1669,7 +1690,7 @@ export default function VideoPlayer({
                         탐지된 객체가 없습니다.
                       </div>
                       <div style={{ fontSize: "0.85rem" }}>
-                        영역을 그려서 객체를 추가해보세요
+                        ���역을 그려서 객체를 추가해보세요
                       </div>
                     </div>
                   )
@@ -2014,7 +2035,7 @@ export default function VideoPlayer({
                                   fontSize: "0.85rem",
                                   resize: "none",
                                 }}
-                                placeholder="수정 할  정보를 입력하세요"
+                                placeholder="수정 할  정보를 입력��세요"
                               />
                             ) : (
                               <div
@@ -2030,7 +2051,7 @@ export default function VideoPlayer({
                                 }}
                               >
                                 {selectedObject.additionalInfo ||
-                                  "AI가 자동으로 탐지한 객체입니다."}
+                                  "AI가 자동으로 탐���한 객체입니다."}
                               </div>
                             )}
                           </div>
@@ -2250,7 +2271,7 @@ export default function VideoPlayer({
                 lineHeight: 1.5,
               }}
             >
-              진짜 삭제하시겠습니까?
+              진짜 삭제하시���습니까?
             </p>
 
             <div
@@ -2338,7 +2359,7 @@ export default function VideoPlayer({
                   fontStyle: "italic",
                 }}
               >
-                ⚠️ 체크박스를 선택해야 삭제할 수 있습니다
+                ⚠️ 체크박스를 선택해야 삭��할 수 있습니다
               </div>
             )}
           </div>
@@ -2661,6 +2682,7 @@ export default function VideoPlayer({
                       additionalInfo: modalObjectInfo.additionalInfo,
                       dlReservoirDomain: modalObjectInfo.dlReservoirDomain,
                       category: modalObjectInfo.category,
+                      videoCurrentTime: modalObjectInfo.videoCurrentTime,
                     });
 
                     toast.success('새로운 객체가 추가되었습니다.');

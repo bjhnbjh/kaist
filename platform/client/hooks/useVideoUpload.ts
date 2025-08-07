@@ -1,7 +1,26 @@
+/**
+ * ===================================
+ * 🎬 동영상 업로드 및 관리 메인 훅
+ * ===================================
+ *
+ * 이 파일의 기능:
+ * 1. 동영상 파일 업로드 및 진행��황 관리
+ * 2. 객체 탐지 시뮬레이션 및 상태 관리
+ * 3. 관리자 패널 UI 상태 제어
+ * 4. 서버 API 연동 (업로드, 삭제)
+ * 5. 로컬 상태 관리 (videos, uploads, selectedVideo 등)
+ *
+ * 📝 수정 가이드:
+ * - API URL 변경: window.location.origin 부분 수정
+ * - 업로드 로직 변경: uploadVideoFile 함수 수정
+ * - 상태 구조 변경: useState 초기값들 수정
+ * - 객체 탐지 로직 변경: runObjectDetection 함수 수정
+ */
+
 // React 훅과 토스트 알림 가져오기
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-// 공통 타입 가져오기
+// 공통 타입 가져오기 (shared/types.ts에서 정의됨)
 import type { DetectedObject, VideoInfo, UploadItem } from "@shared/types";
 
 // 기본 객체 데이터 (목업 데이터 제거 - 그리기 데이터만 사용)
@@ -55,7 +74,15 @@ export function useVideoUpload() {
     });
   }, []);
 
-  // 실제 파일 업로�� API
+  /**
+   * 📤 실제 파일 업로드 API 호출
+   *
+   * 📝 수정 포인트:
+   * - API URL 변경: window.location.origin 수정
+   * - 요청 데이터 변경: formData 구성 수정
+   * - 응답 처리 변경: response 처리 로직 수정
+   * - 에러 처리 개선: catch 블록 수정
+   */
   const uploadVideoFile = useCallback(async (file: File, uploadId: string, metadata: { duration: number, width?: number, height?: number }) => {
     try {
       const apiUrl = window.location.origin;
@@ -277,7 +304,7 @@ export function useVideoUpload() {
     return () => clearTimeout(timeoutId);
   }, []);
 
-  // 선택된 객체들 삭제
+  // ���택된 객체들 삭제
   const deleteSelectedObjects = useCallback(() => {
     if (!selectedVideoId) return;
 
@@ -343,18 +370,60 @@ export function useVideoUpload() {
     toast.success("WebVTT 파일이 다운로드되었습니다.");
   }, [selectedVideo, formatTimeForVTT]);
 
-  // 비디오 삭제
+  /**
+   * 🗑️ 비디오 삭제 (서버와 로컬 상태 모두)
+   *
+   * 📝 수정 포인트:
+   * - API URL 변경: window.location.origin 수정
+   * - 삭제 로직 변경: 서버 API 호출 부분 수정
+   * - 에러 처리 개선: try-catch 블록 수정
+   */
   const deleteVideo = useCallback(
-    (videoId: string) => {
+    async (videoId: string) => {
       if (selectedVideoId === videoId) {
         closeAdminPanel();
       }
 
+      // 삭제할 비디오 정보 찾기
+      const videoToDelete = videos.find(v => v.id === videoId) || uploads.find(u => u.id === videoId);
+      const videoFileName = videoToDelete ?
+        ('file' in videoToDelete ? videoToDelete.file.name : videoToDelete.filename) :
+        null;
+
+      try {
+        // 서버에서 폴더 삭제 요청
+        if (videoFileName) {
+          const apiUrl = window.location.origin;
+          const response = await fetch(`${apiUrl}/api/video`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              videoId: videoId,
+              videoFileName: videoFileName
+            })
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log('Server delete response:', result);
+            toast.success("동영상과 관련 폴더가 서버에서 삭제되었습니다.");
+          } else {
+            console.warn('Server delete failed, proceeding with local delete');
+            toast.warning("서버 삭제는 실패했지만 로컬에서 제거합니다.");
+          }
+        }
+      } catch (error) {
+        console.error('Server delete error:', error);
+        toast.warning("서버 삭제 중 오류가 발생했지만 로컬에서 제거합니다.");
+      }
+
+      // 로컬 상태에서 제거
       setVideos((prev) => prev.filter((video) => video.id !== videoId));
       setUploads((prev) => prev.filter((upload) => upload.id !== videoId));
-      toast.success("동영상이 삭제되었습니다.");
     },
-    [selectedVideoId, closeAdminPanel],
+    [selectedVideoId, closeAdminPanel, videos, uploads],
   );
 
   // 객체 탐지 실행
@@ -442,6 +511,7 @@ export function useVideoUpload() {
       category?: string;
       startTime?: number;
       endTime?: number;
+      videoCurrentTime?: number;
     }) => {
       const currentVideo = videos.find((v) => v.id === videoId);
       const nextObjectNumber = currentVideo
@@ -466,6 +536,7 @@ export function useVideoUpload() {
         additionalInfo: additionalData?.additionalInfo || "AI가 자동으로 탐지한 객체입니다.",
         dlReservoirDomain: additionalData?.dlReservoirDomain || "http://www.naver.com",
         category: additionalData?.category || "기타",
+        videoCurrentTime: additionalData?.videoCurrentTime || 0,
       };
 
       setVideos((prev) =>

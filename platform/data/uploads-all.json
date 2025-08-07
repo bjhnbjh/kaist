@@ -1,0 +1,37 @@
+{
+  "uploads": [
+    {
+      "id": "video-1754544174704-khhqthsf8",
+      "fileName": "첫번쨰 작품.mp4",
+      "fileSize": 6506422,
+      "fileType": "video/mp4",
+      "duration": 35.041667,
+      "timestamp": 1754544174705,
+      "metadata": {
+        "width": 1424,
+        "height": 720
+      },
+      "filePath": "D:\\생각\\대학\\활동내역\\KAIST 오토아이디랩 인턴\\GS1MediaEdit\\kaist\\platform\\data\\첫번쨰_작품\\첫번쨰 작품.mp4",
+      "videoFolder": "첫번쨰_작품",
+      "uploadedAt": "2025-08-07T14:22:54.708+09:00",
+      "status": "uploaded"
+    },
+    {
+      "id": "video-1754545241483-2i6fsyqsu",
+      "fileName": "첫번쨰 작품.mp4",
+      "fileSize": 6506422,
+      "fileType": "video/mp4",
+      "duration": 35.041667,
+      "timestamp": 1754545241483,
+      "metadata": {
+        "width": 1424,
+        "height": 720
+      },
+      "filePath": "D:\\생각\\대학\\활동내역\\KAIST 오토아이디랩 인턴\\GS1MediaEdit\\kaist\\platform\\data\\첫번쨰_작품\\첫번쨰 작품.mp4",
+      "videoFolder": "첫번쨰_작품",
+      "uploadedAt": "2025-08-07T14:40:41.484+09:00",
+      "status": "uploaded"
+    }
+  ],
+  "lastUpdated": "2025-08-07T14:56:56.053+09:00"
+}

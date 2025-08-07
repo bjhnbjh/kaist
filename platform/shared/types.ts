@@ -13,6 +13,7 @@ export interface DetectedObject {
   additionalInfo?: string; // 추가 정보 (선택사항)
   dlReservoirDomain?: string; // 관련 웹사이트 도메인 (선택사항)
   category?: string; // 객체 카테고리 (선택사항)
+  videoCurrentTime?: number; // 객체가 생성된 동영상 시점 (초 단위)
 }
 
 // 업로드된 비디오의 정보를 담는 타입
