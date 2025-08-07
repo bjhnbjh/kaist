@@ -5,6 +5,7 @@ import { handleDrawingSubmission } from "./routes/drawing";
 import { handleVideoFileUpload, handleVideoDelete, uploadMiddleware } from "./routes/upload";
 import { handleWebVTTSave } from "./routes/webvtt";
 import { handleSaveData } from "./routes/save-data";
+import { handleVttCoordinatesRead } from "./routes/vtt-coordinates";
 
 /**
  * ===================================
@@ -77,7 +78,7 @@ export function createServer() {
   app.post("/api/upload-file", uploadMiddleware, handleVideoFileUpload);
 
   /**
-   * 🗑️ 동영상 삭제
+   * 🗑️ 동영상 삭��
    * DELETE /api/video
    * 
    * 📝 수정 방법:
