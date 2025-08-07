@@ -23,9 +23,10 @@ interface DrawnArea {
   id: string;
   points: DrawingPoint[];
   color: string;
-  type: "path" | "rectangle";
+  type: "path" | "rectangle" | "click";
   startPoint?: DrawingPoint;
   endPoint?: DrawingPoint;
+  clickPoint?: DrawingPoint;
 }
 
 interface VideoInfo {
@@ -100,7 +101,7 @@ export default function VideoPlayer({
   const [drawnAreas, setDrawnAreas] = useState<DrawnArea[]>([]);
   const [currentPath, setCurrentPath] = useState<DrawingPoint[]>([]);
   const [isMouseDown, setIsMouseDown] = useState(false);
-  const [drawingMode, setDrawingMode] = useState<"free" | "rectangle">(
+  const [drawingMode, setDrawingMode] = useState<"free" | "rectangle" | "click">(
     "rectangle",
   );
   const [rectangleStart, setRectangleStart] = useState<DrawingPoint | null>(
@@ -2182,7 +2183,7 @@ export default function VideoPlayer({
                         gap: "6px",
                       }}
                     >
-                      ✅ {selectedObjectIds.length}개 객체가 선택됨
+                      ✅ {selectedObjectIds.length}개 ��체가 선택됨
                     </span>
                   </div>
                   <button
