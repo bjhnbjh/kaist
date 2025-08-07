@@ -92,7 +92,7 @@ function extractObjectsFromVtt(content: string): any[] {
           if (dataLine.includes('"이름"')) {
             const match = dataLine.match(/"이름":"([^"]+)"/);
             if (match) obj.name = match[1];
-          } else if (dataLine.includes('"시간"')) {
+          } else if (dataLine.includes('"시��"')) {
             const match = dataLine.match(/"시간":([0-9.]+)/);
             if (match) obj.videoCurrentTime = parseFloat(match[1]);
           } else if (dataLine.includes('"code"')) {
@@ -275,9 +275,7 @@ function saveWebVTTFile(webvttData: WebVTTData) {
   const videoFolderPath = path.join(DATA_DIR, normalizedName);
 
   // 동영상 폴더가 없으면 생성
-  if (!fs.existsSync(videoFolderPath)) {
-    fs.mkdirSync(videoFolderPath, { recursive: true });
-  }
+  ensureDirectoryExists(videoFolderPath);
 
   // VTT 파일 업데이트 (기존 파일과 비교하여 변경된 부분만 반영)
   const singleVttFileName = `${normalizedName}-webvtt.vtt`;
@@ -387,5 +385,5 @@ export const handleWebVTTSave: RequestHandler = (req, res) => {
  * 2. Object(1), Object(2) 형태로 객체 번호 표시
  * 3. 좌표 정보 (position, polygon) 포함
  * 4. 불필요한 자막 정보 제거하여 간소화
- * 5. 기존 파일과 새로운 데이터 병�� 지원
+ * 5. 기존 파일과 새로운 데이터 병합 지원
  */
