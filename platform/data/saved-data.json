@@ -1,0 +1,47 @@
+{
+  "savedProjects": [
+    {
+      "videoId": "video-1754470324502-nywrc2f4m",
+      "videoFileName": "첫번쨰 작품.mp4",
+      "objects": [
+        {
+          "id": "video-1754470324502-nywrc2f4m-new-1754470340464-6bhxemajw",
+          "name": "Object(1)",
+          "code": "CODE_RECT-175",
+          "additionalInfo": "AI가 자동으로 탐지한 객체입니다.",
+          "dlReservoirDomain": "http://www.naver.com",
+          "category": "기타",
+          "confidence": 0.965319134049048,
+          "selected": false
+        },
+        {
+          "id": "video-1754470324502-nywrc2f4m-new-1754470343439-wu9e006ed",
+          "name": "Object(2)",
+          "code": "CODE_RECT-175",
+          "additionalInfo": "AI가 자동으로 탐지한 객체입니다.",
+          "dlReservoirDomain": "http://www.naver.com",
+          "category": "기타",
+          "confidence": 0.8690403515834774,
+          "selected": false
+        },
+        {
+          "id": "video-1754470324502-nywrc2f4m-new-1754470437494-j2xfsz086",
+          "name": "Object(3)아저씨",
+          "code": "CODE_RECT-175",
+          "additionalInfo": "AI가 자동으로 탐지한 객체입니다.",
+          "dlReservoirDomain": "http://www.naver.com",
+          "category": "기타",
+          "confidence": 0.9858864714036527,
+          "selected": false
+        }
+      ],
+      "drawings": [],
+      "duration": 35.041667,
+      "totalFrames": 1051,
+      "timestamp": 1754470453069,
+      "savedAt": "2025-08-06T08:54:13.073Z",
+      "version": 2
+    }
+  ],
+  "lastUpdated": "2025-08-06T08:54:13.074Z"
+}

@@ -1,0 +1,43 @@
+{
+  "files": [
+    {
+      "videoId": "video-1754470324502-nywrc2f4m",
+      "videoFileName": "첫번쨰 작품.mp4",
+      "vttFileName": "video-1754470324502-nywrc2f4m_1754470453080.vtt",
+      "filePath": "D:\\생각\\대학\\활동내역\\KAIST 오토아이디랩 인턴\\GS1MediaEdit\\kaist\\platform\\data\\webvtt\\video-1754470324502-nywrc2f4m_1754470453080.vtt",
+      "objectCount": 3,
+      "duration": 35.041667,
+      "createdAt": "2025-08-06T08:54:13.082Z",
+      "objects": [
+        {
+          "id": "video-1754470324502-nywrc2f4m-new-1754470340464-6bhxemajw",
+          "name": "Object(1)",
+          "code": "CODE_RECT-175",
+          "additionalInfo": "AI가 자동으로 탐지한 객체입니다.",
+          "dlReservoirDomain": "http://www.naver.com",
+          "category": "기타",
+          "confidence": 0.965319134049048
+        },
+        {
+          "id": "video-1754470324502-nywrc2f4m-new-1754470343439-wu9e006ed",
+          "name": "Object(2)",
+          "code": "CODE_RECT-175",
+          "additionalInfo": "AI가 자동으로 탐지한 객체입니다.",
+          "dlReservoirDomain": "http://www.naver.com",
+          "category": "기타",
+          "confidence": 0.8690403515834774
+        },
+        {
+          "id": "video-1754470324502-nywrc2f4m-new-1754470437494-j2xfsz086",
+          "name": "Object(3)아저씨",
+          "code": "CODE_RECT-175",
+          "additionalInfo": "AI가 자동으로 탐지한 객체입니다.",
+          "dlReservoirDomain": "http://www.naver.com",
+          "category": "기타",
+          "confidence": 0.9858864714036527
+        }
+      ]
+    }
+  ],
+  "lastUpdated": "2025-08-06T08:54:13.082Z"
+}

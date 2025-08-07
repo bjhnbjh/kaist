@@ -43,7 +43,48 @@
       "metadata": {},
       "uploadedAt": "2025-08-06T08:40:08.205Z",
       "status": "uploaded"
+    },
+    {
+      "id": "video-1754470324502-nywrc2f4m",
+      "fileName": "첫번쨰 작품.mp4",
+      "fileSize": 6506422,
+      "fileType": "video/mp4",
+      "duration": 0,
+      "timestamp": 1754470329133,
+      "metadata": {},
+      "uploadedAt": "2025-08-06T08:52:09.172Z",
+      "status": "uploaded"
+    },
+    {
+      "id": "video-1754528704268-5syzp83x1",
+      "fileName": "ì²«ë²ì¨° ìí.mp4",
+      "fileSize": 6506422,
+      "fileType": "video/mp4",
+      "duration": 35.041667,
+      "timestamp": 1754528704268,
+      "metadata": {
+        "width": 1424,
+        "height": 720
+      },
+      "filePath": "D:\\생각\\대학\\활동내역\\KAIST 오토아이디랩 인턴\\GS1MediaEdit\\kaist\\platform\\data\\videos\\1754528704201-ì²«ë²ì¨° ìí.mp4",
+      "uploadedAt": "2025-08-07T01:05:04.270Z",
+      "status": "uploaded"
+    },
+    {
+      "id": "video-1754528807483-06cojdauc",
+      "fileName": "ì²«ë²ì¨° ìí.mp4",
+      "fileSize": 6506422,
+      "fileType": "video/mp4",
+      "duration": 35.041667,
+      "timestamp": 1754528807483,
+      "metadata": {
+        "width": 1424,
+        "height": 720
+      },
+      "filePath": "D:\\생각\\대학\\활동내역\\KAIST 오토아이디랩 인턴\\GS1MediaEdit\\kaist\\platform\\data\\videos\\1754528807449-ì²«ë²ì¨° ìí.mp4",
+      "uploadedAt": "2025-08-07T01:06:47.483Z",
+      "status": "uploaded"
     }
   ],
-  "lastUpdated": "2025-08-06T08:40:08.205Z"
+  "lastUpdated": "2025-08-07T01:06:47.484Z"
 }
