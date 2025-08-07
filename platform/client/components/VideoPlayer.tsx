@@ -227,7 +227,7 @@ export default function VideoPlayer({
           // 현재 그리기 영���을 저장하여 객체 생성 시 좌표 정보 연결
           setCurrentDrawingArea(area);
 
-          // 그리기로 추가되는 객체는 totalObjectsCreated + 1로 번호 생성
+          // 그리기로 추가되는 객체�� totalObjectsCreated + 1로 번호 생성
           const nextObjectNumber = video ? video.totalObjectsCreated + 1 : detectedObjects.length + 1;
           setModalObjectInfo({
             name: `Object(${nextObjectNumber})`,
@@ -405,7 +405,7 @@ export default function VideoPlayer({
               coords.y <= maxY
             );
           } else if (area.type === "click" && area.clickPoint) {
-            // 클릭 포인트 삭제를 위한 범위 체크 (15px 범위)
+            // 클릭 포인��� 삭제를 위한 범위 체크 (15px 범위)
             return (
               Math.abs(area.clickPoint.x - coords.x) < 15 &&
               Math.abs(area.clickPoint.y - coords.y) < 15
@@ -712,7 +712,7 @@ export default function VideoPlayer({
     }
   };
 
-  // 편집 데이터 DB 저장 API 호출
+  // 편집 데이터 DB ��장 API 호출
   const saveDataToDb = async () => {
     if (!video) return;
 
@@ -1297,19 +1297,6 @@ export default function VideoPlayer({
               </div>
             )}
 
-            {false && (
-              <div
-                style={{
-                  textAlign: "center",
-                  fontSize: "0.875rem",
-                  color: "white",
-                  fontWeight: "white",
-                }}
-              >
-                📍 VTT 좌표: 0개
-                "VTT removed"
-              </div>
-            )}
 
             {isDrawing && (
               <div
