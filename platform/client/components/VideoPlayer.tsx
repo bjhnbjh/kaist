@@ -1286,7 +1286,7 @@ export default function VideoPlayer({
 
               {// vttCoordinates.length > 0 && (
                 <button
-                  onClick={() => setVttOverlayEnabled(!// vttOverlayEnabled)}
+                  onClick={() => // setVttOverlayEnabled removed
                   style={{
                     padding: "8px 16px",
                     borderRadius: "6px",
