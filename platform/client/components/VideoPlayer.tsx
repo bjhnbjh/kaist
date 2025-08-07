@@ -249,7 +249,7 @@ export default function VideoPlayer({
           drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유그리기',
           coordinates: area.type === 'click' && area.clickPoint
             ? `(${area.clickPoint.x}, ${area.clickPoint.y})`
-            : '오류로 인해 처리되지 않��',
+            : '오류로 인해 처리되지 않음',
           timestamp: new Date().toLocaleString('ko-KR')
         });
         setShowApiResponseModal(true);
@@ -1012,7 +1012,7 @@ export default function VideoPlayer({
     return () => window.removeEventListener("resize", handleResize);
   }, [isOpen, canvasInitialized, initializeCanvas]);
 
-  // 1. displayObjects는 무조건 detectedObjects만 사용
+  // 1. displayObjects는 무조건 detectedObjects��� 사용
   const displayObjects = detectedObjects;
 
   if (!isOpen) return null;
@@ -2553,7 +2553,7 @@ export default function VideoPlayer({
                   margin: 0,
                 }}
               >
-                �� ��체 정보 입력
+                �� 객체 정보 입력
               </h3>
               <button
                 onClick={() => setShowInfoModal(false)}
@@ -2581,7 +2581,7 @@ export default function VideoPlayer({
                 maxHeight: "60vh",
               }}
             >
-              {/* 이름 섹션 */}
+              {/* 이�� 섹션 */}
               <div style={{ marginBottom: "16px" }}>
                 <div
                   style={{
@@ -2817,7 +2817,7 @@ export default function VideoPlayer({
                 onClick={() => {
                   if (modalObjectInfo && video && onAddNewObject) {
                     // 그리기 영역을 새로운 객체로 추가 - 팝업창에서 입력한 모든 정보 포함
-                    const addedObjectName = onAddNewObject(video.id, modalObjectInfo.name, {
+                    const addedObjectId = onAddNewObject(video.id, modalObjectInfo.name, {
                       code: modalObjectInfo.code,
                       additionalInfo: modalObjectInfo.additionalInfo,
                       dlReservoirDomain: modalObjectInfo.dlReservoirDomain,
@@ -2825,9 +2825,15 @@ export default function VideoPlayer({
                       videoCurrentTime: modalObjectInfo.videoCurrentTime,
                     });
 
+                    // 그리기 영역과 객체 매핑 저장
+                    if (currentDrawingArea && addedObjectId) {
+                      setObjectDrawingMap(prev => new Map(prev.set(addedObjectId, currentDrawingArea)));
+                    }
+
                     toast.success('새로운 객체가 추가되었습니다.');
                     setShowInfoModal(false);
                     setModalObjectInfo(null);
+                    setCurrentDrawingArea(null);
                   }
                 }}
                 style={{
@@ -2921,7 +2927,7 @@ export default function VideoPlayer({
 
               {apiResponseData.coordinates && (
                 <div style={{ marginBottom: "12px" }}>
-                  <strong style={{ color: "#374151" }}>���표 정보:</strong>
+                  <strong style={{ color: "#374151" }}>좌표 정보:</strong>
                   <span style={{ marginLeft: "8px", color: "#6b7280", fontFamily: "monospace" }}>
                     {apiResponseData.coordinates}
                   </span>
