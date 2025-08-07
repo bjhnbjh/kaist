@@ -1284,7 +1284,7 @@ export default function VideoPlayer({
               </button>
 
 
-              {// vttCoordinates.length > 0 && (
+              {false && (
                 <button
                   onClick={() => // setVttOverlayEnabled removed
                   style={{
@@ -1315,7 +1315,7 @@ export default function VideoPlayer({
               </div>
             )}
 
-            {// vttCoordinates.length > 0 && (
+            {false && (
               <div
                 style={{
                   textAlign: "center",
