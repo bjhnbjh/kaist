@@ -4,8 +4,8 @@ NOTE
 생성일: 2025-08-07T08:15:00.000+09:00
 탐지된 객체 수: 2
 COORDINATES_DATA_START
-{"name":"Test Object 1","videoTime":5.5,"code":"CODE_RECT-123","category":"기타","domain":"http://www.naver.com","info":"AI가 자동으로 탐지한 객체입니다.","finallink":"http://www.naver.com/00/CODE_RECT-123","position":{"type":"rectangle","startPoint":{"x":100,"y":100},"endPoint":{"x":200,"y":200}},"polygon":null}
-{"name":"Test Object 2","videoTime":10.2,"code":"CODE_RECT-456","category":"기타","domain":"http://www.example.com","info":"클릭으로 생성된 객체입니다.","finallink":"http://www.example.com/00/CODE_RECT-456","position":{"type":"click","clickPoint":{"x":150,"y":150}},"polygon":null}
+{"이름":"Test Object 1","시간":5.5,"code":"CODE_RECT-123","catefory":"기타","도메인":"http://www.naver.com","정보":"AI가 자동으로 탐지한 객체입니다.","finallink":"http://www.naver.com/00/CODE_RECT-123","position":{"type":"rectangle","startPoint":{"x":100,"y":100},"endPoint":{"x":200,"y":200}},"polygon":null}
+{"이름":"Test Object 2","시간":10.2,"code":"CODE_RECT-456","catefory":"기타","도메인":"http://www.example.com","정보":"클릭으로 생성된 객체입니다.","finallink":"http://www.example.com/00/CODE_RECT-456","position":{"type":"click","clickPoint":{"x":150,"y":150}},"polygon":null}
 COORDINATES_DATA_END
 
 1
