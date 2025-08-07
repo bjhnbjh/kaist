@@ -163,7 +163,7 @@ export default function VideoPlayer({
 
   // API URL 설정 (현재 서버 사용)
   const getApiUrl = () => {
-    // 현재 페이지와 같은 도메��� 사용
+    // 현재 페이��와 같은 도메��� 사용
     return window.location.origin;
   };
 
@@ -205,7 +205,7 @@ export default function VideoPlayer({
         // API 응답 상세 정보 설정
         setApiResponseData({
           success: true,
-          message: result.message || '그���기 데이터가 성공적으로 처리되었습니다.',
+          message: result.message || '그���기 데이터가 성공적으로 처리되었습���다.',
           drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유그리기',
           coordinates: area.type === 'click' && area.clickPoint
             ? `(${area.clickPoint.x}, ${area.clickPoint.y})`
@@ -259,7 +259,7 @@ export default function VideoPlayer({
         throw new Error(`HTTP ${response.status}: ${errorResult.message || 'API 전송 실패'}`);
       }
     } catch (error) {
-      console.error('API 전송 오류:', error);
+      console.error('API ���송 오류:', error);
 
       if (!apiResponseData || apiResponseData.success !== false) {
         // API 통신 자체 오류 (네트워�� 등)
@@ -1312,7 +1312,7 @@ export default function VideoPlayer({
                 }}
               >
                 {isErasing
-                  ? "🗑️ ���우개 모드 - 그려진 영역을 클릭하여 삭제하세요"
+                  ? "🗑️ ���우개 모드 - 그려진 영역을 클릭하��� 삭제하세요"
                   : drawingMode === "click"
                   ? "📍 클릭 모드 활성화 - 마우스로 클릭하여 좌표를 찍어보세요"
                   : "🎨 그리기 모드 활성화 - 마우스�� 드래그하여 영역을 그려보세요"}
@@ -1847,7 +1847,7 @@ export default function VideoPlayer({
                         탐지��� 객체가 없습니다.
                       </div>
                       <div style={{ fontSize: "0.85rem" }}>
-                        �����을 그려서 객체를 추가해보세요
+                        �����을 그려서 객체를 추가해보세��
                       </div>
                     </div>
                   )
@@ -2850,7 +2850,6 @@ export default function VideoPlayer({
                       additionalInfo: modalObjectInfo.additionalInfo,
                       dlReservoirDomain: modalObjectInfo.dlReservoirDomain,
                       category: modalObjectInfo.category,
-                      videoCurrentTime: modalObjectInfo.videoCurrentTime,
                     });
 
                     // 그리기 영역과 객체 매핑 저장
