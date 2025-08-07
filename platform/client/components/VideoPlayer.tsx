@@ -1293,7 +1293,7 @@ export default function VideoPlayer({
                     border: "none",
                     fontWeight: "500",
                     cursor: "pointer",
-                    background: // vttOverlayEnabled ? "#ef4444" : "#3b82f6",
+                    background: "white",
                     color: "white",
                     fontSize: "0.9rem",
                   }}
@@ -1320,8 +1320,8 @@ export default function VideoPlayer({
                 style={{
                   textAlign: "center",
                   fontSize: "0.875rem",
-                  color: // vttOverlayEnabled ? "#3b82f6" : "#6b7280",
-                  fontWeight: // vttOverlayEnabled ? "600" : "normal",
+                  color: "white",
+                  fontWeight: "white",
                 }}
               >
                 📍 VTT 좌표: {// vttCoordinates.length}개
