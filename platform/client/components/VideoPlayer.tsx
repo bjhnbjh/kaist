@@ -82,7 +82,8 @@ const formatTime = (seconds: number) => {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);
-  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  const milliseconds = Math.floor((seconds % 1) * 100); // 100분의 1초 단위
+  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}.${milliseconds.toString().padStart(2, "0")}`;
 };
 
 export default function VideoPlayer({
@@ -665,7 +666,7 @@ export default function VideoPlayer({
           dlReservoirDomain: obj.dlReservoirDomain,
           category: obj.category,
           confidence: obj.confidence,
-          videoCurrentTime: obj.videoCurrentTime || 0  // 각 객체의 실제 생성 시간 사용
+          videoCurrentTime: obj.videoCurrentTime || 0  // 각 객체의 실제 생성 시�� 사용
         })),
         duration: videoDuration,
         timestamp: Date.now()
@@ -838,7 +839,7 @@ export default function VideoPlayer({
     setIsEditing(false);
   };
 
-  // 뒤로가기 핸들러 - 탐지된 객체 목록으로만 이동하고 버튼 활성화 상태 유��
+  // 뒤로가기 핸들러 - 탐지된 객체 목록으로만 이동하��� 버튼 활성화 상태 유��
   const handleBackToObjectList = () => {
     setSelectedObjectId(null);
     setIsEditing(false);
@@ -1408,7 +1409,7 @@ export default function VideoPlayer({
                       // 객체 목목이 열려있을 때 닫기
                       setShowObjectList(false);
                     } else if (selectedObjectId) {
-                      // 객�� 상세 정보에서 닫기
+                      // 객�� ��세 정보에서 닫기
                       setShowObjectList(false);
                       setSelectedObjectId(null);
                     }
