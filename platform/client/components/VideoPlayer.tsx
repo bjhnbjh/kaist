@@ -1107,7 +1107,7 @@ export default function VideoPlayer({
               </button>
 
               {isDrawing && (
-                <div style={{ display: "flex", gap: "8px" }}>
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                   <button
                     onClick={() => {
                       setDrawingMode("rectangle");
@@ -1131,6 +1131,30 @@ export default function VideoPlayer({
                     }}
                   >
                     네모박스
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDrawingMode("click");
+                      setIsErasing(false);
+                    }}
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: "6px",
+                      border: "1px solid #d1d5db",
+                      fontWeight: "500",
+                      cursor: "pointer",
+                      background:
+                        drawingMode === "click" && !isErasing
+                          ? "#f59e0b"
+                          : "white",
+                      color:
+                        drawingMode === "click" && !isErasing
+                          ? "white"
+                          : "#374151",
+                      fontSize: "0.85rem",
+                    }}
+                  >
+                    클릭
                   </button>
                   <button
                     onClick={() => setIsErasing(!isErasing)}
@@ -1706,7 +1730,7 @@ export default function VideoPlayer({
                             }}
                           >
                             <Trash2 style={{ width: 16, height: 16 }} />
-                            선택된 객체 ����제
+                            ���택된 객체 ����제
                           </button>
                         </div>
                       )}
@@ -2267,7 +2291,7 @@ export default function VideoPlayer({
         </div>
       </div>
 
-      {/* 삭제 확인 모달 */}
+      {/* 삭제 ���인 모달 */}
       {showDeleteConfirmModal && (
         <div
           style={{
