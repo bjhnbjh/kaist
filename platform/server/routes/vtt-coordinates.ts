@@ -45,12 +45,12 @@ function normalizeFileName(fileName: string): string {
 function extractCoordinatesFromVtt(content: string): any[] {
   const coordinates: any[] = [];
   const lines = content.split('\n');
-  
+
   let inCoordinatesSection = false;
-  
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    
+
     if (line === 'COORDINATES_DATA_START') {
       inCoordinatesSection = true;
       continue;
@@ -59,14 +59,27 @@ function extractCoordinatesFromVtt(content: string): any[] {
       continue;
     } else if (inCoordinatesSection && line.startsWith('{')) {
       try {
-        const coordData = JSON.parse(line);
-        coordinates.push(coordData);
+        const objectData = JSON.parse(line);
+        // Transform to the format expected by client
+        const transformedData = {
+          objectName: objectData.name,
+          videoTime: objectData.videoTime,
+          code: objectData.code,
+          category: objectData.category,
+          domain: objectData.domain,
+          info: objectData.info,
+          finallink: objectData.finallink,
+          position: objectData.position,
+          polygon: objectData.polygon,
+          coordinates: objectData.position  // For backward compatibility
+        };
+        coordinates.push(transformedData);
       } catch (e) {
-        console.warn('Failed to parse coordinates data:', line);
+        console.warn('Failed to parse object data:', line);
       }
     }
   }
-  
+
   return coordinates;
 }
 
