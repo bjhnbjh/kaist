@@ -163,7 +163,7 @@ export default function VideoPlayer({
 
   // API URL 설정 (현재 서버 사용)
   const getApiUrl = () => {
-    // 현재 페이지와 같은 도메��� 사용
+    // 현재 페이지와 같은 도메���� 사용
     return window.location.origin;
   };
 
@@ -335,7 +335,7 @@ export default function VideoPlayer({
         const height = area.endPoint.y - area.startPoint.y;
         ctx.strokeRect(area.startPoint.x, area.startPoint.y, width, height);
       } else if (area.type === "click" && area.clickPoint) {
-        // 클릭 포인트 그���기 (십자가 ���크 + 원)
+        // 클�� 포인트 그���기 (십자가 ���크 + 원)
         const point = area.clickPoint;
         const size = 8;
 
@@ -432,7 +432,7 @@ export default function VideoPlayer({
         ctx.setLineDash([]); // 점선 초기화
       });
     }
-  }, [drawnAreas, vttOverlayEnabled, vttCoordinates, videoCurrentTime]);
+  }, [drawnAreas]);
 
   const getCanvasCoordinates = useCallback((e: React.MouseEvent) => {
     const canvas = canvasRef.current;
@@ -2883,7 +2883,7 @@ export default function VideoPlayer({
                 })()}
               </div>
 
-              {/* 추가정보 섹션 */}
+              {/* 추가정보 ��션 */}
               <div style={{ marginBottom: "16px" }}>
                 <div
                   style={{
