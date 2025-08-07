@@ -2,7 +2,7 @@ import { RequestHandler } from "express";
 import fs from "fs";
 import path from "path";
 import multer from "multer";
-import { getKoreaTimeISO, normalizeFileName, getDataDirectory, ensureDirectoryExists } from "../utils/common";
+import { getKoreaTimeISO, normalizeFileName as normalizeFileNameUtil, getDataDirectory, ensureDirectoryExists } from "../utils/common";
 
 /**
  * ===================================
@@ -196,7 +196,7 @@ export const uploadMiddleware = multer({
 }).single('video'); // 'video' 필드명으로 단일 파일 업로드
 
 // ========================================
-// 💾 데이터 저장 함수들
+// 💾 데���터 저장 함수들
 // ========================================
 
 /**
@@ -232,7 +232,7 @@ function saveUploadData(uploadData: UploadData, filePath?: string, videoFolder?:
   globalData.lastUpdated = getKoreaTimeISO();
   fs.writeFileSync(UPLOADS_FILE, JSON.stringify(globalData, null, 2));
 
-  // 2. 개별 동영상 ���더에 메타데이터 저장
+  // 2. ��별 동영상 ���더에 메타데이터 저장
   if (videoFolder) {
     const videoFolderPath = path.join(DATA_DIR, videoFolder);
     const localUploadsFile = path.join(videoFolderPath, `${videoFolder}-uploads.json`);
@@ -386,7 +386,7 @@ export const handleVideoDelete: RequestHandler = (req, res) => {
     if (!videoFileName) {
       return res.status(400).json({
         success: false,
-        message: '비디오 파일명이 제공되지 않았습니다.'
+        message: '비디오 파일명이 제공되��� 않았습니다.'
       });
     }
 
