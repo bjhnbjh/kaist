@@ -20,7 +20,7 @@ import path from "path";
 /**
  * 파일명을 안전하게 정규화하는 함수 (한글 지원)
  * @param {string} fileName - 원본 파일명
- * @returns {string} 정규화된 파일명
+ * @returns {string} 정규화��� 파일명
  */
 function normalizeFileName(fileName: string): string {
   const ext = path.extname(fileName);
@@ -62,16 +62,15 @@ function extractCoordinatesFromVtt(content: string): any[] {
         const objectData = JSON.parse(line);
         // Transform to the format expected by client
         const transformedData = {
-          objectName: objectData.name,
-          videoTime: objectData.videoTime,
-          code: objectData.code,
-          category: objectData.category,
-          domain: objectData.domain,
-          info: objectData.info,
-          finallink: objectData.finallink,
-          position: objectData.position,
-          polygon: objectData.polygon,
-          coordinates: objectData.position  // For backward compatibility
+          "이름": objectData["이름"] || objectData.name,
+          "시간": objectData["시간"] || objectData.videoTime,
+          "code": objectData.code,
+          "catefory": objectData["catefory"] || objectData.category,
+          "도메인": objectData["도메인"] || objectData.domain,
+          "정보": objectData["정보"] || objectData.info,
+          "finallink": objectData.finallink,
+          "position": objectData.position,
+          "polygon": objectData.polygon
         };
         coordinates.push(transformedData);
       } catch (e) {
@@ -107,7 +106,7 @@ export const handleVttCoordinatesRead: RequestHandler = (req, res) => {
   try {
     const { videoId, videoFileName } = req.query as any;
 
-    // 필수 파라미터 검증
+    // 필수 파��미터 검증
     if (!videoId || !videoFileName) {
       return res.status(400).json({
         success: false,
