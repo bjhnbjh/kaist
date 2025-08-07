@@ -11,7 +11,7 @@ import path from "path";
  * 1. 탐지된 객체 정보를 WebVTT 형식으로 변환
  * 2. 시간 중복 방지 (같은 시간의 객체들을 0.1초씩 조정)
  * 3. 기존 VTT 파일과 새로운 객체 정보 병합
- * 4. 한글 파일명 지원 및 안전한 파일 저장
+ * 4. 한글 파일명 지원 및 안전한 파일 저��
  * 
  * 📝 API 수정 가이드:
  * - VTT 형식 변경: generateCompleteVttContent 함��� 수정
@@ -49,7 +49,7 @@ function normalizeFileName(fileName: string): string {
   // 파일명을 UTF-8로 정규화하고 불필요한 공백 제거
   let normalized = baseName.normalize('NFC').trim();
 
-  // 특수문자를 안전한 문자로 대체
+  // 특수문자를 안전한 문자로 대��
   normalized = normalized
     .replace(/[<>:"/\\|?*]/g, '_')  // 파일시스템에서 금지된 문자들
     .replace(/\s+/g, '_')           // 공백을 언더스코어로
@@ -86,7 +86,7 @@ function formatDuration(seconds: number): string {
  * WebVTT 생성에 필요한 데이터 인터페이스
  * 
  * 📝 수정 포인트:
- * - 새로운 객체 속성 추가: objects 배열의 객체 ��입에 필드 추가
+ * - 새로운 객체 속성 추가: objects 배열의 객체 타입에 필드 추가
  * - 메타데이터 추가: 이 인터페이스에 새로운 필드 추가
  */
 interface WebVTTData {
@@ -125,7 +125,7 @@ const DATA_DIR = path.join(process.cwd(), 'data');
  * 
  * 📝 수정 포인트:
  * - 저장 경로 변경: DATA_DIR 수정
- * - 권한 설정: mkdir 옵션에 mode 추가
+ * - 권한 설정: mkdir 옵션��� mode 추가
  */
 function initializeWebVTTFiles() {
   // data 디렉토리가 없으면 생성
@@ -202,7 +202,7 @@ function extractObjectsFromVtt(content: string): any[] {
  * - 정렬 기준 변경: sort 함수의 비교 로직 수정
  * 
  * @param {Array} existingObjects - 기존 객체들
- * @param {Array} newObjects - ���로운 객체들
+ * @param {Array} newObjects - 새로운 객체들
  * @returns {Array} 병합되고 시간 조정된 객체 배열
  */
 function combineObjectsWithTimeDeduplication(existingObjects: any[], newObjects: any[]): any[] {
@@ -258,6 +258,24 @@ function generateCompleteVttContent(data: WebVTTData, objects: any[]): string {
   vttLines.push(`동영상: ${data.videoFileName}`);
   vttLines.push(`생성일: ${getKoreaTimeISO()}`);
   vttLines.push(`탐지된 객체 수: ${objects.length}`);
+
+  // 📍 좌표 정보를 NOTE 섹션에 JSON 형태로 저장 (화면에는 표시되지 않음)
+  if (objects.some(obj => obj.coordinates)) {
+    vttLines.push('COORDINATES_DATA_START');
+    objects.forEach(obj => {
+      if (obj.coordinates) {
+        const coordData = {
+          objectId: obj.id,
+          objectName: obj.name,
+          videoTime: obj.videoCurrentTime || 0,
+          coordinates: obj.coordinates
+        };
+        vttLines.push(JSON.stringify(coordData));
+      }
+    });
+    vttLines.push('COORDINATES_DATA_END');
+  }
+
   vttLines.push('');
 
   if (objects.length > 0) {
@@ -267,7 +285,7 @@ function generateCompleteVttContent(data: WebVTTData, objects: any[]): string {
     vttLines.push(`📋 탐지된 객체: ${objects.map(obj => obj.name).join(', ')}`);
     vttLines.push('');
 
-    // 🎯 각 객체별 상�� 정보
+    // 🎯 각 객체별 상세 정보
     objects.forEach((obj, index) => {
       const currentTime = obj.videoCurrentTime || 0;
       const startTime = formatDuration(currentTime);
@@ -301,7 +319,7 @@ function generateCompleteVttContent(data: WebVTTData, objects: any[]): string {
  * 기존 VTT와 새로운 데이터를 병합하여 업데이트된 VTT 생성
  * 
  * 📝 수정 포인트:
- * - 헤더 업데이트 로직 변경: 헤더 ���보 수정/추가
+ * - 헤더 업데이트 로직 변경: 헤더 정보 수정/추가
  * - 병합 전략 변경: 기존 vs 새로운 객체 처리 방식 수정
  * 
  * @param {string} existingContent - 기존 VTT 파일 내용
@@ -336,7 +354,7 @@ function saveWebVTTFile(webvttData: WebVTTData) {
   // 📄 WebVTT 콘텐츠 생성
   const vttContent = generateCompleteVttContent(webvttData, webvttData.objects);
 
-  // 📁 동영상 파일명��� 정규화하여 폴더 찾기
+  // 📁 동영상 파일명을 정규화하여 폴더 찾기
   const normalizedName = normalizeFileName(webvttData.videoFileName);
   const videoFolderPath = path.join(DATA_DIR, normalizedName);
 
@@ -457,7 +475,7 @@ export const handleWebVTTSave: RequestHandler = (req, res) => {
  * 
  * 1. VTT 형식 변경:
  *    - generateCompleteVttContent 함수의 vttLines 배열 수정
- *    - 이모지나 라벨 형식 ���경
+ *    - 이모지나 라벨 형식 변경
  * 
  * 2. 시간 형식 변경:
  *    - formatDuration 함수 수정
