@@ -18,7 +18,6 @@ import { handleSaveData } from "./routes/save-data";
  * 3. POST /api/drawing          - 그리기 데이터 처리 (객체 영역 그리기)
  * 4. POST /api/webvtt           - WebVTT 자막 파일 생성/업데이트
  * 5. POST /api/save-data        - 편집 데이터 JSON 저장
- * 6. GET /api/vtt-coordinates   - VTT 파일에서 좌표 데이터 읽기
  * 
  * 📂 데이터 저장 구조:
  * data/
@@ -37,7 +36,7 @@ export function createServer() {
   // 🔧 미들웨어 설정
   // ========================================
   
-  // CORS 설정 - 클라이언트에��� API 호출 허용
+  // CORS 설정 - 클라이언트에서 API 호출 허용
   app.use(cors());
   
   // JSON 파싱 미들웨어 - 큰 용량 파일 처리를 위해 50MB 제한
