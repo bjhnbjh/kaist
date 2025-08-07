@@ -150,7 +150,7 @@ export default function VideoPlayer({
 
   // API URL 설정 (현재 서버 사용)
   const getApiUrl = () => {
-    // 현재 페이지와 같은 도메인 사용
+    // 현재 페이지와 같은 도메��� 사용
     return window.location.origin;
   };
 
@@ -334,6 +334,19 @@ export default function VideoPlayer({
       } else if (drawingMode === "rectangle") {
         setRectangleStart(coords);
         setCurrentRectangle(null);
+      } else if (drawingMode === "click") {
+        // 클릭 모드에서는 즉시 클릭 포인트 생성
+        const newClickArea: DrawnArea = {
+          id: `click-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          points: [],
+          color: "#ef4444",
+          type: "click",
+          clickPoint: coords,
+        };
+        setDrawnAreas((prev) => [...prev, newClickArea]);
+
+        // 클릭 완료 시 즉시 API로 전송
+        sendDrawingToApi(newClickArea);
       } else {
         setCurrentPath([coords]);
       }
@@ -742,7 +755,7 @@ export default function VideoPlayer({
     setIsEditing(false);
   };
 
-  // 뒤로가기 핸들러 - 탐지된 객체 목록으로만 이동하고 버튼 활성화 상태 유지
+  // 뒤로가기 핸들러 - 탐지된 객체 목록으로만 이동하고 버튼 활성화 상태 유��
   const handleBackToObjectList = () => {
     setSelectedObjectId(null);
     setIsEditing(false);
@@ -1279,7 +1292,7 @@ export default function VideoPlayer({
                 <button
                   onClick={() => {
                     if (!showObjectList && !selectedObjectId) {
-                      // 처음 클릭 시 객체 목록 열기
+                      // 처음 클릭 시 객체 목�� 열기
                       setShowObjectList(true);
                       setSelectedObjectId(null);
                     } else if (showObjectList && !selectedObjectId) {
@@ -2183,7 +2196,7 @@ export default function VideoPlayer({
                         gap: "6px",
                       }}
                     >
-                      ✅ {selectedObjectIds.length}개 ��체가 선택됨
+                      ✅ {selectedObjectIds.length}개 객체가 선택됨
                     </span>
                   </div>
                   <button
