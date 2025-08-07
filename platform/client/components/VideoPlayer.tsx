@@ -177,7 +177,7 @@ export default function VideoPlayer({
 
   // API URL 설정 (현재 서버 사용)
   const getApiUrl = () => {
-    // 현재 페이지와 ��은 도메��� 사용
+    // 현재 페이지와 같은 도메��� 사용
     return window.location.origin;
   };
 
@@ -216,7 +216,7 @@ export default function VideoPlayer({
       setIsApiLoading(true);
       const apiUrl = getApiUrl();
 
-      // 현재 동영��� 재생 시간 가져오기
+      // 현재 동영상 재생 시간 가져오기
       const currentVideoTime = videoRef.current?.currentTime || 0;
 
       const drawingData = {
@@ -762,7 +762,7 @@ export default function VideoPlayer({
    *
    * 📝 수정 포인트:
    * - API URL 변경: window.location.origin 수정
-   * - WebVTT 데이터 구조 변경: webvttData 객체 ��정
+   * - WebVTT 데이터 구조 변경: webvttData 객체 수정
    * - 응답 처리 변경: response 처리 로직 수정
    */
   const sendWebVTTToApi = async () => {
@@ -1398,7 +1398,7 @@ export default function VideoPlayer({
                     fontSize: "0.9rem",
                   }}
                 >
-                  {vttOverlayEnabled ? "오버���이 끄기" : "오버레이 켜기"}
+                  {vttOverlayEnabled ? "오버레이 끄기" : "오버레이 켜기"}
                 </button>
               )}
             </div>
@@ -1412,6 +1412,20 @@ export default function VideoPlayer({
                 }}
               >
                 그려진 영역: {drawnAreas.length}개
+              </div>
+            )}
+
+            {vttCoordinates.length > 0 && (
+              <div
+                style={{
+                  textAlign: "center",
+                  fontSize: "0.875rem",
+                  color: vttOverlayEnabled ? "#3b82f6" : "#6b7280",
+                  fontWeight: vttOverlayEnabled ? "600" : "normal",
+                }}
+              >
+                📍 VTT 좌표: {vttCoordinates.length}개
+                {vttOverlayEnabled && " (오버레이 활성화)"}
               </div>
             )}
 
@@ -1432,7 +1446,7 @@ export default function VideoPlayer({
                   ? "🗑️ ���우개 모드 - 그려진 영역을 클릭하여 삭제하세요"
                   : drawingMode === "click"
                   ? "📍 클릭 모드 활성화 - 마우스로 클릭하여 좌표를 찍어보세요"
-                  : "🎨 그리기 모드 활성화 - 마우스�� 드래그하여 영역을 ���려보세요"}
+                  : "🎨 그리기 모드 활성화 - 마우스�� 드래그하여 영역을 그려보세요"}
               </div>
             )}
           </div>
@@ -2412,7 +2426,7 @@ export default function VideoPlayer({
                       🔍
                     </div>
                     <div style={{ fontWeight: "500", marginBottom: "4px" }}>
-                      ���지된 ��체 없음
+                      ���지된 객체 없음
                     </div>
                     <div style={{ fontSize: "0.85rem" }}>
                       "탐지된 객체" 버튼�� 클릭하여
@@ -2697,7 +2711,7 @@ export default function VideoPlayer({
                   margin: 0,
                 }}
               >
-                �� 객체 정보 입��
+                �� 객체 정보 입력
               </h3>
               <button
                 onClick={() => setShowInfoModal(false)}
@@ -2755,7 +2769,7 @@ export default function VideoPlayer({
                   }}
                 />
 
-                {/* 카테고리 드롭다운 */}
+                {/* ���테고리 드롭다운 */}
                 <div style={{ marginTop: "8px" }}>
                   <select
                     value={modalObjectInfo.category}
@@ -2943,7 +2957,7 @@ export default function VideoPlayer({
                   redrawCanvas();
                   setShowInfoModal(false);
                   setModalObjectInfo(null);
-                  toast.info('등록이 취소되었습니다. 그려�� 영역이 삭제되었습니다.');
+                  toast.info('등록이 취소되었습니다. 그����� 영역이 삭제되었습니다.');
                 }}
                 style={{
                   padding: "10px 20px",
@@ -2961,7 +2975,7 @@ export default function VideoPlayer({
               <button
                 onClick={() => {
                   if (modalObjectInfo && video && onAddNewObject) {
-                    // 그리기 영역을 새로운 객체로 추가 - 팝업창에서 입력한 모��� 정보 포함
+                    // 그리기 영역을 새로운 객체로 추가 - 팝업창에서 입력한 모든 정보 포함
                     const addedObjectId = onAddNewObject(video.id, modalObjectInfo.name, {
                       code: modalObjectInfo.code,
                       additionalInfo: modalObjectInfo.additionalInfo,
