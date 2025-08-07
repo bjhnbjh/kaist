@@ -253,7 +253,7 @@ export default function VideoPlayer({
       console.error('API 전송 오류:', error);
 
       if (!apiResponseData || apiResponseData.success !== false) {
-        // API 통신 자체 오류 (네트워크 등)
+        // API 통신 자체 오류 (네트워�� 등)
         setApiResponseData({
           success: false,
           message: error instanceof Error ? error.message : '알 수 없는 ��류가 발생했습니다.',
@@ -821,7 +821,7 @@ export default function VideoPlayer({
         category?: string;
       } = {};
 
-      // 편집된 값이 있을 때만 업데이트에 포함
+      // ��집된 값이 있을 때만 업데이트에 포함
       if (editedObjectName.trim()) updates.name = editedObjectName.trim();
       if (editedObjectCode.trim()) updates.code = editedObjectCode.trim();
       if (editedObjectInfo.trim()) updates.additionalInfo = editedObjectInfo.trim();
@@ -941,7 +941,7 @@ export default function VideoPlayer({
       setShowDeleteConfirmModal(false);
       setObjectToDelete(null);
       setDeleteConfirmed(false);
-      // 초기에는 객체 목록을 닫은 상태로 시작
+      // 초기에는 ��체 목록을 닫은 상태로 시작
       setShowObjectList(false);
 
       if (videoDuration === 0) {
@@ -1813,7 +1813,7 @@ export default function VideoPlayer({
                         탐지��� 객체가 없습니다.
                       </div>
                       <div style={{ fontSize: "0.85rem" }}>
-                        ���역을 그려서 객체를 추가해보세요
+                        �����을 그려서 객체를 추가해보세요
                       </div>
                     </div>
                   )
@@ -2825,6 +2825,126 @@ export default function VideoPlayer({
                 }}
               >
                 저장
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* API 응답 상세 정보 모달 */}
+      {showApiResponseModal && apiResponseData && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2000,
+          }}
+          onClick={() => setShowApiResponseModal(false)}
+        >
+          <div
+            style={{
+              background: "white",
+              borderRadius: "12px",
+              padding: "24px",
+              maxWidth: "500px",
+              width: "90%",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+              border: `3px solid ${apiResponseData.success ? '#10b981' : '#ef4444'}`,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ textAlign: "center", marginBottom: "20px" }}>
+              <div style={{ fontSize: "3rem", marginBottom: "12px" }}>
+                {apiResponseData.success ? "✅" : "❌"}
+              </div>
+              <h3
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: "600",
+                  color: apiResponseData.success ? "#059669" : "#dc2626",
+                  margin: 0,
+                  marginBottom: "8px",
+                }}
+              >
+                {apiResponseData.success ? "API 전송 성공!" : "API 전송 실패"}
+              </h3>
+              <p
+                style={{
+                  fontSize: "0.95rem",
+                  color: "#6b7280",
+                  margin: 0,
+                }}
+              >
+                {apiResponseData.message}
+              </p>
+            </div>
+
+            <div
+              style={{
+                background: "#f8fafc",
+                border: "1px solid #e2e8f0",
+                borderRadius: "8px",
+                padding: "16px",
+                marginBottom: "20px",
+              }}
+            >
+              <div style={{ marginBottom: "12px" }}>
+                <strong style={{ color: "#374151" }}>그리기 타입:</strong>
+                <span style={{ marginLeft: "8px", color: "#6b7280" }}>
+                  {apiResponseData.drawingType}
+                </span>
+              </div>
+
+              {apiResponseData.coordinates && (
+                <div style={{ marginBottom: "12px" }}>
+                  <strong style={{ color: "#374151" }}>좌표 정보:</strong>
+                  <span style={{ marginLeft: "8px", color: "#6b7280", fontFamily: "monospace" }}>
+                    {apiResponseData.coordinates}
+                  </span>
+                </div>
+              )}
+
+              {apiResponseData.videoTime !== undefined && (
+                <div style={{ marginBottom: "12px" }}>
+                  <strong style={{ color: "#374151" }}>동영상 시간:</strong>
+                  <span style={{ marginLeft: "8px", color: "#6b7280" }}>
+                    {formatTime(apiResponseData.videoTime)}
+                  </span>
+                </div>
+              )}
+
+              {apiResponseData.timestamp && (
+                <div>
+                  <strong style={{ color: "#374151" }}>처리 시간:</strong>
+                  <span style={{ marginLeft: "8px", color: "#6b7280" }}>
+                    {apiResponseData.timestamp}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div style={{ textAlign: "center" }}>
+              <button
+                onClick={() => setShowApiResponseModal(false)}
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: "6px",
+                  border: "none",
+                  background: apiResponseData.success ? "#10b981" : "#ef4444",
+                  color: "white",
+                  fontSize: "0.9rem",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                }}
+              >
+                확인
               </button>
             </div>
           </div>
