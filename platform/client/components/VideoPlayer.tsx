@@ -367,7 +367,7 @@ export default function VideoPlayer({
     });
 
     // VTT 좌표 기반 오버레이 표시 (활성화된 경우)
-    if (vttOverlayEnabled && vttCoordinates.length > 0) {
+    if (// vttOverlayEnabled && vttCoordinates.length > 0) {
       const currentTime = videoRef.current?.currentTime || 0;
 
       // 현재 시간에 해당하는 좌표들 찾기 (±0.5초 범위)
@@ -1351,19 +1351,19 @@ export default function VideoPlayer({
 
               {vttCoordinates.length > 0 && (
                 <button
-                  onClick={() => setVttOverlayEnabled(!vttOverlayEnabled)}
+                  onClick={() => setVttOverlayEnabled(!// vttOverlayEnabled)}
                   style={{
                     padding: "8px 16px",
                     borderRadius: "6px",
                     border: "none",
                     fontWeight: "500",
                     cursor: "pointer",
-                    background: vttOverlayEnabled ? "#ef4444" : "#3b82f6",
+                    background: // vttOverlayEnabled ? "#ef4444" : "#3b82f6",
                     color: "white",
                     fontSize: "0.9rem",
                   }}
                 >
-                  {vttOverlayEnabled ? "오버레이 끄기" : "오���레이 켜기"}
+                  {// vttOverlayEnabled ? "오버레이 끄기" : "오���레이 켜기"}
                 </button>
               )}
             </div>
@@ -1385,12 +1385,12 @@ export default function VideoPlayer({
                 style={{
                   textAlign: "center",
                   fontSize: "0.875rem",
-                  color: vttOverlayEnabled ? "#3b82f6" : "#6b7280",
-                  fontWeight: vttOverlayEnabled ? "600" : "normal",
+                  color: // vttOverlayEnabled ? "#3b82f6" : "#6b7280",
+                  fontWeight: // vttOverlayEnabled ? "600" : "normal",
                 }}
               >
                 📍 VTT 좌표: {vttCoordinates.length}개
-                {vttOverlayEnabled && " (오버레이 활성화)"}
+                {// vttOverlayEnabled && " (오버레이 활성화)"}
               </div>
             )}
 
