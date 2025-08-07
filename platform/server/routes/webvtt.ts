@@ -64,7 +64,7 @@ function normalizeFileName(fileName: string): string {
  * 초 단위 시간을 WebVTT 형식으로 변환
  * 
  * 📝 수정 포인트:
- * - 시간 형식 변경: 반환 형식 수정 (현재: MM:SS:HH)
+ * - 시간 형식 변경: ��환 형식 수정 (현재: MM:SS:HH)
  * - 밀리초 정밀도 변경: ms 계산 로직 수정
  * 
  * @param {number} seconds - 초 단위 시간
@@ -101,7 +101,7 @@ interface WebVTTData {
     category?: string;
     confidence?: number;
     videoCurrentTime?: number;  // 객체가 생성된 동영상 시점
-    finallink?: string;  // 최종 링크
+    finallink?: string;  // 최�� 링크
     coordinates?: {  // 그리기 좌표 정보 (VTT에만 저장, 화면에는 표시 안함)
       type: "path" | "rectangle" | "click";
       points?: Array<{ x: number; y: number }>;
@@ -145,7 +145,7 @@ function initializeWebVTTFiles() {
  * VTT에서 기존 객체 정보 추출 (단순화된 파싱)
  * 
  * 📝 수정 포인트:
- * - 파싱 규칙 변경: 이모지 패턴이나 라벨 형식 변경 시 여기 수정
+ * - ��싱 규칙 변경: 이모지 패턴이나 라벨 형식 변경 시 여기 수정
  * - 새로운 속성 파싱: 새로운 객체 속성 추가 시 파싱 로직 추가
  * 
  * @param {string} content - 기존 VTT 파일 내용
@@ -230,7 +230,7 @@ function extractObjectsFromVtt(content: string): any[] {
  * - 정렬 기준 변경: sort 함수의 비교 로직 수정
  * 
  * @param {Array} existingObjects - 기존 객체들
- * @param {Array} newObjects - ��로운 객체들
+ * @param {Array} newObjects - 새로운 객체들
  * @returns {Array} 병합되고 시간 조정된 객체 배열
  */
 function combineObjectsWithTimeDeduplication(existingObjects: any[], newObjects: any[]): any[] {
@@ -292,15 +292,15 @@ function generateCompleteVttContent(data: WebVTTData, objects: any[]): string {
     vttLines.push('COORDINATES_DATA_START');
     objects.forEach(obj => {
       const objectData = {
-        name: obj.name,
-        videoTime: obj.videoCurrentTime || 0,
-        code: obj.code || `CODE_RECT-${Math.floor(Math.random() * 1000)}`,
-        category: obj.category || "기타",
-        domain: obj.dlReservoirDomain || "http://www.naver.com",
-        info: obj.additionalInfo || "AI가 자동으로 탐지한 객체입니다.",
-        finallink: `${obj.dlReservoirDomain || "http://www.naver.com"}/00/${obj.code || `CODE_RECT-${Math.floor(Math.random() * 1000)}`}`,
-        position: obj.coordinates || obj.position || null,
-        polygon: obj.polygon || null
+        "이름": obj.name,
+        "시간": obj.videoCurrentTime || 0,
+        "code": obj.code || `CODE_RECT-${Math.floor(Math.random() * 1000)}`,
+        "catefory": obj.category || "기타",
+        "도메인": obj.dlReservoirDomain || "http://www.naver.com",
+        "정보": obj.additionalInfo || "AI가 자동으로 탐지한 객체입니다.",
+        "finallink": `${obj.dlReservoirDomain || "http://www.naver.com"}/00/${obj.code || `CODE_RECT-${Math.floor(Math.random() * 1000)}`}`,
+        "position": obj.coordinates || obj.position || null,
+        "polygon": obj.polygon || null
       };
       vttLines.push(JSON.stringify(objectData));
     });
@@ -325,7 +325,7 @@ function generateCompleteVttContent(data: WebVTTData, objects: any[]): string {
       vttLines.push(`${index + 2}`); // 큐 번호 (1은 개요용이므로 2부터 시작)
       vttLines.push(`${startTime} --> ${endTime}`);
 
-      // 📝 객체 정보 구성 (���모지와 함께)
+      // 📝 객체 정보 구성 (이모지와 함께)
       const objectInfo = [`🎯 ${obj.name}`];
       if (obj.code) objectInfo.push(`🔧 코드: ${obj.code}`);
       if (obj.category) objectInfo.push(`📂 카테고리: ${obj.category}`);
@@ -400,7 +400,7 @@ function saveWebVTTFile(webvttData: WebVTTData) {
 
   let finalVttContent = '';
 
-  // 기존 VTT 파일이 있으면 기존 ��체들과 병합
+  // 기존 VTT 파일이 있으면 기존 객체들과 병합
   if (fs.existsSync(singleVttFilePath)) {
     const existingContent = fs.readFileSync(singleVttFilePath, 'utf8');
     finalVttContent = createUpdatedVttContent(existingContent, webvttData);
@@ -520,7 +520,7 @@ export const handleWebVTTSave: RequestHandler = (req, res) => {
  *    - DATA_DIR 상수 수정
  *    - 폴더 구조나 파일명 규칙 변경
  * 
- * 5. API ���답 구조 변경:
+ * 5. API 응답 구조 변경:
  *    - handleWebVTTSave의 response 객체 수정
  *    - 클라이언트에서 받는 데이터 구조도 함께 수정 필요
  * 
