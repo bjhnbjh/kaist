@@ -170,6 +170,7 @@ export default function VideoPlayer({
         points: area.points,
         startPoint: area.startPoint,
         endPoint: area.endPoint,
+        clickPoint: area.clickPoint, // 클릭 포인트 추가
         videoId: video?.id,
         videoCurrentTime: currentVideoTime,  // 실제 동영상 시간 추가
         timestamp: Date.now()
