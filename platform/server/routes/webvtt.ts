@@ -8,7 +8,7 @@ import path from "path";
  * ===================================
  * 
  * 이 파일의 기능:
- * 1. 탐지된 객체 정보를 WebVTT ���식으로 변환
+ * 1. 탐지된 객체 정보를 WebVTT 형식으로 변환
  * 2. 시간 중복 방지 (같은 시간의 객체들을 0.1초씩 조정)
  * 3. 기존 VTT 파일과 새로운 객체 정보 병합
  * 4. 한글 파일명 지원 및 안전한 파일 저장
@@ -101,6 +101,7 @@ interface WebVTTData {
     category?: string;
     confidence?: number;
     videoCurrentTime?: number;  // 객체가 생성된 동영상 시점
+    finallink?: string;  // 최종 링크
     coordinates?: {  // 그리기 좌표 정보 (VTT에만 저장, 화면에는 표시 안함)
       type: "path" | "rectangle" | "click";
       points?: Array<{ x: number; y: number }>;
@@ -108,6 +109,8 @@ interface WebVTTData {
       endPoint?: { x: number; y: number };
       clickPoint?: { x: number; y: number };
     };
+    position?: any;  // 좌표들
+    polygon?: any;   // 추후 API를 통해 가져올 폴리곤 데이터
   }>;
   duration: number;
   timestamp: number;
@@ -195,7 +198,7 @@ function extractObjectsFromVtt(content: string): any[] {
       // 다음 라인들에서 추가 정보 수집
       for (let j = i + 1; j < lines.length && lines[j].trim() !== ''; j++) {
         const infoLine = lines[j].trim();
-        if (infoLine.startsWith('�� 코드:')) {
+        if (infoLine.startsWith('🔧 코드:')) {
           obj.code = infoLine.replace('🔧 코드: ', '');
         } else if (infoLine.startsWith('📂 카테고리:')) {
           obj.category = infoLine.replace('📂 카테고리: ', '');
@@ -227,7 +230,7 @@ function extractObjectsFromVtt(content: string): any[] {
  * - 정렬 기준 변경: sort 함수의 비교 로직 수정
  * 
  * @param {Array} existingObjects - 기존 객체들
- * @param {Array} newObjects - 새로운 객체들
+ * @param {Array} newObjects - ��로운 객체들
  * @returns {Array} 병합되고 시간 조정된 객체 배열
  */
 function combineObjectsWithTimeDeduplication(existingObjects: any[], newObjects: any[]): any[] {
@@ -322,7 +325,7 @@ function generateCompleteVttContent(data: WebVTTData, objects: any[]): string {
       vttLines.push(`${index + 2}`); // 큐 번호 (1은 개요용이므로 2부터 시작)
       vttLines.push(`${startTime} --> ${endTime}`);
 
-      // 📝 객체 정보 구성 (이모지와 함께)
+      // 📝 객체 정보 구성 (���모지와 함께)
       const objectInfo = [`🎯 ${obj.name}`];
       if (obj.code) objectInfo.push(`🔧 코드: ${obj.code}`);
       if (obj.category) objectInfo.push(`📂 카테고리: ${obj.category}`);
@@ -361,7 +364,7 @@ function createUpdatedVttContent(existingContent: string, newData: WebVTTData): 
   // 🔄 새로운 객체들과 병합 (시간 중복 방지)
   const allObjects = combineObjectsWithTimeDeduplication(existingObjects, newData.objects);
   
-  // ✨ ��로운 VTT 파일 생��
+  // ✨ 새로운 VTT 파일 생��
   return generateCompleteVttContent(newData, allObjects);
 }
 
@@ -397,7 +400,7 @@ function saveWebVTTFile(webvttData: WebVTTData) {
 
   let finalVttContent = '';
 
-  // 기존 VTT 파일이 있으면 기존 객체들과 병합
+  // 기존 VTT 파일이 있으면 기존 ��체들과 병합
   if (fs.existsSync(singleVttFilePath)) {
     const existingContent = fs.readFileSync(singleVttFilePath, 'utf8');
     finalVttContent = createUpdatedVttContent(existingContent, webvttData);
@@ -517,7 +520,7 @@ export const handleWebVTTSave: RequestHandler = (req, res) => {
  *    - DATA_DIR 상수 수정
  *    - 폴더 구조나 파일명 규칙 변경
  * 
- * 5. API 응답 구조 변경:
+ * 5. API ���답 구조 변경:
  *    - handleWebVTTSave의 response 객체 수정
  *    - 클라이언트에서 받는 데이터 구조도 함께 수정 필요
  * 
