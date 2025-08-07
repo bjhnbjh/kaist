@@ -153,6 +153,9 @@ export default function VideoPlayer({
     videoTime?: number;
     timestamp?: string;
   } | null>(null);
+  // 그리기 영역과 생성된 객체 간의 매핑 추적
+  const [currentDrawingArea, setCurrentDrawingArea] = useState<DrawnArea | null>(null);
+  const [objectDrawingMap, setObjectDrawingMap] = useState<Map<string, DrawnArea>>(new Map());
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -248,7 +251,7 @@ export default function VideoPlayer({
         });
         setShowApiResponseModal(true);
 
-        throw new Error(`HTTP ${response.status}: ${errorResult.message || 'API 전송 실패'}`);
+        throw new Error(`HTTP ${response.status}: ${errorResult.message || 'API 전송 ���패'}`);
       }
     } catch (error) {
       console.error('API 전송 오류:', error);
@@ -765,7 +768,7 @@ export default function VideoPlayer({
       // 최종 저장 완�� 메시지 표시
       toast.success("모든 데이터가 저장되었습니다.");
 
-      console.log("저장 후 비디오 정보:", {
+      console.log("���장 후 비디오 정보:", {
         duration: currentDuration,
         frames: currentFrames,
         currentVideoDuration: videoDuration,
@@ -846,7 +849,7 @@ export default function VideoPlayer({
     // showObjectList true로 유지하여 "탐지된 객체" 버튼 활성화 상태 유지
   };
 
-  // 삭제 확인 모달 관련 핸들러들
+  // 삭�� 확인 모달 관련 핸들러들
   const handleDeleteClick = (objectId: string) => {
     setObjectToDelete(objectId);
     setShowDeleteConfirmModal(true);
@@ -1752,7 +1755,7 @@ export default function VideoPlayer({
                           </div>
                           <button
                             onClick={() => {
-                              // 일괄 삭제를 위해 확인 모달을 열어서 전체 선택 삭제 처리
+                              // 일괄 ��제를 위해 확인 모달을 열어서 전체 선택 삭제 처리
                               if (selectedObjectIds.length > 0) {
                                 setObjectToDelete("BULK_DELETE");
                                 setShowDeleteConfirmModal(true);
