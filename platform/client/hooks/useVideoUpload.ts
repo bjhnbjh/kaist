@@ -23,8 +23,7 @@ import { toast } from "sonner";
 // 공통 타입 가져오기 (shared/types.ts에서 정의됨)
 import type { DetectedObject, VideoInfo, UploadItem } from "@shared/types";
 
-// 기본 객체 데이터 (목업 데이터 제거 - 그리기 데이터만 사용)
-const DEFAULT_OBJECTS: Omit<DetectedObject, "id">[] = [];
+// 기본 객체 데이터는 제거됨 - 실제 탐지된 객체만 사용
 
 // 비디오 업로드와 관리를 위한 커스텀 훅
 export function useVideoUpload() {
@@ -459,7 +458,7 @@ export function useVideoUpload() {
                     ...obj,
                     id: `${videoId}-obj-${index}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                     name: `Object(${index + 1})`,
-                    startTime: Math.random() * (videoDuration * 0.3), // 비디오 앞부분에서 시작
+                    startTime: Math.random() * (videoDuration * 0.3), // 비디오 앞부��에서 시작
                     endTime: Math.random() * (videoDuration * 0.3) + (videoDuration * 0.7), // 비디오 뒷부분에서 끝
                   })),
                   totalObjectsCreated: Math.max(
