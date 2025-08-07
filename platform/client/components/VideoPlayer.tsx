@@ -909,7 +909,7 @@ export default function VideoPlayer({
           setDetectionProgress(100);
           onRunObjectDetection(video.id);
           toast.success(
-            "객체 탐지가 완료되었습니다! 새로운 객체들이 발견되었습니다.",
+            "객체 탐지가 완료되었���니다! 새로운 객체들이 발견되었습니다.",
           );
 
           setTimeout(() => {
@@ -1110,6 +1110,18 @@ export default function VideoPlayer({
       redrawCanvas();
     }
   }, [drawnAreas, canvasInitialized, redrawCanvas]);
+
+  // 비디오 모달 열릴 때 VTT 좌표 자동 로드
+  useEffect(() => {
+    if (isOpen && video && canvasInitialized) {
+      // 잠시 후 VTT 좌표 로드 (캔버스 초기화 완료 후)
+      const timer = setTimeout(() => {
+        loadVttCoordinates();
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, video, canvasInitialized]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -1573,7 +1585,7 @@ export default function VideoPlayer({
                       // 객체 목목이 열려있을 때 닫기
                       setShowObjectList(false);
                     } else if (selectedObjectId) {
-                      // 객�� ��세 정보에서 닫기
+                      // 객�� ��세 정보에서 ��기
                       setShowObjectList(false);
                       setSelectedObjectId(null);
                     }
@@ -2093,7 +2105,7 @@ export default function VideoPlayer({
                                     color: "#475569",
                                   }}
                                 >
-                                  카테고리:{" "}
+                                  카테��리:{" "}
                                   {selectedObject.category ||
                                     editedCategory ||
                                     "기타"}
