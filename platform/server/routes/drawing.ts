@@ -11,7 +11,7 @@ import { RequestHandler } from "express";
  * 3. 간단한 응답 반환 (실제 처리는 클라이언트에서)
  * 
  * 📝 API 수정 가이드:
- * - 그리기 데이터 저장: 여기에 파일 저장 로직 추가
+ * - 그리기 데이터 저장: 여기에 파�� 저장 로직 추가
  * - 데이터 검증 강화: drawingData 검증 로직 추가
  * - 응답 구조 변경: response 객체 수정
  */
@@ -29,11 +29,12 @@ import { RequestHandler } from "express";
  */
 interface DrawingData {
   id: string;                           // 그리기 영역 고유 ID
-  type: "path" | "rectangle";           // 그리기 타입
+  type: "path" | "rectangle" | "click"; // 그리기 타입 (클릭 추가)
   color: string;                        // 색상
   points: Array<{ x: number; y: number }>; // 좌표점들
   startPoint?: { x: number; y: number }; // 사각형 시작점
   endPoint?: { x: number; y: number };   // 사각형 끝점
+  clickPoint?: { x: number; y: number }; // 클릭 포인트 좌표
   videoId?: string;                     // 연관된 동영상 ID
   videoCurrentTime?: number;            // 그려진 시점의 동영상 시간
   timestamp: number;                    // 생성 타임스탬프
@@ -83,7 +84,7 @@ export const handleDrawingSubmission: RequestHandler = (req, res) => {
     // - 이미지 처리나 분석
     // - 다른 서비스로 전송
 
-    // 🎉 성공 응답
+    // 🎉 성�� 응답
     const response = {
       success: true,
       message: '그리기 데이터가 성공적으로 처리되었습니다.',
