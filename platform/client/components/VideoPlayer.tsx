@@ -268,7 +268,7 @@ export default function VideoPlayer({
         const height = area.endPoint.y - area.startPoint.y;
         ctx.strokeRect(area.startPoint.x, area.startPoint.y, width, height);
       } else if (area.type === "click" && area.clickPoint) {
-        // 클릭 포인트 그리기 (십자가 마크 + 원)
+        // 클릭 포인트 그리기 (십자가 ���크 + 원)
         const point = area.clickPoint;
         const size = 8;
 
@@ -334,6 +334,12 @@ export default function VideoPlayer({
               coords.x <= maxX &&
               coords.y >= minY &&
               coords.y <= maxY
+            );
+          } else if (area.type === "click" && area.clickPoint) {
+            // 클릭 포인트 삭제를 위한 범위 체크 (15px 범위)
+            return (
+              Math.abs(area.clickPoint.x - coords.x) < 15 &&
+              Math.abs(area.clickPoint.y - coords.y) < 15
             );
           } else if (area.type === "path" && area.points.length > 0) {
             return area.points.some(
@@ -1318,7 +1324,7 @@ export default function VideoPlayer({
                       // 객체 목목이 열려있을 때 닫기
                       setShowObjectList(false);
                     } else if (selectedObjectId) {
-                      // 객체 상세 정보에서 닫기
+                      // 객�� 상세 정보에서 닫기
                       setShowObjectList(false);
                       setSelectedObjectId(null);
                     }
@@ -2174,7 +2180,7 @@ export default function VideoPlayer({
                       탐지된 객체 없음
                     </div>
                     <div style={{ fontSize: "0.85rem" }}>
-                      "탐지된 객체" 버튼을 클릭하여
+                      "탐지된 객체" 버튼�� 클릭하여
                       <br />
                       객체 목록을 확인해주세요
                     </div>
