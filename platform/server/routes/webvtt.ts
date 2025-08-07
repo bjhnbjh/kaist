@@ -86,7 +86,7 @@ function formatDuration(seconds: number): string {
  * WebVTT 생성에 필요한 데이터 인터페이스
  * 
  * 📝 수정 포인트:
- * - 새로운 객체 속성 추가: objects 배열의 객체 타입에 필드 추가
+ * - 새로운 객체 속성 추가: objects 배열의 객체 ��입에 필드 추가
  * - 메타데이터 추가: 이 인터페이스에 새로운 필드 추가
  */
 interface WebVTTData {
@@ -101,6 +101,13 @@ interface WebVTTData {
     category?: string;
     confidence?: number;
     videoCurrentTime?: number;  // 객체가 생성된 동영상 시점
+    coordinates?: {  // 그리기 좌표 정보 (VTT에만 저장, 화면에는 표시 안함)
+      type: "path" | "rectangle" | "click";
+      points?: Array<{ x: number; y: number }>;
+      startPoint?: { x: number; y: number };
+      endPoint?: { x: number; y: number };
+      clickPoint?: { x: number; y: number };
+    };
   }>;
   duration: number;
   timestamp: number;
@@ -195,7 +202,7 @@ function extractObjectsFromVtt(content: string): any[] {
  * - 정렬 기준 변경: sort 함수의 비교 로직 수정
  * 
  * @param {Array} existingObjects - 기존 객체들
- * @param {Array} newObjects - 새로운 객체들
+ * @param {Array} newObjects - ���로운 객체들
  * @returns {Array} 병합되고 시간 조정된 객체 배열
  */
 function combineObjectsWithTimeDeduplication(existingObjects: any[], newObjects: any[]): any[] {
@@ -260,7 +267,7 @@ function generateCompleteVttContent(data: WebVTTData, objects: any[]): string {
     vttLines.push(`📋 탐지된 객체: ${objects.map(obj => obj.name).join(', ')}`);
     vttLines.push('');
 
-    // 🎯 각 객체별 상세 정보
+    // 🎯 각 객체별 상�� 정보
     objects.forEach((obj, index) => {
       const currentTime = obj.videoCurrentTime || 0;
       const startTime = formatDuration(currentTime);
@@ -294,7 +301,7 @@ function generateCompleteVttContent(data: WebVTTData, objects: any[]): string {
  * 기존 VTT와 새로운 데이터를 병합하여 업데이트된 VTT 생성
  * 
  * 📝 수정 포인트:
- * - 헤더 업데이트 로직 변경: 헤더 정보 수정/추가
+ * - 헤더 업데이트 로직 변경: 헤더 ���보 수정/추가
  * - 병합 전략 변경: 기존 vs 새로운 객체 처리 방식 수정
  * 
  * @param {string} existingContent - 기존 VTT 파일 내용
@@ -329,7 +336,7 @@ function saveWebVTTFile(webvttData: WebVTTData) {
   // 📄 WebVTT 콘텐츠 생성
   const vttContent = generateCompleteVttContent(webvttData, webvttData.objects);
 
-  // 📁 동영상 파일명을 정규화하여 폴더 찾기
+  // 📁 동영상 파일명��� 정규화하여 폴더 찾기
   const normalizedName = normalizeFileName(webvttData.videoFileName);
   const videoFolderPath = path.join(DATA_DIR, normalizedName);
 
@@ -450,7 +457,7 @@ export const handleWebVTTSave: RequestHandler = (req, res) => {
  * 
  * 1. VTT 형식 변경:
  *    - generateCompleteVttContent 함수의 vttLines 배열 수정
- *    - 이모지나 라벨 형식 변경
+ *    - 이모지나 라벨 형식 ���경
  * 
  * 2. 시간 형식 변경:
  *    - formatDuration 함수 수정
