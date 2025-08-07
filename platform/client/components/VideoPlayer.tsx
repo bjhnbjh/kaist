@@ -367,11 +367,11 @@ export default function VideoPlayer({
     });
 
     // VTT 좌표 기반 오버레이 표시 (활성화된 경우)
-    if (// vttOverlayEnabled && vttCoordinates.length > 0) {
+    if (// vttOverlayEnabled && // vttCoordinates.length > 0) {
       const currentTime = videoRef.current?.currentTime || 0;
 
       // 현재 시간에 해당하는 좌표들 찾기 (±0.5초 범위)
-      const activeCoordinates = vttCoordinates.filter(coord =>
+      const activeCoordinates = // vttCoordinates.filter(coord =>
         Math.abs(coord.videoTime - currentTime) <= 0.5
       );
 
@@ -1349,7 +1349,7 @@ export default function VideoPlayer({
               </button>
 
 
-              {vttCoordinates.length > 0 && (
+              {// vttCoordinates.length > 0 && (
                 <button
                   onClick={() => setVttOverlayEnabled(!// vttOverlayEnabled)}
                   style={{
@@ -1380,7 +1380,7 @@ export default function VideoPlayer({
               </div>
             )}
 
-            {vttCoordinates.length > 0 && (
+            {// vttCoordinates.length > 0 && (
               <div
                 style={{
                   textAlign: "center",
@@ -1389,7 +1389,7 @@ export default function VideoPlayer({
                   fontWeight: // vttOverlayEnabled ? "600" : "normal",
                 }}
               >
-                📍 VTT 좌표: {vttCoordinates.length}개
+                📍 VTT 좌표: {// vttCoordinates.length}개
                 {// vttOverlayEnabled && " (오버레이 활성화)"}
               </div>
             )}
