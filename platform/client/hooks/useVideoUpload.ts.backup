@@ -23,8 +23,7 @@ import { toast } from "sonner";
 // 공통 타입 가져오기 (shared/types.ts에서 정의됨)
 import type { DetectedObject, VideoInfo, UploadItem } from "@shared/types";
 
-// 임시로 빈 배열 유지 (향후 완전 제거 예정)
-const DEFAULT_OBJECTS: any[] = [];
+// 기본 객체 데이터는 제거됨 - 실제 탐지된 객체만 사용
 
 // 비디오 업로드와 관리를 위한 커스텀 훅
 export function useVideoUpload() {
@@ -348,7 +347,7 @@ export function useVideoUpload() {
 
       vttContent += `${index + 1}\n`;
       vttContent += `${startTime} --> ${endTime}\n`;
-      vttContent += `${obj.name} (��뢰도: ${(obj.confidence * 100).toFixed(1)}%)\n`;
+      vttContent += `${obj.name} (신뢰도: ${(obj.confidence * 100).toFixed(1)}%)\n`;
       if (obj.category) {
         vttContent += `카테고리: ${obj.category}\n`;
       }
