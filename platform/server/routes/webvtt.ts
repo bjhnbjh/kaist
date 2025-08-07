@@ -8,7 +8,7 @@ import path from "path";
  * ===================================
  * 
  * 이 파일의 기능:
- * 1. 탐지된 객체 정보를 WebVTT 형식으로 변환
+ * 1. 탐지된 객체 정보를 WebVTT ���식으로 변환
  * 2. 시간 중복 방지 (같은 시간의 객체들을 0.1초씩 조정)
  * 3. 기존 VTT 파일과 새로운 객체 정보 병합
  * 4. 한글 파일명 지원 및 안전한 파일 저장
@@ -195,7 +195,7 @@ function extractObjectsFromVtt(content: string): any[] {
       // 다음 라인들에서 추가 정보 수집
       for (let j = i + 1; j < lines.length && lines[j].trim() !== ''; j++) {
         const infoLine = lines[j].trim();
-        if (infoLine.startsWith('🔧 코드:')) {
+        if (infoLine.startsWith('�� 코드:')) {
           obj.code = infoLine.replace('🔧 코드: ', '');
         } else if (infoLine.startsWith('📂 카테고리:')) {
           obj.category = infoLine.replace('📂 카테고리: ', '');
@@ -284,19 +284,22 @@ function generateCompleteVttContent(data: WebVTTData, objects: any[]): string {
   vttLines.push(`생성일: ${getKoreaTimeISO()}`);
   vttLines.push(`탐지된 객체 수: ${objects.length}`);
 
-  // 📍 좌표 정보를 NOTE 섹션에 JSON 형태로 저장 (화면에는 표시되지 않음)
-  if (objects.some(obj => obj.coordinates)) {
+  // 📍 객체 정보를 NOTE 섹션에 새로운 JSON 형태로 저장
+  if (objects.length > 0) {
     vttLines.push('COORDINATES_DATA_START');
     objects.forEach(obj => {
-      if (obj.coordinates) {
-        const coordData = {
-          objectId: obj.id,
-          objectName: obj.name,
-          videoTime: obj.videoCurrentTime || 0,
-          coordinates: obj.coordinates
-        };
-        vttLines.push(JSON.stringify(coordData));
-      }
+      const objectData = {
+        name: obj.name,
+        videoTime: obj.videoCurrentTime || 0,
+        code: obj.code || `CODE_RECT-${Math.floor(Math.random() * 1000)}`,
+        category: obj.category || "기타",
+        domain: obj.dlReservoirDomain || "http://www.naver.com",
+        info: obj.additionalInfo || "AI가 자동으로 탐지한 객체입니다.",
+        finallink: `${obj.dlReservoirDomain || "http://www.naver.com"}/00/${obj.code || `CODE_RECT-${Math.floor(Math.random() * 1000)}`}`,
+        position: obj.coordinates || obj.position || null,
+        polygon: obj.polygon || null
+      };
+      vttLines.push(JSON.stringify(objectData));
     });
     vttLines.push('COORDINATES_DATA_END');
   }
@@ -358,7 +361,7 @@ function createUpdatedVttContent(existingContent: string, newData: WebVTTData): 
   // 🔄 새로운 객체들과 병합 (시간 중복 방지)
   const allObjects = combineObjectsWithTimeDeduplication(existingObjects, newData.objects);
   
-  // ✨ 새로운 VTT 파일 생��
+  // ✨ ��로운 VTT 파일 생��
   return generateCompleteVttContent(newData, allObjects);
 }
 
