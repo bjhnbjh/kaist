@@ -95,7 +95,8 @@ export const handleDrawingSubmission: RequestHandler = (req, res) => {
         type: drawingData.type,
         videoId: drawingData.videoId,
         videoTime: drawingData.videoCurrentTime,
-        pointsProcessed: drawingData.points?.length || 0
+        pointsProcessed: drawingData.points?.length || 0,
+        clickCoordinates: drawingData.clickPoint ? `(${drawingData.clickPoint.x}, ${drawingData.clickPoint.y})` : null
       }
     };
 
@@ -105,7 +106,7 @@ export const handleDrawingSubmission: RequestHandler = (req, res) => {
     console.error('❌ Drawing submission error:', error);
     res.status(500).json({
       success: false,
-      message: '그리기 데이�� 처리 중 오류가 발생했습니다.',
+      message: '그리기 데이터 처리 중 오류가 발생했습니다.',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
