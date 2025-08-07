@@ -218,7 +218,7 @@ export default function VideoPlayer({
         setShowApiResponseModal(true);
 
         // 성공 토스트 표시
-        toast.success(`${area.type === 'click' ? '클릭 좌표' : '그리기 영역'}가 서버로 전송되었습니다.`);
+        toast.success(`${area.type === 'click' ? '클릭 ��표' : '그리기 영역'}가 서버로 전송되었습니다.`);
 
         // 잠시 후 정�� 입력 모달 표시
         setTimeout(() => {
@@ -247,7 +247,7 @@ export default function VideoPlayer({
         // API 오류 응답 상세 정보 설정
         setApiResponseData({
           success: false,
-          message: errorResult.message || 'API 서버에서 오류가 발생했습니다.',
+          message: errorResult.message || 'API 서버에��� 오류가 발생했습니다.',
           drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유그리기',
           coordinates: area.type === 'click' && area.clickPoint
             ? `(${area.clickPoint.x}, ${area.clickPoint.y})`
@@ -329,11 +329,21 @@ export default function VideoPlayer({
     setCanvasInitialized(true);
   }, []);
 
+  /**
+   * 캔버스 다시 그리기 함수
+   *
+   * 기능:
+   * - 사용자가 그린 모든 영역을 캔버스에 다시 렌더링
+   * - 네모박스, 클릭 포인트, 자유그리기 모든 타입 지원
+   * - 각 그리기 타입별로 적절한 시각적 표현 제공
+   */
   const redrawCanvas = useCallback(() => {
+    // 캔버스와 2D 컨텍스트 가져오기
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!ctx || !canvas) return;
 
+    // 캔버스 전체를 지워서 깨끗하게 시작
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     drawnAreas.forEach((area) => {
@@ -892,7 +902,7 @@ export default function VideoPlayer({
         });
         setSelectedObjectIds([]);
         setHasObjectChanges(true);
-        toast.success(`${deleteCount}개 객체가 삭제되었���니다.`);
+        toast.success(`${deleteCount}��� 객체가 삭제되었���니다.`);
 
         // 즉시 서버에 저장
         await saveDataToDb();
@@ -1315,7 +1325,7 @@ export default function VideoPlayer({
                   ? "🗑️ ���우개 모드 - 그려진 영역을 클릭하��� 삭제하세요"
                   : drawingMode === "click"
                   ? "📍 클릭 모드 활성화 - 마��스로 클릭���여 좌표를 찍어보세요"
-                  : "🎨 그리기 모드 활성화 - 마우스�� 드래그하여 영역을 그려보세요"}
+                  : "🎨 그리기 모드 활성화 - 마우스�� 드래그하여 영��을 그려보세요"}
               </div>
             )}
           </div>
@@ -1568,7 +1578,7 @@ export default function VideoPlayer({
                         gap: "4px",
                         transition: "background-color 0.2s ease",
                       }}
-                      title="탐���� 객체 목록으로 돌아가기"
+                      title="탐���� 객체 ��록으로 돌아가기"
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = "#f3f4f6";
                       }}
@@ -2298,7 +2308,7 @@ export default function VideoPlayer({
                       ���지된 객체 없음
                     </div>
                     <div style={{ fontSize: "0.85rem" }}>
-                      "탐지된 객체" 버튼�� ���릭하여
+                      "탐지된 객체" 버튼�� �����릭하여
                       <br />
                       객체 목록을 확인해주세요
                     </div>
@@ -2844,7 +2854,7 @@ export default function VideoPlayer({
               <button
                 onClick={() => {
                   if (modalObjectInfo && video && onAddNewObject) {
-                    // 그리기 영역을 새로운 객체로 추가 - 팝업창에서 입력한 모든 정보 포함
+                    // 그리�� 영역을 새로운 객체로 추가 - 팝업창에서 입력한 모든 정보 포함
                     const addedObjectId = onAddNewObject(video.id, modalObjectInfo.name, {
                       code: modalObjectInfo.code,
                       additionalInfo: modalObjectInfo.additionalInfo,
