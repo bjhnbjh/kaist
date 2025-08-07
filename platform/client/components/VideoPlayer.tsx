@@ -240,7 +240,7 @@ export default function VideoPlayer({
 
         return result;
       } else {
-        const errorResult = await response.json().catch(() => ({ message: 'API 응답 오류' }));
+        const errorResult = await response.json().catch(() => ({ message: 'API 응답 오��' }));
 
         // API 오류 응답 상세 정보 설정
         setApiResponseData({
@@ -1012,7 +1012,7 @@ export default function VideoPlayer({
     return () => window.removeEventListener("resize", handleResize);
   }, [isOpen, canvasInitialized, initializeCanvas]);
 
-  // 1. displayObjects는 무조건 detectedObjects��� 사용
+  // 1. displayObjects는 무조건 detectedObjects만 사용
   const displayObjects = detectedObjects;
 
   if (!isOpen) return null;
@@ -1288,7 +1288,7 @@ export default function VideoPlayer({
                   ? "🗑️ ���우개 모드 - 그려진 영역을 클릭하여 삭제하세요"
                   : drawingMode === "click"
                   ? "📍 클릭 모드 활성화 - 마우스로 클릭하여 좌표를 찍어보세요"
-                  : "🎨 그리기 모드 활성화 - 마우스로 드래그하여 영역을 그려보세요"}
+                  : "🎨 그리기 모드 활성화 - 마우스�� 드래그하여 영역을 그려보세요"}
               </div>
             )}
           </div>
@@ -1541,7 +1541,7 @@ export default function VideoPlayer({
                         gap: "4px",
                         transition: "background-color 0.2s ease",
                       }}
-                      title="탐��된 객체 목록으로 돌아가기"
+                      title="탐���� 객체 목록으로 돌아가기"
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = "#f3f4f6";
                       }}
@@ -1713,7 +1713,7 @@ export default function VideoPlayer({
                               justifyContent: "center",
                               transition: "color 0.2s ease",
                             }}
-                            title="정보 보기"
+                            title="정보 보���"
                           >
                             <ChevronRight style={{ width: 16, height: 16 }} />
                           </button>
@@ -2581,7 +2581,7 @@ export default function VideoPlayer({
                 maxHeight: "60vh",
               }}
             >
-              {/* 이�� 섹션 */}
+              {/* 이름 섹션 */}
               <div style={{ marginBottom: "16px" }}>
                 <div
                   style={{
@@ -2795,10 +2795,11 @@ export default function VideoPlayer({
                   setCurrentPath([]);
                   setCurrentRectangle(null);
                   setRectangleStart(null);
+                  setCurrentDrawingArea(null);
                   redrawCanvas();
                   setShowInfoModal(false);
                   setModalObjectInfo(null);
-                  toast.info('등록이 취소되었습니다. 그려진 영역이 삭제되었습니다.');
+                  toast.info('등록이 취소되었습니다. 그려�� 영역이 삭제되었습니다.');
                 }}
                 style={{
                   padding: "10px 20px",
