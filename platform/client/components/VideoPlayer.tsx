@@ -712,7 +712,7 @@ export default function VideoPlayer({
     }
   };
 
-  // 편집 데이터 DB ��장 API 호출
+  // 편집 데이터 DB ���� API 호출
   const saveDataToDb = async () => {
     if (!video) return;
 
@@ -1014,16 +1014,6 @@ export default function VideoPlayer({
     }
   }, [drawnAreas, canvasInitialized, redrawCanvas]);
 
-  // 비디오 모달 열릴 때 VTT 좌표 자동 로드
-  useEffect(() => {
-    if (isOpen && video && canvasInitialized) {
-      // 잠시 후 VTT 좌표 로드 (캔버스 초기화 완료 후)
-      const timer = setTimeout(() => {
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen, video, canvasInitialized]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -1314,7 +1304,7 @@ export default function VideoPlayer({
                 {isErasing
                   ? "🗑️ ���우개 모드 - 그려진 영역을 클릭하��� 삭제하세요"
                   : drawingMode === "click"
-                  ? "📍 클릭 모드 활성화 - 마우스로 클릭하여 좌표를 찍어보세요"
+                  ? "📍 클릭 모드 활성화 - 마��스로 클릭하여 좌표를 찍어보세요"
                   : "🎨 그리기 모드 활성화 - 마우스�� 드래그하여 영역을 그려보세요"}
               </div>
             )}
@@ -2344,7 +2334,7 @@ export default function VideoPlayer({
                   </div>
                   <button
                     onClick={() => {
-                      // 일괄 삭제를 위해 확인 모달을 열어서 전체 선택 삭제로 처리
+                      // 일괄 삭제를 위해 확인 ���달을 열어서 전체 선택 삭제로 처리
                       if (selectedObjectIds.length > 0) {
                         setObjectToDelete("BULK_DELETE");
                         setShowDeleteConfirmModal(true);
