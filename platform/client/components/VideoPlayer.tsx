@@ -195,20 +195,41 @@ export default function VideoPlayer({
 
       if (response.ok) {
         const result = await response.json();
-        toast.success('그리기 데이터가 서버로 전송되었습니다.');
 
-        // API 응답 후 정보 입력 모달 표시
-        // 그리기로 추가되는 객체는 totalObjectsCreated + 1로 번호 생성
-        const nextObjectNumber = video ? video.totalObjectsCreated + 1 : detectedObjects.length + 1;
-        setModalObjectInfo({
-          name: `Object(${nextObjectNumber})`,
-          code: `CODE_${area.id.slice(0, 8).toUpperCase()}`,
-          additionalInfo: 'AI가 자동으로 탐지한 객체입니다.',
-          dlReservoirDomain: 'http://www.naver.com',
-          category: '기타',
-          videoCurrentTime: currentVideoTime
+        // API 응답 상세 정보 설정
+        setApiResponseData({
+          success: true,
+          message: result.message || '그리기 데이터가 성공적으로 처리되었습니다.',
+          drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유그리기',
+          coordinates: area.type === 'click' && area.clickPoint
+            ? `(${area.clickPoint.x}, ${area.clickPoint.y})`
+            : area.type === 'rectangle' && area.startPoint && area.endPoint
+            ? `(${area.startPoint.x}, ${area.startPoint.y}) ~ (${area.endPoint.x}, ${area.endPoint.y})`
+            : '복수 좌표',
+          videoTime: currentVideoTime,
+          timestamp: new Date().toLocaleString('ko-KR')
         });
-        setShowInfoModal(true);
+        setShowApiResponseModal(true);
+
+        // 성공 토스트 표시
+        toast.success(`${area.type === 'click' ? '클릭 좌표' : '그리기 영역'}가 서버로 전송되었습니다.`);
+
+        // 잠시 후 정보 입력 모달 표시
+        setTimeout(() => {
+          setShowApiResponseModal(false);
+
+          // 그리기로 추가되는 객체는 totalObjectsCreated + 1로 번호 생성
+          const nextObjectNumber = video ? video.totalObjectsCreated + 1 : detectedObjects.length + 1;
+          setModalObjectInfo({
+            name: `Object(${nextObjectNumber})`,
+            code: `CODE_${area.id.slice(0, 8).toUpperCase()}`,
+            additionalInfo: area.type === 'click' ? '클릭으로 생성된 객체입니다.' : 'AI가 자동으로 탐지한 객체입니다.',
+            dlReservoirDomain: 'http://www.naver.com',
+            category: '기타',
+            videoCurrentTime: currentVideoTime
+          });
+          setShowInfoModal(true);
+        }, 2000);
 
         return result;
       } else {
@@ -222,7 +243,7 @@ export default function VideoPlayer({
     }
   };
 
-  // 캔버스 초기화 함수
+  // 캔버스 초기��� 함수
   const initializeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const videoElement = videoRef.current;
@@ -744,7 +765,7 @@ export default function VideoPlayer({
           setDetectionProgress(100);
           onRunObjectDetection(video.id);
           toast.success(
-            "객체 탐지가 완료되었습니다! 새로운 객체들이 발견되었습니다.",
+            "객체 탐지가 완료되었습��다! 새로운 객체들이 발견되었습니다.",
           );
 
           setTimeout(() => {
@@ -1353,7 +1374,7 @@ export default function VideoPlayer({
                 <button
                   onClick={() => {
                     if (!showObjectList && !selectedObjectId) {
-                      // 처음 클릭 시 객체 목�� 열기
+                      // 처음 ��릭 시 객체 목�� 열기
                       setShowObjectList(true);
                       setSelectedObjectId(null);
                     } else if (showObjectList && !selectedObjectId) {
@@ -2096,7 +2117,7 @@ export default function VideoPlayer({
                                     e.target.value ===
                                     selectedObject.additionalInfo ||
                                     e.target.value ===
-                                    "AI��� 자동으로 탐지한 객체입니다."
+                                    "AI가 자동으로 탐지한 객체입니다."
                                   ) {
                                     setEditedObjectInfo("");
                                   }
@@ -2526,7 +2547,7 @@ export default function VideoPlayer({
                 maxHeight: "60vh",
               }}
             >
-              {/* 이��� 섹션 */}
+              {/* 이름 섹션 */}
               <div style={{ marginBottom: "16px" }}>
                 <div
                   style={{
