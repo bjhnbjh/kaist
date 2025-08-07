@@ -279,14 +279,24 @@ export default function VideoPlayer({
     }
   };
 
-  // 캔버스 초기화 함수
+  /**
+   * 캔버스 초기화 함수
+   *
+   * 기능:
+   * - 비디오 위에 그리기 캔버스를 정확히 오버레이
+   * - 비디오 크기에 맞춰 캔버스 크기 자동 조정
+   * - 비디오 재생 상태 보존
+   */
   const initializeCanvas = useCallback(() => {
+    // 필요한 DOM 요소들 가져오기
     const canvas = canvasRef.current;
     const videoElement = videoRef.current;
     const container = containerRef.current;
 
+    // 필수 요소가 없으면 초기화 중단
     if (!canvas || !videoElement || !container) return;
 
+    // 비디오가 아직 로드되지 않았으면 잠시 후 재시도
     if (videoElement.videoWidth === 0 || videoElement.videoHeight === 0) {
       setTimeout(initializeCanvas, 100);
       return;
@@ -1304,7 +1314,7 @@ export default function VideoPlayer({
                 {isErasing
                   ? "🗑️ ���우개 모드 - 그려진 영역을 클릭하��� 삭제하세요"
                   : drawingMode === "click"
-                  ? "📍 클릭 모드 활성화 - 마��스로 클릭하여 좌표를 찍어보세요"
+                  ? "📍 클릭 모드 활성화 - 마��스로 클릭���여 좌표를 찍어보세요"
                   : "🎨 그리기 모드 활성화 - 마우스�� 드래그하여 영역을 그려보세요"}
               </div>
             )}
@@ -1813,7 +1823,7 @@ export default function VideoPlayer({
                             }}
                           >
                             <Trash2 style={{ width: 16, height: 16 }} />
-                            ���택된 객체 ����제
+                            ���택된 객�� ����제
                           </button>
                         </div>
                       )}
