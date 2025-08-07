@@ -1084,7 +1084,7 @@ export default function VideoPlayer({
     if (isOpen && video && canvasInitialized) {
       // 잠시 후 VTT 좌표 로드 (캔버스 초기화 완료 후)
       const timer = setTimeout(() => {
-        loadVttCoordinates();
+        // loadVttCoordinates();
       }, 1000);
 
       return () => clearTimeout(timer);
