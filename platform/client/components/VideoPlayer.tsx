@@ -163,7 +163,7 @@ export default function VideoPlayer({
 
   // API URL 설정 (현재 서버 사용)
   const getApiUrl = () => {
-    // 현재 페이지와 같은 도메���� 사용
+    // 현재 페이지와 같은 도메��� 사용
     return window.location.origin;
   };
 
@@ -224,7 +224,7 @@ export default function VideoPlayer({
         setTimeout(() => {
           setShowApiResponseModal(false);
 
-          // 현재 그리기 영역을 저장하여 객체 생성 시 좌표 정보 연결
+          // 현재 그리기 영���을 저장하여 객체 생성 시 좌표 정보 연결
           setCurrentDrawingArea(area);
 
           // 그리기로 추가되는 객체는 totalObjectsCreated + 1로 번호 생성
@@ -335,7 +335,7 @@ export default function VideoPlayer({
         const height = area.endPoint.y - area.startPoint.y;
         ctx.strokeRect(area.startPoint.x, area.startPoint.y, width, height);
       } else if (area.type === "click" && area.clickPoint) {
-        // 클�� 포인트 그���기 (십자가 ���크 + 원)
+        // 클릭 포인트 그���기 (십자가 ���크 + 원)
         const point = area.clickPoint;
         const size = 8;
 
@@ -773,7 +773,7 @@ export default function VideoPlayer({
       }
     } catch (error) {
       console.error('WebVTT API error:', error);
-      toast.error('WebVTT 서버 저장 중 오류가 발생했습니다.');
+      toast.error('WebVTT 서버 저장 중 오류가 발생���습니다.');
     }
   };
 
@@ -820,7 +820,7 @@ export default function VideoPlayer({
 
       if (response.ok) {
         const result = await response.json();
-        toast.success('편집 데이��가 DB에 저장되었습니다.');
+        toast.success('편집 데이��가 DB��� 저장되었습니다.');
         console.log('Save data API response:', result);
       } else {
         throw new Error('Save data API 전송 실패');
@@ -1348,21 +1348,6 @@ export default function VideoPlayer({
 최종저장
               </button>
 
-              <button
-                onClick={loadVttCoordinates}
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: "6px",
-                  border: "1px solid #d1d5db",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  background: "white",
-                  color: "#374151",
-                  fontSize: "0.9rem",
-                }}
-              >
-                VTT 좌표 불러오기
-              </button>
 
               {vttCoordinates.length > 0 && (
                 <button
@@ -1637,7 +1622,7 @@ export default function VideoPlayer({
                   >
                     {selectedObjectId
                       ? "선택된 객체 정보"
-                      : `탐지된 객체 목록(${displayObjects.length}개)`}
+                      : `탐지�� 객체 목록(${displayObjects.length}개)`}
                   </h4>
                   {showObjectList && !selectedObjectId && (
                     <button
@@ -1731,7 +1716,7 @@ export default function VideoPlayer({
                         탐지된 객체가 없습니다.
                       </div>
                       <div style={{ fontSize: "0.95rem" }}>
-                        <b>객체 탐지 실행</b>을 먼저 눌러주세요.
+                        <b>객체 탐지 ���행</b>을 먼저 눌러주세요.
                       </div>
                     </div>
                   ) : displayObjects && displayObjects.length > 0 ? (
@@ -2883,7 +2868,7 @@ export default function VideoPlayer({
                 })()}
               </div>
 
-              {/* 추가정보 ��션 */}
+              {/* 추가정보 섹션 */}
               <div style={{ marginBottom: "16px" }}>
                 <div
                   style={{
