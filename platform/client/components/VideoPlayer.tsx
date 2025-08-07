@@ -181,6 +181,35 @@ export default function VideoPlayer({
     return window.location.origin;
   };
 
+  // VTT 좌표 데이터 로드
+  const loadVttCoordinates = async () => {
+    if (!video) return;
+
+    try {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/vtt-coordinates?videoId=${video.id}&videoFileName=${encodeURIComponent(video.file.name)}`);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('VTT 좌표 데이터 로드됨:', result);
+
+        if (result.success && result.coordinates) {
+          setVttCoordinates(result.coordinates);
+          toast.success(`VTT에서 ${result.coordinatesCount}개의 좌표 데이터를 불러왔습니다.`);
+        } else {
+          setVttCoordinates([]);
+          toast.info('저장된 좌표 데이터가 없습니다.');
+        }
+      } else {
+        console.warn('VTT 좌표 데이터 로드 실패:', response.status);
+        setVttCoordinates([]);
+      }
+    } catch (error) {
+      console.error('VTT 좌표 데이터 로��� 오류:', error);
+      setVttCoordinates([]);
+    }
+  };
+
   // 그리기 완료시 API로 데이터 전송
   const sendDrawingToApi = async (area: DrawnArea) => {
     try {
