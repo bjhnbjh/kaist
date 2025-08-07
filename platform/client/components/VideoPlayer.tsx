@@ -23,9 +23,10 @@ interface DrawnArea {
   id: string;
   points: DrawingPoint[];
   color: string;
-  type: "path" | "rectangle";
+  type: "path" | "rectangle" | "click";
   startPoint?: DrawingPoint;
   endPoint?: DrawingPoint;
+  clickPoint?: DrawingPoint;
 }
 
 interface VideoInfo {
@@ -100,7 +101,7 @@ export default function VideoPlayer({
   const [drawnAreas, setDrawnAreas] = useState<DrawnArea[]>([]);
   const [currentPath, setCurrentPath] = useState<DrawingPoint[]>([]);
   const [isMouseDown, setIsMouseDown] = useState(false);
-  const [drawingMode, setDrawingMode] = useState<"free" | "rectangle">(
+  const [drawingMode, setDrawingMode] = useState<"free" | "rectangle" | "click">(
     "rectangle",
   );
   const [rectangleStart, setRectangleStart] = useState<DrawingPoint | null>(
@@ -142,6 +143,15 @@ export default function VideoPlayer({
     videoCurrentTime: number;
   } | null>(null);
   const [isApiLoading, setIsApiLoading] = useState(false);
+  const [showApiResponseModal, setShowApiResponseModal] = useState(false);
+  const [apiResponseData, setApiResponseData] = useState<{
+    success: boolean;
+    message: string;
+    drawingType: string;
+    coordinates?: string;
+    videoTime?: number;
+    timestamp?: string;
+  } | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -149,7 +159,7 @@ export default function VideoPlayer({
 
   // API URL 설정 (현재 서버 사용)
   const getApiUrl = () => {
-    // 현재 페이지와 같은 도메인 사용
+    // 현재 페이지와 같은 도메��� 사용
     return window.location.origin;
   };
 
@@ -169,6 +179,7 @@ export default function VideoPlayer({
         points: area.points,
         startPoint: area.startPoint,
         endPoint: area.endPoint,
+        clickPoint: area.clickPoint, // 클릭 포인트 추가
         videoId: video?.id,
         videoCurrentTime: currentVideoTime,  // 실제 동영상 시간 추가
         timestamp: Date.now()
@@ -184,27 +195,75 @@ export default function VideoPlayer({
 
       if (response.ok) {
         const result = await response.json();
-        toast.success('그리기 데이터가 서버로 전송되었습니다.');
 
-        // API 응답 후 정보 입력 모달 표시
-        // 그리기로 추가되는 객체는 totalObjectsCreated + 1로 번호 생성
-        const nextObjectNumber = video ? video.totalObjectsCreated + 1 : detectedObjects.length + 1;
-        setModalObjectInfo({
-          name: `Object(${nextObjectNumber})`,
-          code: `CODE_${area.id.slice(0, 8).toUpperCase()}`,
-          additionalInfo: 'AI가 자동으로 탐지한 객체입니다.',
-          dlReservoirDomain: 'http://www.naver.com',
-          category: '기타',
-          videoCurrentTime: currentVideoTime
+        // API 응답 상세 정보 설정
+        setApiResponseData({
+          success: true,
+          message: result.message || '그리기 데이터가 성공적으로 처리되었습니다.',
+          drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유그리기',
+          coordinates: area.type === 'click' && area.clickPoint
+            ? `(${area.clickPoint.x}, ${area.clickPoint.y})`
+            : area.type === 'rectangle' && area.startPoint && area.endPoint
+            ? `(${area.startPoint.x}, ${area.startPoint.y}) ~ (${area.endPoint.x}, ${area.endPoint.y})`
+            : '복수 좌표',
+          videoTime: currentVideoTime,
+          timestamp: new Date().toLocaleString('ko-KR')
         });
-        setShowInfoModal(true);
+        setShowApiResponseModal(true);
+
+        // 성공 토스트 표시
+        toast.success(`${area.type === 'click' ? '클릭 좌표' : '그리기 영역'}가 서버로 전송되었습니다.`);
+
+        // 잠시 후 정보 입력 모달 표시
+        setTimeout(() => {
+          setShowApiResponseModal(false);
+
+          // 그리기로 추가되는 객체는 totalObjectsCreated + 1로 번호 생성
+          const nextObjectNumber = video ? video.totalObjectsCreated + 1 : detectedObjects.length + 1;
+          setModalObjectInfo({
+            name: `Object(${nextObjectNumber})`,
+            code: `CODE_${area.id.slice(0, 8).toUpperCase()}`,
+            additionalInfo: area.type === 'click' ? '클릭으로 생성된 객체입니다.' : 'AI가 자동으로 탐지한 객체입니다.',
+            dlReservoirDomain: 'http://www.naver.com',
+            category: '기타',
+            videoCurrentTime: currentVideoTime
+          });
+          setShowInfoModal(true);
+        }, 2000);
 
         return result;
       } else {
-        throw new Error('API 전송 실패');
+        const errorResult = await response.json().catch(() => ({ message: 'API 응답 오류' }));
+
+        // API 오류 응답 상세 정보 설정
+        setApiResponseData({
+          success: false,
+          message: errorResult.message || 'API 서버에서 오류가 발생했습니다.',
+          drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유그리기',
+          coordinates: area.type === 'click' && area.clickPoint
+            ? `(${area.clickPoint.x}, ${area.clickPoint.y})`
+            : '오류로 인해 처리되지 않음',
+          timestamp: new Date().toLocaleString('ko-KR')
+        });
+        setShowApiResponseModal(true);
+
+        throw new Error(`HTTP ${response.status}: ${errorResult.message || 'API 전송 실패'}`);
       }
     } catch (error) {
       console.error('API 전송 오류:', error);
+
+      if (!apiResponseData || apiResponseData.success !== false) {
+        // API 통신 자체 오류 (네트워�� 등)
+        setApiResponseData({
+          success: false,
+          message: error instanceof Error ? error.message : '알 수 없는 ��류가 발생했습니다.',
+          drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유그리기',
+          coordinates: '통신 오류로 전송 실패',
+          timestamp: new Date().toLocaleString('ko-KR')
+        });
+        setShowApiResponseModal(true);
+      }
+
       toast.error('서버로 데이터를 전송하는 중 오류가 발생했습니다.');
     } finally {
       setIsApiLoading(false);
@@ -266,6 +325,25 @@ export default function VideoPlayer({
         const width = area.endPoint.x - area.startPoint.x;
         const height = area.endPoint.y - area.startPoint.y;
         ctx.strokeRect(area.startPoint.x, area.startPoint.y, width, height);
+      } else if (area.type === "click" && area.clickPoint) {
+        // 클릭 포인트 그리기 (십자가 ���크 + 원)
+        const point = area.clickPoint;
+        const size = 8;
+
+        // 십자가 그리기
+        ctx.strokeStyle = area.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(point.x - size, point.y);
+        ctx.lineTo(point.x + size, point.y);
+        ctx.moveTo(point.x, point.y - size);
+        ctx.lineTo(point.x, point.y + size);
+        ctx.stroke();
+
+        // 원 그리기
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, size/2, 0, 2 * Math.PI);
+        ctx.stroke();
       } else if (area.type === "path" && area.points.length > 1) {
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
@@ -315,6 +393,12 @@ export default function VideoPlayer({
               coords.y >= minY &&
               coords.y <= maxY
             );
+          } else if (area.type === "click" && area.clickPoint) {
+            // 클릭 포인트 삭제를 위한 범위 체크 (15px 범위)
+            return (
+              Math.abs(area.clickPoint.x - coords.x) < 15 &&
+              Math.abs(area.clickPoint.y - coords.y) < 15
+            );
           } else if (area.type === "path" && area.points.length > 0) {
             return area.points.some(
               (point) =>
@@ -333,6 +417,19 @@ export default function VideoPlayer({
       } else if (drawingMode === "rectangle") {
         setRectangleStart(coords);
         setCurrentRectangle(null);
+      } else if (drawingMode === "click") {
+        // 클릭 모드에서는 즉시 클릭 포인트 생성
+        const newClickArea: DrawnArea = {
+          id: `click-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          points: [],
+          color: "#ef4444",
+          type: "click",
+          clickPoint: coords,
+        };
+        setDrawnAreas((prev) => [...prev, newClickArea]);
+
+        // 클릭 완료 시 즉시 API로 전송
+        sendDrawingToApi(newClickArea);
       } else {
         setCurrentPath([coords]);
       }
@@ -675,7 +772,7 @@ export default function VideoPlayer({
       });
     } catch (error) {
       console.error('Save error:', error);
-      toast.error("저장 중 오류가 발생했습니다.");
+      toast.error("저장 중 오류��� 발생했습니다.");
     }
   };
 
@@ -724,7 +821,7 @@ export default function VideoPlayer({
         category?: string;
       } = {};
 
-      // 편집된 값이 있을 때만 업데이트에 포함
+      // ��집된 값이 있을 때만 업데이트에 포함
       if (editedObjectName.trim()) updates.name = editedObjectName.trim();
       if (editedObjectCode.trim()) updates.code = editedObjectCode.trim();
       if (editedObjectInfo.trim()) updates.additionalInfo = editedObjectInfo.trim();
@@ -741,7 +838,7 @@ export default function VideoPlayer({
     setIsEditing(false);
   };
 
-  // 뒤로가기 핸들러 - 탐지된 객체 목록으로만 이동하고 버튼 활성화 상태 유지
+  // 뒤로가기 핸들러 - 탐지된 객체 목록으로만 이동하고 버튼 활성화 상태 유��
   const handleBackToObjectList = () => {
     setSelectedObjectId(null);
     setIsEditing(false);
@@ -844,7 +941,7 @@ export default function VideoPlayer({
       setShowDeleteConfirmModal(false);
       setObjectToDelete(null);
       setDeleteConfirmed(false);
-      // 초기에는 객체 목록을 닫은 상태로 시작
+      // 초기에는 ��체 목록을 닫은 상태로 시작
       setShowObjectList(false);
 
       if (videoDuration === 0) {
@@ -1067,7 +1164,7 @@ export default function VideoPlayer({
               </button>
 
               {isDrawing && (
-                <div style={{ display: "flex", gap: "8px" }}>
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                   <button
                     onClick={() => {
                       setDrawingMode("rectangle");
@@ -1091,6 +1188,30 @@ export default function VideoPlayer({
                     }}
                   >
                     네모박스
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDrawingMode("click");
+                      setIsErasing(false);
+                    }}
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: "6px",
+                      border: "1px solid #d1d5db",
+                      fontWeight: "500",
+                      cursor: "pointer",
+                      background:
+                        drawingMode === "click" && !isErasing
+                          ? "#f59e0b"
+                          : "white",
+                      color:
+                        drawingMode === "click" && !isErasing
+                          ? "white"
+                          : "#374151",
+                      fontSize: "0.85rem",
+                    }}
+                  >
+                    클릭
                   </button>
                   <button
                     onClick={() => setIsErasing(!isErasing)}
@@ -1157,8 +1278,10 @@ export default function VideoPlayer({
                 }}
               >
                 {isErasing
-                  ? "🗑️ 지우개 모드 - 그려진 영역을 클릭하여 삭제하세요"
-                  : "🎨 그리기 모드 활성화 - 마우��로 드래그하여 영역을 그려보세요"}
+                  ? "🗑️ ���우개 모드 - 그려진 영역을 클릭하여 삭제하세요"
+                  : drawingMode === "click"
+                  ? "📍 클릭 모드 활성화 - 마우스로 클릭하여 좌표를 찍어보세요"
+                  : "🎨 그리기 모드 활성화 - 마우스로 드래그하여 영역을 그려보세요"}
               </div>
             )}
           </div>
@@ -1278,14 +1401,14 @@ export default function VideoPlayer({
                 <button
                   onClick={() => {
                     if (!showObjectList && !selectedObjectId) {
-                      // 처음 클릭 시 객체 목록 열기
+                      // 처음 클릭 시 객체 목�� 열기
                       setShowObjectList(true);
                       setSelectedObjectId(null);
                     } else if (showObjectList && !selectedObjectId) {
                       // 객체 목목이 열려있을 때 닫기
                       setShowObjectList(false);
                     } else if (selectedObjectId) {
-                      // 객체 상세 정보에서 닫기
+                      // 객�� 상세 정보에서 닫기
                       setShowObjectList(false);
                       setSelectedObjectId(null);
                     }
@@ -1666,7 +1789,7 @@ export default function VideoPlayer({
                             }}
                           >
                             <Trash2 style={{ width: 16, height: 16 }} />
-                            선택된 객체 ����제
+                            ���택된 객체 ����제
                           </button>
                         </div>
                       )}
@@ -1687,10 +1810,10 @@ export default function VideoPlayer({
                         🔍
                       </div>
                       <div style={{ fontWeight: "500", marginBottom: "4px" }}>
-                        탐지된 객체가 없습니다.
+                        탐지��� 객체가 없습니다.
                       </div>
                       <div style={{ fontSize: "0.85rem" }}>
-                        ���역을 그려서 객체를 추가해보세요
+                        �����을 그려서 객체를 추가해보세요
                       </div>
                     </div>
                   )
@@ -2141,7 +2264,7 @@ export default function VideoPlayer({
                       탐지된 객체 없음
                     </div>
                     <div style={{ fontSize: "0.85rem" }}>
-                      "탐지된 객체" 버튼을 클릭하여
+                      "탐지된 객체" 버튼�� 클릭하여
                       <br />
                       객체 목록을 확인해주세요
                     </div>
@@ -2227,7 +2350,7 @@ export default function VideoPlayer({
         </div>
       </div>
 
-      {/* 삭제 확인 모달 */}
+      {/* 삭제 ���인 모달 */}
       {showDeleteConfirmModal && (
         <div
           style={{
@@ -2625,7 +2748,7 @@ export default function VideoPlayer({
                     marginBottom: "8px",
                   }}
                 >
-                  💡 추가정보
+                  💡 추가정���
                 </div>
                 <textarea
                   value={modalObjectInfo.additionalInfo}
@@ -2702,6 +2825,126 @@ export default function VideoPlayer({
                 }}
               >
                 저장
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* API 응답 상세 정보 모달 */}
+      {showApiResponseModal && apiResponseData && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2000,
+          }}
+          onClick={() => setShowApiResponseModal(false)}
+        >
+          <div
+            style={{
+              background: "white",
+              borderRadius: "12px",
+              padding: "24px",
+              maxWidth: "500px",
+              width: "90%",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+              border: `3px solid ${apiResponseData.success ? '#10b981' : '#ef4444'}`,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ textAlign: "center", marginBottom: "20px" }}>
+              <div style={{ fontSize: "3rem", marginBottom: "12px" }}>
+                {apiResponseData.success ? "✅" : "❌"}
+              </div>
+              <h3
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: "600",
+                  color: apiResponseData.success ? "#059669" : "#dc2626",
+                  margin: 0,
+                  marginBottom: "8px",
+                }}
+              >
+                {apiResponseData.success ? "API 전송 성공!" : "API 전송 실패"}
+              </h3>
+              <p
+                style={{
+                  fontSize: "0.95rem",
+                  color: "#6b7280",
+                  margin: 0,
+                }}
+              >
+                {apiResponseData.message}
+              </p>
+            </div>
+
+            <div
+              style={{
+                background: "#f8fafc",
+                border: "1px solid #e2e8f0",
+                borderRadius: "8px",
+                padding: "16px",
+                marginBottom: "20px",
+              }}
+            >
+              <div style={{ marginBottom: "12px" }}>
+                <strong style={{ color: "#374151" }}>그리기 타입:</strong>
+                <span style={{ marginLeft: "8px", color: "#6b7280" }}>
+                  {apiResponseData.drawingType}
+                </span>
+              </div>
+
+              {apiResponseData.coordinates && (
+                <div style={{ marginBottom: "12px" }}>
+                  <strong style={{ color: "#374151" }}>좌표 정보:</strong>
+                  <span style={{ marginLeft: "8px", color: "#6b7280", fontFamily: "monospace" }}>
+                    {apiResponseData.coordinates}
+                  </span>
+                </div>
+              )}
+
+              {apiResponseData.videoTime !== undefined && (
+                <div style={{ marginBottom: "12px" }}>
+                  <strong style={{ color: "#374151" }}>동영상 시간:</strong>
+                  <span style={{ marginLeft: "8px", color: "#6b7280" }}>
+                    {formatTime(apiResponseData.videoTime)}
+                  </span>
+                </div>
+              )}
+
+              {apiResponseData.timestamp && (
+                <div>
+                  <strong style={{ color: "#374151" }}>처리 시간:</strong>
+                  <span style={{ marginLeft: "8px", color: "#6b7280" }}>
+                    {apiResponseData.timestamp}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div style={{ textAlign: "center" }}>
+              <button
+                onClick={() => setShowApiResponseModal(false)}
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: "6px",
+                  border: "none",
+                  background: apiResponseData.success ? "#10b981" : "#ef4444",
+                  color: "white",
+                  fontSize: "0.9rem",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                }}
+              >
+                확인
               </button>
             </div>
           </div>

@@ -10,7 +10,18 @@
       "drawingCount": 0,
       "duration": 35.041667,
       "totalFrames": 1051
+    },
+    {
+      "videoId": "video-1754548833106-cx55p1uzh",
+      "videoFileName": "첫번쨰 작품.mp4",
+      "videoFolder": "첫번쨰_작품",
+      "version": 1,
+      "savedAt": "2025-08-07T15:41:11.810+09:00",
+      "objectCount": 1,
+      "drawingCount": 0,
+      "duration": 35.041667,
+      "totalFrames": 1051
     }
   ],
-  "lastUpdated": "2025-08-07T14:24:13.477+09:00"
+  "lastUpdated": "2025-08-07T15:41:11.810+09:00"
 }
