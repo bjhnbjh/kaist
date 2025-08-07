@@ -59,16 +59,7 @@ interface WebVTTData {
 // 🗂️ 파일 시스템 설정
 // ========================================
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-
-/**
- * WebVTT 저장 디렉토리 초기화
- */
-function initializeWebVTTFiles() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-}
+// 데이터 디렉토리는 공통 유틸리티에서 관리
 
 // ========================================
 // 🎯 핵심 로직 함수들
@@ -258,7 +249,7 @@ function generateCompleteVttContent(data: WebVTTData, objects: any[]): string {
  * 기존 VTT와 새로운 데이터를 병합하여 업데이트된 VTT 생성
  */
 function createUpdatedVttContent(existingContent: string, newData: WebVTTData): string {
-  // 기존 객체들 추출
+  // 기�� 객체들 추출
   const existingObjects = extractObjectsFromVtt(existingContent);
   
   // 새로운 객체들과 병합 (시간 중복 방지)
@@ -332,7 +323,7 @@ function saveWebVTTFile(webvttData: WebVTTData) {
  * 
  * @route POST /api/webvtt
  * @param {Request} req - Express 요청 객체 (WebVTTData 포함)
- * @param {Response} res - Express 응답 객체
+ * @param {Response} res - Express 응�� 객체
  */
 export const handleWebVTTSave: RequestHandler = (req, res) => {
   try {
