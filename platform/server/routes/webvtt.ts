@@ -101,6 +101,13 @@ interface WebVTTData {
     category?: string;
     confidence?: number;
     videoCurrentTime?: number;  // 객체가 생성된 동영상 시점
+    coordinates?: {  // 그리기 좌표 정보 (VTT에만 저장, 화면에는 표시 안함)
+      type: "path" | "rectangle" | "click";
+      points?: Array<{ x: number; y: number }>;
+      startPoint?: { x: number; y: number };
+      endPoint?: { x: number; y: number };
+      clickPoint?: { x: number; y: number };
+    };
   }>;
   duration: number;
   timestamp: number;
@@ -144,17 +151,37 @@ function initializeWebVTTFiles() {
 function extractObjectsFromVtt(content: string): any[] {
   const objects: any[] = [];
   const lines = content.split('\n');
-  
+
+  // 📍 좌표 데이터 추출 (NOTE 섹션에서)
+  const coordinatesMap = new Map();
+  let inCoordinatesSection = false;
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    
+
+    if (line === 'COORDINATES_DATA_START') {
+      inCoordinatesSection = true;
+      continue;
+    } else if (line === 'COORDINATES_DATA_END') {
+      inCoordinatesSection = false;
+      continue;
+    } else if (inCoordinatesSection && line.startsWith('{')) {
+      try {
+        const coordData = JSON.parse(line);
+        coordinatesMap.set(coordData.objectId, coordData.coordinates);
+      } catch (e) {
+        console.warn('Failed to parse coordinates data:', line);
+      }
+      continue;
+    }
+
     // 🎯 이모지로 시작하는 객체 이름 라인 찾기
     if (line.startsWith('🎯')) {
       const obj: any = {
         name: line.replace('🎯 ', ''),
         id: `existing-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       };
-      
+
       // 이전 라인에서 시간 정보 찾기
       if (i > 0 && lines[i-1].includes('-->')) {
         const timeMatch = lines[i-1].match(/^([\d:]+)\s*-->/);
@@ -164,7 +191,7 @@ function extractObjectsFromVtt(content: string): any[] {
           obj.videoCurrentTime = parseInt(timeParts[0]) * 60 + parseInt(timeParts[1]) + parseInt(timeParts[2]) / 100;
         }
       }
-      
+
       // 다음 라인들에서 추가 정보 수집
       for (let j = i + 1; j < lines.length && lines[j].trim() !== ''; j++) {
         const infoLine = lines[j].trim();
@@ -178,11 +205,16 @@ function extractObjectsFromVtt(content: string): any[] {
           obj.additionalInfo = infoLine.replace('💡 정보: ', '');
         }
       }
-      
+
+      // 📍 저장된 좌표 정보가 있으면 추가
+      if (coordinatesMap.has(obj.id)) {
+        obj.coordinates = coordinatesMap.get(obj.id);
+      }
+
       objects.push(obj);
     }
   }
-  
+
   return objects;
 }
 
@@ -251,6 +283,24 @@ function generateCompleteVttContent(data: WebVTTData, objects: any[]): string {
   vttLines.push(`동영상: ${data.videoFileName}`);
   vttLines.push(`생성일: ${getKoreaTimeISO()}`);
   vttLines.push(`탐지된 객체 수: ${objects.length}`);
+
+  // 📍 좌표 정보를 NOTE 섹션에 JSON 형태로 저장 (화면에는 표시되지 않음)
+  if (objects.some(obj => obj.coordinates)) {
+    vttLines.push('COORDINATES_DATA_START');
+    objects.forEach(obj => {
+      if (obj.coordinates) {
+        const coordData = {
+          objectId: obj.id,
+          objectName: obj.name,
+          videoTime: obj.videoCurrentTime || 0,
+          coordinates: obj.coordinates
+        };
+        vttLines.push(JSON.stringify(coordData));
+      }
+    });
+    vttLines.push('COORDINATES_DATA_END');
+  }
+
   vttLines.push('');
 
   if (objects.length > 0) {

@@ -5,6 +5,7 @@ import { handleDrawingSubmission } from "./routes/drawing";
 import { handleVideoFileUpload, handleVideoDelete, uploadMiddleware } from "./routes/upload";
 import { handleWebVTTSave } from "./routes/webvtt";
 import { handleSaveData } from "./routes/save-data";
+import { handleVttCoordinatesRead } from "./routes/vtt-coordinates";
 
 /**
  * ===================================
@@ -12,12 +13,13 @@ import { handleSaveData } from "./routes/save-data";
  * ===================================
  * 
  * 📍 API 엔드포인트 목록:
- * 
+ *
  * 1. POST /api/upload-file      - 동영상 파일 업로드 (multer 사용)
  * 2. DELETE /api/video          - 동영상 및 관련 폴더 삭제
  * 3. POST /api/drawing          - 그리기 데이터 처리 (객체 영역 그리기)
  * 4. POST /api/webvtt           - WebVTT 자막 파일 생성/업데이트
  * 5. POST /api/save-data        - 편집 데이터 JSON 저장
+ * 6. GET /api/vtt-coordinates   - VTT 파일에서 좌표 데이터 읽기
  * 
  * 📂 데이터 저장 구조:
  * data/
@@ -56,7 +58,7 @@ export function createServer() {
   /**
    * 서버 상태 체크용 엔드포인트
    * GET /api/ping
-   * 용도: 서버가 정상 작동하는지 확인
+   * ��도: 서버가 정상 작동하는지 확인
    */
   app.get("/api/ping", (_req, res) => {
     res.json({ 
@@ -110,12 +112,22 @@ export function createServer() {
   /**
    * 💾 편집 데이터 저장
    * POST /api/save-data
-   * 
+   *
    * 📝 수정 방법:
    * - server/routes/save-data.ts의 handleSaveData 함수 수정
    * - 저장 데이터 구조 변경 시 SaveDataRequest 인터페이스 수정
    */
   app.post("/api/save-data", handleSaveData);
+
+  /**
+   * 📍 VTT 좌표 데이터 읽기
+   * GET /api/vtt-coordinates
+   *
+   * 📝 수정 방법:
+   * - server/routes/vtt-coordinates.ts의 handleVttCoordinatesRead 함수 수정
+   * - 좌표 데이터 파싱 로직 변경 시 extractCoordinatesFromVtt 함수 수정
+   */
+  app.get("/api/vtt-coordinates", handleVttCoordinatesRead);
 
   return app;
 }

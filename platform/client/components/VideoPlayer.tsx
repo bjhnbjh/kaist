@@ -82,7 +82,8 @@ const formatTime = (seconds: number) => {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);
-  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  const milliseconds = Math.floor((seconds % 1) * 100); // 100분의 1초 단위
+  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}.${milliseconds.toString().padStart(2, "0")}`;
 };
 
 export default function VideoPlayer({
@@ -152,6 +153,23 @@ export default function VideoPlayer({
     videoTime?: number;
     timestamp?: string;
   } | null>(null);
+  // 그리기 영역과 생성된 객체 간의 매핑 추적
+  const [currentDrawingArea, setCurrentDrawingArea] = useState<DrawnArea | null>(null);
+  const [objectDrawingMap, setObjectDrawingMap] = useState<Map<string, DrawnArea>>(new Map());
+  // VTT 기반 좌표 오버레이
+  const [vttOverlayEnabled, setVttOverlayEnabled] = useState(false);
+  const [vttCoordinates, setVttCoordinates] = useState<Array<{
+    objectId: string;
+    objectName: string;
+    videoTime: number;
+    coordinates: {
+      type: "path" | "rectangle" | "click";
+      points?: Array<{ x: number; y: number }>;
+      startPoint?: { x: number; y: number };
+      endPoint?: { x: number; y: number };
+      clickPoint?: { x: number; y: number };
+    };
+  }>>([]);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -161,6 +179,35 @@ export default function VideoPlayer({
   const getApiUrl = () => {
     // 현재 페이지와 같은 도메��� 사용
     return window.location.origin;
+  };
+
+  // VTT 좌표 데이터 로드
+  const loadVttCoordinates = async () => {
+    if (!video) return;
+
+    try {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/vtt-coordinates?videoId=${video.id}&videoFileName=${encodeURIComponent(video.file.name)}`);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('VTT 좌표 데이터 로드됨:', result);
+
+        if (result.success && result.coordinates) {
+          setVttCoordinates(result.coordinates);
+          toast.success(`VTT에서 ${result.coordinatesCount}개의 좌표 데이터를 불러왔습니다.`);
+        } else {
+          setVttCoordinates([]);
+          toast.info('저장된 좌표 데��터가 없습니다.');
+        }
+      } else {
+        console.warn('VTT 좌표 데이터 로드 실패:', response.status);
+        setVttCoordinates([]);
+      }
+    } catch (error) {
+      console.error('VTT 좌표 데이터 로��� 오류:', error);
+      setVttCoordinates([]);
+    }
   };
 
   // 그리기 완료시 API로 데이터 전송
@@ -218,6 +265,9 @@ export default function VideoPlayer({
         setTimeout(() => {
           setShowApiResponseModal(false);
 
+          // 현재 그리기 영역을 저장하여 객체 생성 시 좌표 정보 연결
+          setCurrentDrawingArea(area);
+
           // 그리기로 추가되는 객체는 totalObjectsCreated + 1로 번호 생성
           const nextObjectNumber = video ? video.totalObjectsCreated + 1 : detectedObjects.length + 1;
           setModalObjectInfo({
@@ -233,7 +283,7 @@ export default function VideoPlayer({
 
         return result;
       } else {
-        const errorResult = await response.json().catch(() => ({ message: 'API 응답 오류' }));
+        const errorResult = await response.json().catch(() => ({ message: 'API 응답 오��' }));
 
         // API 오류 응답 상세 정보 설정
         setApiResponseData({
@@ -326,7 +376,7 @@ export default function VideoPlayer({
         const height = area.endPoint.y - area.startPoint.y;
         ctx.strokeRect(area.startPoint.x, area.startPoint.y, width, height);
       } else if (area.type === "click" && area.clickPoint) {
-        // 클릭 포인트 그리기 (십자가 ���크 + 원)
+        // 클릭 포인트 그���기 (십자가 ���크 + 원)
         const point = area.clickPoint;
         const size = 8;
 
@@ -356,7 +406,74 @@ export default function VideoPlayer({
         ctx.stroke();
       }
     });
-  }, [drawnAreas]);
+
+    // VTT 좌표 기반 오버레이 표시 (활성화된 경우)
+    if (vttOverlayEnabled && vttCoordinates.length > 0) {
+      const currentTime = videoRef.current?.currentTime || 0;
+
+      // 현재 시간에 해당하는 좌표들 찾기 (±0.5초 범위)
+      const activeCoordinates = vttCoordinates.filter(coord =>
+        Math.abs(coord.videoTime - currentTime) <= 0.5
+      );
+
+      activeCoordinates.forEach((coord, index) => {
+        const coords = coord.coordinates;
+
+        // VTT 오버레이는 파란색 계열로 표시 (기존 그리기와 구분)
+        ctx.strokeStyle = `hsl(${200 + index * 30}, 80%, 50%)`;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]); // 점선으로 표시해서 구분
+
+        if (coords.type === "rectangle" && coords.startPoint && coords.endPoint) {
+          const width = coords.endPoint.x - coords.startPoint.x;
+          const height = coords.endPoint.y - coords.startPoint.y;
+          ctx.strokeRect(coords.startPoint.x, coords.startPoint.y, width, height);
+
+          // 객체 이름 표시
+          ctx.fillStyle = ctx.strokeStyle;
+          ctx.font = "12px Arial";
+          ctx.fillText(coord.objectName, coords.startPoint.x, coords.startPoint.y - 5);
+        } else if (coords.type === "click" && coords.clickPoint) {
+          const point = coords.clickPoint;
+          const size = 10;
+
+          // 십자가 + 원 (VTT 버전)
+          ctx.beginPath();
+          ctx.moveTo(point.x - size, point.y);
+          ctx.lineTo(point.x + size, point.y);
+          ctx.moveTo(point.x, point.y - size);
+          ctx.lineTo(point.x, point.y + size);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, size/2, 0, 2 * Math.PI);
+          ctx.stroke();
+
+          // 객체 이름 표시
+          ctx.fillStyle = ctx.strokeStyle;
+          ctx.font = "12px Arial";
+          ctx.fillText(coord.objectName, point.x + 15, point.y - 5);
+        } else if (coords.type === "path" && coords.points && coords.points.length > 1) {
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+
+          ctx.beginPath();
+          ctx.moveTo(coords.points[0].x, coords.points[0].y);
+          coords.points.forEach((point) => {
+            ctx.lineTo(point.x, point.y);
+          });
+          ctx.stroke();
+
+          // 객체 이름 표시
+          ctx.fillStyle = ctx.strokeStyle;
+          ctx.font = "12px Arial";
+          ctx.fillText(coord.objectName, coords.points[0].x, coords.points[0].y - 5);
+        }
+
+        ctx.setLineDash([]); // 점선 초기화
+      });
+    }
+  }, [drawnAreas, vttOverlayEnabled, vttCoordinates, videoCurrentTime]);
 
   const getCanvasCoordinates = useCallback((e: React.MouseEvent) => {
     const canvas = canvasRef.current;
@@ -665,7 +782,7 @@ export default function VideoPlayer({
           dlReservoirDomain: obj.dlReservoirDomain,
           category: obj.category,
           confidence: obj.confidence,
-          videoCurrentTime: obj.videoCurrentTime || 0  // 각 객체의 실제 생성 시간 사용
+          videoCurrentTime: obj.videoCurrentTime || 0  // 각 객체의 실제 생성 시�� 사용
         })),
         duration: videoDuration,
         timestamp: Date.now()
@@ -792,7 +909,7 @@ export default function VideoPlayer({
           setDetectionProgress(100);
           onRunObjectDetection(video.id);
           toast.success(
-            "객체 탐지가 완료되었습니다! 새로운 객체들이 발견되었습니다.",
+            "객체 탐지가 완료되었���니다! 새로운 객체들이 발견되었습니다.",
           );
 
           setTimeout(() => {
@@ -838,7 +955,7 @@ export default function VideoPlayer({
     setIsEditing(false);
   };
 
-  // 뒤로가기 핸들러 - 탐지된 객체 목록으로만 이동하고 버튼 활성화 상태 유��
+  // 뒤로가기 핸들러 - 탐지된 객체 목록으로만 이동하��� 버튼 활성화 상태 유��
   const handleBackToObjectList = () => {
     setSelectedObjectId(null);
     setIsEditing(false);
@@ -993,6 +1110,18 @@ export default function VideoPlayer({
       redrawCanvas();
     }
   }, [drawnAreas, canvasInitialized, redrawCanvas]);
+
+  // 비디오 모달 열릴 때 VTT 좌표 자동 로드
+  useEffect(() => {
+    if (isOpen && video && canvasInitialized) {
+      // 잠시 후 VTT 좌표 로드 (캔버스 초기화 완료 후)
+      const timer = setTimeout(() => {
+        loadVttCoordinates();
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, video, canvasInitialized]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -1250,6 +1379,40 @@ export default function VideoPlayer({
               >
 최종저장
               </button>
+
+              <button
+                onClick={loadVttCoordinates}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  border: "1px solid #d1d5db",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                  background: "white",
+                  color: "#374151",
+                  fontSize: "0.9rem",
+                }}
+              >
+                VTT 좌표 불러오기
+              </button>
+
+              {vttCoordinates.length > 0 && (
+                <button
+                  onClick={() => setVttOverlayEnabled(!vttOverlayEnabled)}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    border: "none",
+                    fontWeight: "500",
+                    cursor: "pointer",
+                    background: vttOverlayEnabled ? "#ef4444" : "#3b82f6",
+                    color: "white",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  {vttOverlayEnabled ? "오버레이 끄기" : "오버레이 켜기"}
+                </button>
+              )}
             </div>
 
             {drawnAreas.length > 0 && (
@@ -1261,6 +1424,20 @@ export default function VideoPlayer({
                 }}
               >
                 그려진 영역: {drawnAreas.length}개
+              </div>
+            )}
+
+            {vttCoordinates.length > 0 && (
+              <div
+                style={{
+                  textAlign: "center",
+                  fontSize: "0.875rem",
+                  color: vttOverlayEnabled ? "#3b82f6" : "#6b7280",
+                  fontWeight: vttOverlayEnabled ? "600" : "normal",
+                }}
+              >
+                📍 VTT 좌표: {vttCoordinates.length}개
+                {vttOverlayEnabled && " (오버레이 활성화)"}
               </div>
             )}
 
@@ -1281,7 +1458,7 @@ export default function VideoPlayer({
                   ? "🗑️ ���우개 모드 - 그려진 영역을 클릭하여 삭제하세요"
                   : drawingMode === "click"
                   ? "📍 클릭 모드 활성화 - 마우스로 클릭하여 좌표를 찍어보세요"
-                  : "🎨 그리기 모드 활성화 - 마우스로 드래그하여 영역을 그려보세요"}
+                  : "🎨 그리기 모드 활성화 - 마우스�� 드래그하여 영역을 그려보세요"}
               </div>
             )}
           </div>
@@ -1408,7 +1585,7 @@ export default function VideoPlayer({
                       // 객체 목목이 열려있을 때 닫기
                       setShowObjectList(false);
                     } else if (selectedObjectId) {
-                      // 객�� 상세 정보에서 닫기
+                      // 객�� ��세 정보에서 ��기
                       setShowObjectList(false);
                       setSelectedObjectId(null);
                     }
@@ -1534,7 +1711,7 @@ export default function VideoPlayer({
                         gap: "4px",
                         transition: "background-color 0.2s ease",
                       }}
-                      title="탐��된 객체 목록으로 돌아가기"
+                      title="탐���� 객체 목록으로 돌아가기"
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = "#f3f4f6";
                       }}
@@ -1706,7 +1883,7 @@ export default function VideoPlayer({
                               justifyContent: "center",
                               transition: "color 0.2s ease",
                             }}
-                            title="정보 보기"
+                            title="정보 보���"
                           >
                             <ChevronRight style={{ width: 16, height: 16 }} />
                           </button>
@@ -1928,7 +2105,7 @@ export default function VideoPlayer({
                                     color: "#475569",
                                   }}
                                 >
-                                  카테고리:{" "}
+                                  카테��리:{" "}
                                   {selectedObject.category ||
                                     editedCategory ||
                                     "기타"}
@@ -2261,7 +2438,7 @@ export default function VideoPlayer({
                       🔍
                     </div>
                     <div style={{ fontWeight: "500", marginBottom: "4px" }}>
-                      탐지된 객체 없음
+                      ���지된 객체 없음
                     </div>
                     <div style={{ fontSize: "0.85rem" }}>
                       "탐지된 객체" 버튼�� 클릭하여
@@ -2482,7 +2659,7 @@ export default function VideoPlayer({
                   fontStyle: "italic",
                 }}
               >
-                ⚠️ 체크박스를 선택해야 삭��할 수 있습니다
+                ⚠️ 체크박스를 선택해야 삭����� 수 있습니다
               </div>
             )}
           </div>
@@ -2546,7 +2723,7 @@ export default function VideoPlayer({
                   margin: 0,
                 }}
               >
-                새 객체 정보 입력
+                �� 객체 정보 입력
               </h3>
               <button
                 onClick={() => setShowInfoModal(false)}
@@ -2604,7 +2781,7 @@ export default function VideoPlayer({
                   }}
                 />
 
-                {/* 카테고리 드롭다운 */}
+                {/* ���테고리 드롭다운 */}
                 <div style={{ marginTop: "8px" }}>
                   <select
                     value={modalObjectInfo.category}
@@ -2623,7 +2800,7 @@ export default function VideoPlayer({
                       background: "#ffffff",
                     }}
                   >
-                    <option value="기타">기타 (00)</option>
+                    <option value="��타">기타 (00)</option>
                     <option value="GTIN">GTIN (01)</option>
                     <option value="GLN">GLN (02)</option>
                     <option value="GIAI">GIAI (03)</option>
@@ -2782,7 +2959,18 @@ export default function VideoPlayer({
               }}
             >
               <button
-                onClick={() => setShowInfoModal(false)}
+                onClick={() => {
+                  // 취소 시 그려진 영역들을 모두 제거
+                  setDrawnAreas([]);
+                  setCurrentPath([]);
+                  setCurrentRectangle(null);
+                  setRectangleStart(null);
+                  setCurrentDrawingArea(null);
+                  redrawCanvas();
+                  setShowInfoModal(false);
+                  setModalObjectInfo(null);
+                  toast.info('등록이 취소되었습니다. 그����� 영역이 삭제되었습니다.');
+                }}
                 style={{
                   padding: "10px 20px",
                   borderRadius: "6px",
@@ -2800,7 +2988,7 @@ export default function VideoPlayer({
                 onClick={() => {
                   if (modalObjectInfo && video && onAddNewObject) {
                     // 그리기 영역을 새로운 객체로 추가 - 팝업창에서 입력한 모든 정보 포함
-                    const addedObjectName = onAddNewObject(video.id, modalObjectInfo.name, {
+                    const addedObjectId = onAddNewObject(video.id, modalObjectInfo.name, {
                       code: modalObjectInfo.code,
                       additionalInfo: modalObjectInfo.additionalInfo,
                       dlReservoirDomain: modalObjectInfo.dlReservoirDomain,
@@ -2808,9 +2996,15 @@ export default function VideoPlayer({
                       videoCurrentTime: modalObjectInfo.videoCurrentTime,
                     });
 
-                    toast.success('새로운 객체가 추가되었습니다.');
+                    // 그리기 영역과 객체 매핑 저장
+                    if (currentDrawingArea && addedObjectId) {
+                      setObjectDrawingMap(prev => new Map(prev.set(addedObjectId, currentDrawingArea)));
+                    }
+
+                    toast.success('새로운 객체��� 추가되었습니다.');
                     setShowInfoModal(false);
                     setModalObjectInfo(null);
+                    setCurrentDrawingArea(null);
                   }
                 }}
                 style={{
