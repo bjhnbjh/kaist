@@ -143,6 +143,15 @@ export default function VideoPlayer({
     videoCurrentTime: number;
   } | null>(null);
   const [isApiLoading, setIsApiLoading] = useState(false);
+  const [showApiResponseModal, setShowApiResponseModal] = useState(false);
+  const [apiResponseData, setApiResponseData] = useState<{
+    success: boolean;
+    message: string;
+    drawingType: string;
+    coordinates?: string;
+    videoTime?: number;
+    timestamp?: string;
+  } | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -2087,7 +2096,7 @@ export default function VideoPlayer({
                                     e.target.value ===
                                     selectedObject.additionalInfo ||
                                     e.target.value ===
-                                    "AI가 자동으로 탐지한 객체입니다."
+                                    "AI��� 자동으로 탐지한 객체입니다."
                                   ) {
                                     setEditedObjectInfo("");
                                   }
@@ -2517,7 +2526,7 @@ export default function VideoPlayer({
                 maxHeight: "60vh",
               }}
             >
-              {/* 이름 섹션 */}
+              {/* 이��� 섹션 */}
               <div style={{ marginBottom: "16px" }}>
                 <div
                   style={{
