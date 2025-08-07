@@ -252,7 +252,7 @@ function generateCompleteVttContent(data: WebVTTData, objects: any[]): string {
       vttLines.push('{');
       vttLines.push(`"이름":"Object(${objectNumber})${objectNumber}",`);
       vttLines.push(`"시간":${obj.videoCurrentTime || 0},`);
-      vttLines.push(`"code":"${obj.code || `CODE_RECT-${Math.floor(Math.random() * 1000)}"}",`);
+      vttLines.push(`"code":"${obj.code || `CODE_RECT-${Math.floor(Math.random() * 1000)}`}",`);
       vttLines.push(`"catefory":"${obj.category || "기타"}",`);
       vttLines.push(`"도메인":"${obj.dlReservoirDomain || "http://www.naver.com"}",`);
       vttLines.push(`"정보":"${obj.additionalInfo || "AI가 자동으로 탐지한 객체입니다."}",`);
