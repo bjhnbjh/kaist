@@ -198,7 +198,7 @@ export default function VideoPlayer({
           toast.success(`VTT에서 ${result.coordinatesCount}개의 좌표 데이터를 불러왔습니다.`);
         } else {
           setVttCoordinates([]);
-          toast.info('저장된 좌표 데이터가 없습니다.');
+          toast.info('저장된 좌표 데��터가 없습니다.');
         }
       } else {
         console.warn('VTT 좌표 데이터 로드 실패:', response.status);
@@ -376,7 +376,7 @@ export default function VideoPlayer({
         const height = area.endPoint.y - area.startPoint.y;
         ctx.strokeRect(area.startPoint.x, area.startPoint.y, width, height);
       } else if (area.type === "click" && area.clickPoint) {
-        // 클릭 포인트 그리기 (십자가 ���크 + 원)
+        // 클릭 포인트 그���기 (십자가 ���크 + 원)
         const point = area.clickPoint;
         const size = 8;
 
@@ -406,7 +406,74 @@ export default function VideoPlayer({
         ctx.stroke();
       }
     });
-  }, [drawnAreas]);
+
+    // VTT 좌표 기반 오버레이 표시 (활성화된 경우)
+    if (vttOverlayEnabled && vttCoordinates.length > 0) {
+      const currentTime = videoRef.current?.currentTime || 0;
+
+      // 현재 시간에 해당하는 좌표들 찾기 (±0.5초 범위)
+      const activeCoordinates = vttCoordinates.filter(coord =>
+        Math.abs(coord.videoTime - currentTime) <= 0.5
+      );
+
+      activeCoordinates.forEach((coord, index) => {
+        const coords = coord.coordinates;
+
+        // VTT 오버레이는 파란색 계열로 표시 (기존 그리기와 구분)
+        ctx.strokeStyle = `hsl(${200 + index * 30}, 80%, 50%)`;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]); // 점선으로 표시해서 구분
+
+        if (coords.type === "rectangle" && coords.startPoint && coords.endPoint) {
+          const width = coords.endPoint.x - coords.startPoint.x;
+          const height = coords.endPoint.y - coords.startPoint.y;
+          ctx.strokeRect(coords.startPoint.x, coords.startPoint.y, width, height);
+
+          // 객체 이름 표시
+          ctx.fillStyle = ctx.strokeStyle;
+          ctx.font = "12px Arial";
+          ctx.fillText(coord.objectName, coords.startPoint.x, coords.startPoint.y - 5);
+        } else if (coords.type === "click" && coords.clickPoint) {
+          const point = coords.clickPoint;
+          const size = 10;
+
+          // 십자가 + 원 (VTT 버전)
+          ctx.beginPath();
+          ctx.moveTo(point.x - size, point.y);
+          ctx.lineTo(point.x + size, point.y);
+          ctx.moveTo(point.x, point.y - size);
+          ctx.lineTo(point.x, point.y + size);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, size/2, 0, 2 * Math.PI);
+          ctx.stroke();
+
+          // 객체 이름 표시
+          ctx.fillStyle = ctx.strokeStyle;
+          ctx.font = "12px Arial";
+          ctx.fillText(coord.objectName, point.x + 15, point.y - 5);
+        } else if (coords.type === "path" && coords.points && coords.points.length > 1) {
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+
+          ctx.beginPath();
+          ctx.moveTo(coords.points[0].x, coords.points[0].y);
+          coords.points.forEach((point) => {
+            ctx.lineTo(point.x, point.y);
+          });
+          ctx.stroke();
+
+          // 객체 이름 표시
+          ctx.fillStyle = ctx.strokeStyle;
+          ctx.font = "12px Arial";
+          ctx.fillText(coord.objectName, coords.points[0].x, coords.points[0].y - 5);
+        }
+
+        ctx.setLineDash([]); // 점선 초기화
+      });
+    }
+  }, [drawnAreas, vttOverlayEnabled, vttCoordinates, videoCurrentTime]);
 
   const getCanvasCoordinates = useCallback((e: React.MouseEvent) => {
     const canvas = canvasRef.current;
@@ -2532,7 +2599,7 @@ export default function VideoPlayer({
                   fontStyle: "italic",
                 }}
               >
-                ⚠️ 체크박스를 선택해야 삭��할 수 있습니다
+                ⚠️ 체크박스를 선택해야 삭����� 수 있습니다
               </div>
             )}
           </div>
@@ -2874,7 +2941,7 @@ export default function VideoPlayer({
                       setObjectDrawingMap(prev => new Map(prev.set(addedObjectId, currentDrawingArea)));
                     }
 
-                    toast.success('새로운 객체가 추가되었습니다.');
+                    toast.success('새로운 객체��� 추가되었습니다.');
                     setShowInfoModal(false);
                     setModalObjectInfo(null);
                     setCurrentDrawingArea(null);
