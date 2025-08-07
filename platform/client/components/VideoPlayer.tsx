@@ -156,20 +156,6 @@ export default function VideoPlayer({
   // 그리기 영역과 생성된 객체 간의 매핑 추적
   const [currentDrawingArea, setCurrentDrawingArea] = useState<DrawnArea | null>(null);
   const [objectDrawingMap, setObjectDrawingMap] = useState<Map<string, DrawnArea>>(new Map());
-  // VTT 기반 좌표 오버레이
-  const [vttOverlayEnabled, setVttOverlayEnabled] = useState(false);
-  const [vttCoordinates, setVttCoordinates] = useState<Array<{
-    objectId: string;
-    objectName: string;
-    videoTime: number;
-    coordinates: {
-      type: "path" | "rectangle" | "click";
-      points?: Array<{ x: number; y: number }>;
-      startPoint?: { x: number; y: number };
-      endPoint?: { x: number; y: number };
-      clickPoint?: { x: number; y: number };
-    };
-  }>>([]);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -246,7 +232,7 @@ export default function VideoPlayer({
         // API 응답 상세 정보 설정
         setApiResponseData({
           success: true,
-          message: result.message || '그리기 데이터가 성공적으로 처리되었습니다.',
+          message: result.message || '그���기 데이터가 성공적으로 처리되었습니다.',
           drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유그리기',
           coordinates: area.type === 'click' && area.clickPoint
             ? `(${area.clickPoint.x}, ${area.clickPoint.y})`
@@ -419,7 +405,7 @@ export default function VideoPlayer({
       activeCoordinates.forEach((coord, index) => {
         const coords = coord.coordinates;
 
-        // VTT 오버레이는 파란색 계열로 표시 (기존 그리기와 구분)
+        // VTT 오버레���는 파란색 계열로 표시 (기존 그리기와 구분)
         ctx.strokeStyle = `hsl(${200 + index * 30}, 80%, 50%)`;
         ctx.lineWidth = 2;
         ctx.setLineDash([5, 5]); // 점선으로 표시해서 구분
@@ -964,7 +950,7 @@ export default function VideoPlayer({
     setIsEditing(false);
   };
 
-  // 뒤로가기 핸들러 - 탐지된 객체 목록으로만 이동하��� 버튼 활성화 상태 유��
+  // 뒤로가�� 핸들러 - 탐지된 객체 목록으로만 이동하��� 버튼 활성화 상태 유��
   const handleBackToObjectList = () => {
     setSelectedObjectId(null);
     setIsEditing(false);
@@ -1419,7 +1405,7 @@ export default function VideoPlayer({
                     fontSize: "0.9rem",
                   }}
                 >
-                  {vttOverlayEnabled ? "오버레이 끄기" : "오버레이 켜기"}
+                  {vttOverlayEnabled ? "오버레이 끄기" : "오���레이 켜기"}
                 </button>
               )}
             </div>
@@ -1993,7 +1979,7 @@ export default function VideoPlayer({
                       }}
                     >
                       <div style={{ fontSize: "2rem", marginBottom: "8px" }}>
-                        🔍
+                        ���
                       </div>
                       <div style={{ fontWeight: "500", marginBottom: "4px" }}>
                         탐지��� 객체가 없습니다.
