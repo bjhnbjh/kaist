@@ -4,9 +4,5 @@
  * and/or small pure JS functions that can be used on both client and server
  */
 
-/**
- * Example response type for /api/demo
- */
-export interface DemoResponse {
-  message: string;
-}
+// Shared API interfaces - currently empty
+// Add actual API interfaces here as needed
