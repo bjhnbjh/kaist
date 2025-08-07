@@ -37,7 +37,7 @@ export function createServer() {
   // 🔧 미들웨어 설정
   // ========================================
   
-  // CORS 설정 - 클라이언트에서 API 호출 허용
+  // CORS 설정 - 클라이언트에��� API 호출 허용
   app.use(cors());
   
   // JSON 파싱 미들웨어 - 큰 용량 파일 처리를 위해 50MB 제한
@@ -88,7 +88,7 @@ export function createServer() {
   app.delete("/api/video", handleVideoDelete);
 
   /**
-   * 🎨 ���리기 데이터 처리
+   * 🎨 그리기 데이터 처리
    * POST /api/drawing
    * 
    * 📝 수정 방법:
@@ -118,15 +118,6 @@ export function createServer() {
    */
   app.post("/api/save-data", handleSaveData);
 
-  /**
-   * 📍 VTT 좌표 데이터 읽기
-   * GET /api/vtt-coordinates
-   *
-   * 📝 수정 방법:
-   * - server/routes/vtt-coordinates.ts의 handleVttCoordinatesRead 함수 수정
-   * - 좌표 데이터 파싱 로직 변경 시 extractCoordinatesFromVtt 함수 수정
-   */
-  app.get("/api/vtt-coordinates", handleVttCoordinatesRead);
 
   return app;
 }
