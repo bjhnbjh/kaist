@@ -14,6 +14,9 @@ export interface DetectedObject {
   dlReservoirDomain?: string; // 관련 웹사이트 도메인 (선택사항)
   category?: string; // 객체 카테고리 (선택사항)
   videoCurrentTime?: number; // 객체가 생성된 동영상 시점 (초 단위)
+  finallink?: string; // 최종 링크 URL
+  position?: any; // 좌표 정보
+  polygon?: any; // 폴리곤 데이터 (추후 API로 추가)
 }
 
 // 업로드된 비디오의 정보를 담는 타입
