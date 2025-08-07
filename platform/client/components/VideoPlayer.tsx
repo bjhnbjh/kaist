@@ -1298,7 +1298,7 @@ export default function VideoPlayer({
                     fontSize: "0.9rem",
                   }}
                 >
-                  {// vttOverlayEnabled ? "오버레이 끄기" : "오���레이 켜기"}
+                  "VTT removed"
                 </button>
               )}
             </div>
@@ -1325,7 +1325,7 @@ export default function VideoPlayer({
                 }}
               >
                 📍 VTT 좌표: {// vttCoordinates.length}개
-                {// vttOverlayEnabled && " (오버레이 활성화)"}
+                "VTT removed"
               </div>
             )}
 
