@@ -78,7 +78,7 @@ export function createServer() {
   app.post("/api/upload-file", uploadMiddleware, handleVideoFileUpload);
 
   /**
-   * 🗑️ 동영상 삭��
+   * 🗑️ 동영상 삭제
    * DELETE /api/video
    * 
    * 📝 수정 방법:
@@ -111,12 +111,22 @@ export function createServer() {
   /**
    * 💾 편집 데이터 저장
    * POST /api/save-data
-   * 
+   *
    * 📝 수정 방법:
    * - server/routes/save-data.ts의 handleSaveData 함수 수정
    * - 저장 데이터 구조 변경 시 SaveDataRequest 인터페이스 수정
    */
   app.post("/api/save-data", handleSaveData);
+
+  /**
+   * 📍 VTT 좌표 데이터 읽기
+   * GET /api/vtt-coordinates
+   *
+   * 📝 수정 방법:
+   * - server/routes/vtt-coordinates.ts의 handleVttCoordinatesRead 함수 수정
+   * - 좌표 데이터 파싱 로직 변경 시 extractCoordinatesFromVtt 함수 수정
+   */
+  app.get("/api/vtt-coordinates", handleVttCoordinatesRead);
 
   return app;
 }
