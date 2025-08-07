@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import fs from "fs";
 import path from "path";
 import multer from "multer";
+import { getKoreaTimeISO, normalizeFileName, getDataDirectory, ensureDirectoryExists } from "../utils/common";
 
 /**
  * ===================================
@@ -36,7 +37,7 @@ function getKoreaTimeISO(): string {
 }
 
 /**
- * 파일명을 안전하게 정규화하는 함수 (한글 지원)
+ * 파일명을 안전하게 정규화하��� 함수 (한글 지원)
  * 
  * 📝 수정 포인트:
  * - 허용할 특수문자 변경: 정규식 패턴 수정
@@ -192,7 +193,7 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
  * 
  * 📝 수정 포인트:
  * - 파일 크기 제한 변경: limits.fileSize 값 수정
- * - 메모리 사용량 조정: 큰 파일 처리 시 성능 고려
+ * - 메모리 사용��� 조정: 큰 파일 처리 시 성능 고려
  */
 export const uploadMiddleware = multer({
   storage,
@@ -232,7 +233,7 @@ function saveUploadData(uploadData: UploadData, filePath?: string, videoFolder?:
     status: 'uploaded'
   };
 
-  // 1. 전역 인덱스 파일 업데이트 (uploads-all.json)
+  // 1. 전역 인덱��� 파일 업데이트 (uploads-all.json)
   const globalFileContent = fs.readFileSync(UPLOADS_FILE, 'utf8');
   const globalData = JSON.parse(globalFileContent);
   globalData.uploads.push(uploadRecord);
@@ -309,7 +310,7 @@ export const handleVideoFileUpload: RequestHandler = (req, res) => {
       });
     }
 
-    // 클라이언트에서 전송된 메타데이터 추출
+    // 클라이언트에서 전송된 메타데이�� 추출
     const duration = parseFloat(req.body.duration) || 0;
     const width = req.body.width ? parseInt(req.body.width) : undefined;
     const height = req.body.height ? parseInt(req.body.height) : undefined;
