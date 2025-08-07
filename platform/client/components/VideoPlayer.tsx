@@ -1324,7 +1324,7 @@ export default function VideoPlayer({
                   fontWeight: "white",
                 }}
               >
-                📍 VTT 좌표: {// vttCoordinates.length}개
+                📍 VTT 좌표: 0개
                 "VTT removed"
               </div>
             )}
