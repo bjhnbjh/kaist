@@ -19,43 +19,7 @@ import { getKoreaTimeISO, normalizeFileName, formatDuration, getDataDirectory, e
 // 🛠️ 유틸리티 함수들
 // ========================================
 
-/**
- * 한국시간(KST) 기준으로 ISO 문자열 반환
- */
-function getKoreaTimeISO(): string {
-  const now = new Date();
-  const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
-  return koreaTime.toISOString().replace('Z', '+09:00');
-}
-
-/**
- * 파일명을 안전하게 정규화하는 함수 (한글 지원)
- */
-function normalizeFileName(fileName: string): string {
-  const ext = path.extname(fileName);
-  const baseName = path.basename(fileName, ext);
-
-  let normalized = baseName.normalize('NFC').trim();
-  normalized = normalized
-    .replace(/[<>:"/\\|?*]/g, '_')
-    .replace(/\s+/g, '_')
-    .replace(/[^\w가-힣\-_.()]/g, '')
-    .replace(/_{2,}/g, '_')
-    .replace(/^_+|_+$/g, '');
-
-  return normalized || 'unnamed';
-}
-
-/**
- * 초 단위 시간을 WebVTT 형식으로 변환 (MM:SS:HH)
- */
-function formatDuration(seconds: number): string {
-  const totalMinutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-  const ms = Math.floor((seconds % 1) * 100);
-
-  return `${totalMinutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}:${ms.toString().padStart(2, '0')}`;
-}
+// 유틸리티 함수들은 ../utils/common.ts에서 import하여 사용
 
 // ========================================
 // 📊 타입 정의
@@ -360,7 +324,7 @@ function saveWebVTTFile(webvttData: WebVTTData) {
 }
 
 // ========================================
-// 🌐 API 핸들���
+// 🌐 API 핸들러
 // ========================================
 
 /**
