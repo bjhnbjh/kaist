@@ -26,15 +26,7 @@ import { getKoreaTimeISO, normalizeFileName, getDataDirectory, ensureDirectoryEx
 // 🛠️ 유틸리티 함수들
 // ========================================
 
-/**
- * 한국시간(KST) 기준으로 ISO 문자열 반환
- * @returns {string} KST 시간대의 ISO 문자열
- */
-function getKoreaTimeISO(): string {
-  const now = new Date();
-  const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
-  return koreaTime.toISOString().replace('Z', '+09:00');
-}
+// getKoreaTimeISO 함수는 ../utils/common.ts에서 import하여 사용
 
 /**
  * 파일명을 안전하게 정규화하��� 함수 (한글 지원)
@@ -88,7 +80,7 @@ function normalizeFileName(fileName: string): string {
  * 업로드 데이터 인터페이스
  * 
  * 📝 수정 포인트:
- * - 새로운 메타데이터 추가 시 이 인터페이스에 필드 추가
+ * - 새로운 메타데이터 추가 시 이 인터페이���에 필드 추가
  * - 파일 정보 구조 변경 시 여기 수정
  */
 interface UploadData {
@@ -240,7 +232,7 @@ function saveUploadData(uploadData: UploadData, filePath?: string, videoFolder?:
   globalData.lastUpdated = getKoreaTimeISO();
   fs.writeFileSync(UPLOADS_FILE, JSON.stringify(globalData, null, 2));
 
-  // 2. 개별 동영상 폴더에 메타데이터 저장
+  // 2. 개별 동영상 ���더에 메타데이터 저장
   if (videoFolder) {
     const videoFolderPath = path.join(DATA_DIR, videoFolder);
     const localUploadsFile = path.join(videoFolderPath, `${videoFolder}-uploads.json`);
@@ -280,7 +272,7 @@ function initializeDataFiles() {
       lastUpdated: new Date().toISOString()
     };
     fs.writeFileSync(UPLOADS_FILE, JSON.stringify(initialData, null, 2));
-    console.log('📄 Created uploads index file:', UPLOADS_FILE);
+    console.log('���� Created uploads index file:', UPLOADS_FILE);
   }
 }
 
