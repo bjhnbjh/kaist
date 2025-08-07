@@ -168,33 +168,6 @@ export default function VideoPlayer({
   };
 
   // VTT 좌표 데이터 로드
-  const loadVttCoordinates = async () => {
-    if (!video) return;
-
-    try {
-      const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/api/vtt-coordinates?videoId=${video.id}&videoFileName=${encodeURIComponent(video.file.name)}`);
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log('VTT 좌표 데이터 로드됨:', result);
-
-        if (result.success && result.coordinates) {
-          setVttCoordinates(result.coordinates);
-          toast.success(`VTT에서 ${result.coordinatesCount}개의 좌표 데이터를 불러왔습니다.`);
-        } else {
-          setVttCoordinates([]);
-          toast.info('저장된 좌표 데��터가 없습니다.');
-        }
-      } else {
-        console.warn('VTT 좌표 데이터 로드 실패:', response.status);
-        setVttCoordinates([]);
-      }
-    } catch (error) {
-      console.error('VTT 좌표 데이터 로��� 오류:', error);
-      setVttCoordinates([]);
-    }
-  };
 
   // 그리기 완료시 API로 데이터 전송
   const sendDrawingToApi = async (area: DrawnArea) => {
@@ -376,7 +349,7 @@ export default function VideoPlayer({
         ctx.lineTo(point.x, point.y + size);
         ctx.stroke();
 
-        // 원 그리기
+        // ��� 그리기
         ctx.beginPath();
         ctx.arc(point.x, point.y, size/2, 0, 2 * Math.PI);
         ctx.stroke();
@@ -876,7 +849,7 @@ export default function VideoPlayer({
       // 최종 저장 완�� 메시지 표시
       toast.success("모든 데이터가 저장되었습니��.");
 
-      console.log("저장 후 비디오 정보:", {
+      console.log("���장 후 비디오 정보:", {
         duration: currentDuration,
         frames: currentFrames,
         currentVideoDuration: videoDuration,
@@ -2351,7 +2324,7 @@ export default function VideoPlayer({
                             )}
                           </div>
 
-                          {/* 수정 버튼 - 객체 정보 하단으로 이동 */}
+                          {/* 수정 버튼 - 객체 정보 하단으로 이��� */}
                           <div style={{ marginBottom: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
                             <button
                               onClick={() => {
@@ -2718,7 +2691,7 @@ export default function VideoPlayer({
                   margin: 0,
                 }}
               >
-                �� 객체 정보 입력
+                ��� 객체 정보 입력
               </h3>
               <button
                 onClick={() => setShowInfoModal(false)}
