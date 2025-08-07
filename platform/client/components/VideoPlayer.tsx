@@ -222,6 +222,9 @@ export default function VideoPlayer({
         setTimeout(() => {
           setShowApiResponseModal(false);
 
+          // 현재 그리기 영역을 저장하여 객체 생성 시 좌표 정보 연결
+          setCurrentDrawingArea(area);
+
           // 그리기로 추가되는 객체는 totalObjectsCreated + 1로 번호 생성
           const nextObjectNumber = video ? video.totalObjectsCreated + 1 : detectedObjects.length + 1;
           setModalObjectInfo({
@@ -246,12 +249,12 @@ export default function VideoPlayer({
           drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유그리기',
           coordinates: area.type === 'click' && area.clickPoint
             ? `(${area.clickPoint.x}, ${area.clickPoint.y})`
-            : '오류로 인해 처리되지 않음',
+            : '오류로 인해 처리되지 않��',
           timestamp: new Date().toLocaleString('ko-KR')
         });
         setShowApiResponseModal(true);
 
-        throw new Error(`HTTP ${response.status}: ${errorResult.message || 'API 전송 ���패'}`);
+        throw new Error(`HTTP ${response.status}: ${errorResult.message || 'API 전송 실패'}`);
       }
     } catch (error) {
       console.error('API 전송 오류:', error);
@@ -768,7 +771,7 @@ export default function VideoPlayer({
       // 최종 저장 완�� 메시지 표시
       toast.success("모든 데이터가 저장되었습니다.");
 
-      console.log("���장 후 비디오 정보:", {
+      console.log("저장 후 비디오 정보:", {
         duration: currentDuration,
         frames: currentFrames,
         currentVideoDuration: videoDuration,
@@ -849,7 +852,7 @@ export default function VideoPlayer({
     // showObjectList true로 유지하여 "탐지된 객체" 버튼 활성화 상태 유지
   };
 
-  // 삭�� 확인 모달 관련 핸들러들
+  // 삭제 확인 모달 관련 핸들러들
   const handleDeleteClick = (objectId: string) => {
     setObjectToDelete(objectId);
     setShowDeleteConfirmModal(true);
@@ -1755,7 +1758,7 @@ export default function VideoPlayer({
                           </div>
                           <button
                             onClick={() => {
-                              // 일괄 ��제를 위해 확인 모달을 열어서 전체 선택 삭제 처리
+                              // 일괄 삭제를 위해 확인 모달을 열어서 전체 선택 삭제 처리
                               if (selectedObjectIds.length > 0) {
                                 setObjectToDelete("BULK_DELETE");
                                 setShowDeleteConfirmModal(true);
@@ -2550,7 +2553,7 @@ export default function VideoPlayer({
                   margin: 0,
                 }}
               >
-                �� 객체 정보 입력
+                �� ��체 정보 입력
               </h3>
               <button
                 onClick={() => setShowInfoModal(false)}
@@ -2918,7 +2921,7 @@ export default function VideoPlayer({
 
               {apiResponseData.coordinates && (
                 <div style={{ marginBottom: "12px" }}>
-                  <strong style={{ color: "#374151" }}>좌표 정보:</strong>
+                  <strong style={{ color: "#374151" }}>���표 정보:</strong>
                   <span style={{ marginLeft: "8px", color: "#6b7280", fontFamily: "monospace" }}>
                     {apiResponseData.coordinates}
                   </span>
