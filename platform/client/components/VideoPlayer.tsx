@@ -715,7 +715,7 @@ export default function VideoPlayer({
       });
     } catch (error) {
       console.error('Save error:', error);
-      toast.error("저장 중 오류가 발생했습니다.");
+      toast.error("저장 중 오류��� 발생했습니다.");
     }
   };
 
@@ -1221,8 +1221,10 @@ export default function VideoPlayer({
                 }}
               >
                 {isErasing
-                  ? "🗑️ 지우개 모드 - 그려진 영역을 클릭하여 삭제하세요"
-                  : "🎨 그리기 모드 활성화 - 마우��로 드래그하여 영역을 그려보세요"}
+                  ? "🗑️ ���우개 모드 - 그려진 영역을 클릭하여 삭제하세요"
+                  : drawingMode === "click"
+                  ? "📍 클릭 모드 활성화 - 마우스로 클릭하여 좌표를 찍어보세요"
+                  : "🎨 그리기 모드 활성화 - 마우스로 드래그하여 영역을 그려보세요"}
               </div>
             )}
           </div>
@@ -1751,7 +1753,7 @@ export default function VideoPlayer({
                         🔍
                       </div>
                       <div style={{ fontWeight: "500", marginBottom: "4px" }}>
-                        탐지된 객체가 없습니다.
+                        탐지��� 객체가 없습니다.
                       </div>
                       <div style={{ fontSize: "0.85rem" }}>
                         ���역을 그려서 객체를 추가해보세요
@@ -2689,7 +2691,7 @@ export default function VideoPlayer({
                     marginBottom: "8px",
                   }}
                 >
-                  💡 추가정보
+                  💡 추가정���
                 </div>
                 <textarea
                   value={modalObjectInfo.additionalInfo}
