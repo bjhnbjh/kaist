@@ -2547,7 +2547,7 @@ export default function VideoPlayer({
                   margin: 0,
                 }}
               >
-                새 객체 정보 입력
+                �� 객체 정보 입력
               </h3>
               <button
                 onClick={() => setShowInfoModal(false)}
@@ -2624,7 +2624,7 @@ export default function VideoPlayer({
                       background: "#ffffff",
                     }}
                   >
-                    <option value="기타">기타 (00)</option>
+                    <option value="��타">기타 (00)</option>
                     <option value="GTIN">GTIN (01)</option>
                     <option value="GLN">GLN (02)</option>
                     <option value="GIAI">GIAI (03)</option>
@@ -2783,7 +2783,17 @@ export default function VideoPlayer({
               }}
             >
               <button
-                onClick={() => setShowInfoModal(false)}
+                onClick={() => {
+                  // 취소 시 그려진 영역들을 모두 제거
+                  setDrawnAreas([]);
+                  setCurrentPath([]);
+                  setCurrentRectangle(null);
+                  setRectangleStart(null);
+                  redrawCanvas();
+                  setShowInfoModal(false);
+                  setModalObjectInfo(null);
+                  toast.info('등록이 취소되었습니다. 그려진 영역이 삭제되었습니다.');
+                }}
                 style={{
                   padding: "10px 20px",
                   borderRadius: "6px",
