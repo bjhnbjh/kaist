@@ -267,6 +267,25 @@ export default function VideoPlayer({
         const width = area.endPoint.x - area.startPoint.x;
         const height = area.endPoint.y - area.startPoint.y;
         ctx.strokeRect(area.startPoint.x, area.startPoint.y, width, height);
+      } else if (area.type === "click" && area.clickPoint) {
+        // 클릭 포인트 그리기 (십자가 마크 + 원)
+        const point = area.clickPoint;
+        const size = 8;
+
+        // 십자가 그리기
+        ctx.strokeStyle = area.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(point.x - size, point.y);
+        ctx.lineTo(point.x + size, point.y);
+        ctx.moveTo(point.x, point.y - size);
+        ctx.lineTo(point.x, point.y + size);
+        ctx.stroke();
+
+        // 원 그리기
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, size/2, 0, 2 * Math.PI);
+        ctx.stroke();
       } else if (area.type === "path" && area.points.length > 1) {
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
