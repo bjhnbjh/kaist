@@ -156,6 +156,20 @@ export default function VideoPlayer({
   // 그리기 영역과 생성된 객체 간의 매핑 추적
   const [currentDrawingArea, setCurrentDrawingArea] = useState<DrawnArea | null>(null);
   const [objectDrawingMap, setObjectDrawingMap] = useState<Map<string, DrawnArea>>(new Map());
+  // VTT 기반 좌표 오버레이
+  const [vttOverlayEnabled, setVttOverlayEnabled] = useState(false);
+  const [vttCoordinates, setVttCoordinates] = useState<Array<{
+    objectId: string;
+    objectName: string;
+    videoTime: number;
+    coordinates: {
+      type: "path" | "rectangle" | "click";
+      points?: Array<{ x: number; y: number }>;
+      startPoint?: { x: number; y: number };
+      endPoint?: { x: number; y: number };
+      clickPoint?: { x: number; y: number };
+    };
+  }>>([]);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -2268,7 +2282,7 @@ export default function VideoPlayer({
                       🔍
                     </div>
                     <div style={{ fontWeight: "500", marginBottom: "4px" }}>
-                      탐지된 객체 없음
+                      ���지된 객체 없음
                     </div>
                     <div style={{ fontSize: "0.85rem" }}>
                       "탐지된 객체" 버튼�� 클릭하여
