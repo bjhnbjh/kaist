@@ -11,7 +11,7 @@ import { RequestHandler } from "express";
  * 3. 간단한 응답 반환 (실제 처리는 클라이언트에서)
  * 
  * 📝 API 수정 가이드:
- * - 그리기 데이터 저장: 여기에 파일 저장 로직 추가
+ * - 그리기 데이터 저장: 여기에 파�� 저장 로직 추가
  * - 데이터 검증 강화: drawingData 검증 로직 추가
  * - 응답 구조 변경: response 객체 수정
  */
@@ -67,7 +67,6 @@ export const handleDrawingSubmission: RequestHandler = (req, res) => {
       videoId: drawingData.videoId,
       videoCurrentTime: drawingData.videoCurrentTime,
       pointsCount: drawingData.points?.length || 0,
-      clickPoint: drawingData.clickPoint ? `(${drawingData.clickPoint.x}, ${drawingData.clickPoint.y})` : null,
       timestamp: drawingData.timestamp
     });
 
@@ -85,7 +84,7 @@ export const handleDrawingSubmission: RequestHandler = (req, res) => {
     // - 이미지 처리나 분석
     // - 다른 서비스로 전송
 
-    // 🎉 성공 응답
+    // 🎉 성�� 응답
     const response = {
       success: true,
       message: '그리기 데이터가 성공적으로 처리되었습니다.',
@@ -95,8 +94,7 @@ export const handleDrawingSubmission: RequestHandler = (req, res) => {
         type: drawingData.type,
         videoId: drawingData.videoId,
         videoTime: drawingData.videoCurrentTime,
-        pointsProcessed: drawingData.points?.length || 0,
-        clickCoordinates: drawingData.clickPoint ? `(${drawingData.clickPoint.x}, ${drawingData.clickPoint.y})` : null
+        pointsProcessed: drawingData.points?.length || 0
       }
     };
 
