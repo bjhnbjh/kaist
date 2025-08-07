@@ -64,7 +64,7 @@ function normalizeFileName(fileName: string): string {
  * 초 단위 시간을 WebVTT 형식으로 변환
  * 
  * 📝 수정 포인트:
- * - 시간 형식 변경: ��환 형식 수정 (현재: MM:SS:HH)
+ * - 시간 형식 변경: ��환 형식 수정 (��재: MM:SS:HH)
  * - 밀리초 정밀도 변경: ms 계산 로직 수정
  * 
  * @param {number} seconds - 초 단위 시간
@@ -145,7 +145,7 @@ function initializeWebVTTFiles() {
  * VTT에서 기존 객체 정보 추출 (단순화된 파싱)
  * 
  * 📝 수정 포인트:
- * - ��싱 규칙 변경: 이모지 패턴이나 라벨 형식 변경 시 여기 수정
+ * - ��싱 규칙 변���: 이모지 패턴이나 라벨 형식 변경 시 여기 수정
  * - 새로운 속성 파싱: 새로운 객체 속성 추가 시 파싱 로직 추가
  * 
  * @param {string} content - 기존 VTT 파일 내용
@@ -287,59 +287,47 @@ function generateCompleteVttContent(data: WebVTTData, objects: any[]): string {
   vttLines.push(`생성일: ${getKoreaTimeISO()}`);
   vttLines.push(`탐지된 객체 수: ${objects.length}`);
 
-  // 📍 객체 정보를 NOTE 섹션에 새로운 JSON 형태로 저장
+  // 📍 객체 정보를 NOTE 섹션에 한국어 형태로 표시 (각 객체별로 ��호와 함께)
   if (objects.length > 0) {
-    vttLines.push('COORDINATES_DATA_START');
-    objects.forEach(obj => {
-      const objectData = {
-        "이름": obj.name,
-        "시간": obj.videoCurrentTime || 0,
-        "code": obj.code || `CODE_RECT-${Math.floor(Math.random() * 1000)}`,
-        "catefory": obj.category || "기타",
-        "도메인": obj.dlReservoirDomain || "http://www.naver.com",
-        "정보": obj.additionalInfo || "AI가 자동으로 탐지한 객체입니다.",
-        "finallink": `${obj.dlReservoirDomain || "http://www.naver.com"}/00/${obj.code || `CODE_RECT-${Math.floor(Math.random() * 1000)}`}`,
-        "position": obj.coordinates || obj.position || null,
-        "polygon": obj.polygon || null
-      };
-      vttLines.push(JSON.stringify(objectData));
+    objects.forEach((obj, index) => {
+      const objectNumber = index + 1;
+      vttLines.push(`Object(${objectNumber})`);
+      vttLines.push('{');
+      vttLines.push(`"이름":"Object(${objectNumber})${objectNumber}",`);
+      vttLines.push(`"시간":${obj.videoCurrentTime || 0},`);
+      vttLines.push(`"code":"${obj.code || `CODE_RECT-${Math.floor(Math.random() * 1000)}`}",`);
+      vttLines.push(`"catefory":"${obj.category || "기타"}",`);
+      vttLines.push(`"도메인":"${obj.dlReservoirDomain || "http://www.naver.com"}",`);
+      vttLines.push(`"정보":"${obj.additionalInfo || "AI가 자동으로 탐지한 객체입니다."}",`);
+      vttLines.push(`"finallink":"${obj.dlReservoirDomain || "http://www.naver.com"}/00/${obj.code || `CODE_RECT-${Math.floor(Math.random() * 1000)}`}",`);
+
+      // 좌표 정보 추가 - position과 polygon 모두 포함
+      if (obj.coordinates || obj.position) {
+        const coords = obj.coordinates || obj.position;
+        vttLines.push(`"position":${JSON.stringify(coords)},`);
+      } else {
+        vttLines.push(`"position":null,`);
+      }
+
+      vttLines.push(`"polygon":${obj.polygon ? JSON.stringify(obj.polygon) : 'null'}`);
+      vttLines.push('}');
+      vttLines.push(''); // 객체 간 구분을 위한 빈 줄
     });
-    vttLines.push('COORDINATES_DATA_END');
   }
 
   vttLines.push('');
 
+  // VTT 타임라인 영역은 간소화하여 불필요한 자막 정보 제거
   if (objects.length > 0) {
-    // 📋 전체 개요 (첫 번째 큐)
+    // 간단한 요약 정보만 표시
     vttLines.push('1');
     vttLines.push(`00:00:00.000 --> ${formatDuration(data.duration)}`);
-    vttLines.push(`📋 탐지된 객체: ${objects.map(obj => obj.name).join(', ')}`);
+    vttLines.push(`탐지된 객체: ${objects.length}개`);
     vttLines.push('');
-
-    // 🎯 각 객체별 상세 정보
-    objects.forEach((obj, index) => {
-      const currentTime = obj.videoCurrentTime || 0;
-      const startTime = formatDuration(currentTime);
-      const endTime = formatDuration(currentTime); // 정확한 시간만 사용
-
-      vttLines.push(`${index + 2}`); // 큐 번호 (1은 개요용이므로 2부터 시작)
-      vttLines.push(`${startTime} --> ${endTime}`);
-
-      // 📝 객체 정보 구성 (이모지와 함께)
-      const objectInfo = [`🎯 ${obj.name}`];
-      if (obj.code) objectInfo.push(`🔧 코드: ${obj.code}`);
-      if (obj.category) objectInfo.push(`📂 카테고리: ${obj.category}`);
-      if (obj.dlReservoirDomain) objectInfo.push(`🌐 도메인: ${obj.dlReservoirDomain}`);
-      if (obj.additionalInfo) objectInfo.push(`💡 정보: ${obj.additionalInfo}`);
-
-      vttLines.push(objectInfo.join('\n'));
-      vttLines.push('');
-    });
   } else {
-    // ❌ 객체가 없는 경우
     vttLines.push('1');
     vttLines.push(`00:00:00.000 --> ${formatDuration(data.duration)}`);
-    vttLines.push('❌ 탐지된 객체가 없습니다.');
+    vttLines.push('탐지된 객체가 없습니다.');
     vttLines.push('');
   }
 
@@ -473,7 +461,7 @@ export const handleWebVTTSave: RequestHandler = (req, res) => {
     // 🎉 성공 응답
     const response = {
       success: true,
-      message: 'WebVTT 파일이 성공적으로 로컬에 저장되었습니다.',
+      message: 'WebVTT 파일이 성공적으로 로컬에 저장되었���니다.',
       videoId: webvttData.videoId,
       fileName: saveResult.fileName,
       filePath: saveResult.filePath,
