@@ -31,7 +31,39 @@
       "videoFolder": "첫번쨰_작품",
       "uploadedAt": "2025-08-07T14:40:41.484+09:00",
       "status": "uploaded"
+    },
+    {
+      "id": "video-1754548839738-vfhi9xi2w",
+      "fileName": "첫번쨰 작품.mp4",
+      "fileSize": 6506422,
+      "fileType": "video/mp4",
+      "duration": 35.041667,
+      "timestamp": 1754548839738,
+      "metadata": {
+        "width": 1424,
+        "height": 720
+      },
+      "filePath": "/app/code/platform/data/첫번쨰_작품/첫번쨰 작품.mp4",
+      "videoFolder": "첫번쨰_작품",
+      "uploadedAt": "2025-08-07T15:40:39.738+09:00",
+      "status": "uploaded"
+    },
+    {
+      "id": "video-1754549107989-zszc25g4p",
+      "fileName": "첫번쨰 작품.mp4",
+      "fileSize": 6506422,
+      "fileType": "video/mp4",
+      "duration": 35.041667,
+      "timestamp": 1754549107989,
+      "metadata": {
+        "width": 1424,
+        "height": 720
+      },
+      "filePath": "/app/code/platform/data/첫번쨰_작품(1)/첫번쨰 작품.mp4",
+      "videoFolder": "첫번쨰_작품(1)",
+      "uploadedAt": "2025-08-07T15:45:07.989+09:00",
+      "status": "uploaded"
     }
   ],
-  "lastUpdated": "2025-08-07T14:56:56.053+09:00"
+  "lastUpdated": "2025-08-07T15:45:07.990+09:00"
 }
