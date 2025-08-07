@@ -112,9 +112,20 @@ export function useVideoUpload() {
     }
   }, []);
 
-  // 업로드 시뮬레이션 함수
+  /**
+   * 파일 업로드 시뮬레이션 함수
+   *
+   * 기능:
+   * - 실제 서버 업로드 진행 상황을 시각적으로 표현
+   * - 파일 크기에 따른 동적 업로드 시간 계산
+   * - 업로드 -> 처리 -> 완료 단계별 진행상황 표시
+   *
+   * @param file 업로드할 비디오 파일
+   */
   const simulateUpload = useCallback((file: File) => {
+    // 고유한 업로드 ID 생성
     const uploadId = `video-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // 파일 크기를 MB 단위로 변환
     const fileSizeInMB = file.size / (1024 * 1024);
 
     // 파일 크기에 따라 업로드 시간 결정
@@ -470,7 +481,7 @@ export function useVideoUpload() {
               }),
             );
 
-            // 탐지 완료 후 selectedVideoId를 다시 설정하여 최신 selectedVideo를 강제로 반영
+            // 탐지 완료 후 selectedVideoId를 다시 설정하여 ���신 selectedVideo를 강제로 반영
             setSelectedVideoId(videoId);
 
             toast.success("객체 탐지가 완료되었습니다!");
