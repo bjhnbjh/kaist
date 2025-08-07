@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import fs from "fs";
 import path from "path";
+import { getKoreaTimeISO, normalizeFileName, formatDuration, getDataDirectory, ensureDirectoryExists } from "../utils/common";
 
 /**
  * ===================================
@@ -145,7 +146,7 @@ function extractObjectsFromVtt(content: string): any[] {
           } else if (dataLine.includes('"catefory"')) {
             const match = dataLine.match(/"catefory":"([^"]+)"/);
             if (match) obj.category = match[1];
-          } else if (dataLine.includes('"도메��"')) {
+          } else if (dataLine.includes('"도메인"')) {
             const match = dataLine.match(/"도메인":"([^"]+)"/);
             if (match) obj.dlReservoirDomain = match[1];
           } else if (dataLine.includes('"정보"')) {
@@ -312,7 +313,7 @@ function saveWebVTTFile(webvttData: WebVTTData) {
   // WebVTT 콘텐츠 생성
   const vttContent = generateCompleteVttContent(webvttData, webvttData.objects);
 
-  // 동영상 파일���을 정규화하여 폴더 찾기
+  // 동영상 파일명을 정규화하여 폴더 찾기
   const normalizedName = normalizeFileName(webvttData.videoFileName);
   const videoFolderPath = path.join(DATA_DIR, normalizedName);
 
@@ -359,7 +360,7 @@ function saveWebVTTFile(webvttData: WebVTTData) {
 }
 
 // ========================================
-// 🌐 API 핸들러
+// 🌐 API 핸들���
 // ========================================
 
 /**
