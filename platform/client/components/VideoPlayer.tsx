@@ -220,7 +220,7 @@ export default function VideoPlayer({
         // 성공 토스트 표시
         toast.success(`${area.type === 'click' ? '클릭 좌표' : '그리기 영역'}가 서버로 전송되었습니다.`);
 
-        // 잠시 후 정보 입력 모달 표시
+        // 잠시 후 정�� 입력 모달 표시
         setTimeout(() => {
           setShowApiResponseModal(false);
 
@@ -439,7 +439,7 @@ export default function VideoPlayer({
         };
         setDrawnAreas((prev) => [...prev, newClickArea]);
 
-        // 클릭 완료 시 즉시 API로 전송
+        // 클릭 완료 시 즉시 API로 ��송
         sendDrawingToApi(newClickArea);
       } else {
         setCurrentPath([coords]);
@@ -1283,23 +1283,6 @@ export default function VideoPlayer({
               </button>
 
 
-              {false && (
-                <button
-                  onClick={() => // setVttOverlayEnabled removed
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: "6px",
-                    border: "none",
-                    fontWeight: "500",
-                    cursor: "pointer",
-                    background: "white",
-                    color: "white",
-                    fontSize: "0.9rem",
-                  }}
-                >
-                  "VTT removed"
-                </button>
-              )}
             </div>
 
             {drawnAreas.length > 0 && (
@@ -1500,7 +1483,7 @@ export default function VideoPlayer({
                 </button>
               </div>
 
-              {/* 객�� 탐지 진행도 */}
+              {/* 객�� ��지 진행도 */}
               {isDetecting && (
                 <div
                   style={{
@@ -2328,7 +2311,7 @@ export default function VideoPlayer({
                       ���지된 객체 없음
                     </div>
                     <div style={{ fontSize: "0.85rem" }}>
-                      "탐지된 객체" 버튼�� 클릭하여
+                      "탐지된 객체" 버튼�� ���릭하여
                       <br />
                       객체 목록을 확인해주세요
                     </div>
@@ -2847,7 +2830,7 @@ export default function VideoPlayer({
             >
               <button
                 onClick={() => {
-                  // 취소 시 그려진 영역들을 모두 제거
+                  // ��소 시 그려진 영역들을 모두 제거
                   setDrawnAreas([]);
                   setCurrentPath([]);
                   setCurrentRectangle(null);
