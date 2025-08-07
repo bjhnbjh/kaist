@@ -233,17 +233,44 @@ export default function VideoPlayer({
 
         return result;
       } else {
-        throw new Error('API 전송 실패');
+        const errorResult = await response.json().catch(() => ({ message: 'API 응답 오류' }));
+
+        // API 오류 응답 상세 정보 설정
+        setApiResponseData({
+          success: false,
+          message: errorResult.message || 'API 서버에서 오류가 발생했습니다.',
+          drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유그리기',
+          coordinates: area.type === 'click' && area.clickPoint
+            ? `(${area.clickPoint.x}, ${area.clickPoint.y})`
+            : '오류로 인해 처리되지 않음',
+          timestamp: new Date().toLocaleString('ko-KR')
+        });
+        setShowApiResponseModal(true);
+
+        throw new Error(`HTTP ${response.status}: ${errorResult.message || 'API 전송 실패'}`);
       }
     } catch (error) {
       console.error('API 전송 오류:', error);
+
+      if (!apiResponseData || apiResponseData.success !== false) {
+        // API 통신 자체 오류 (네트워크 등)
+        setApiResponseData({
+          success: false,
+          message: error instanceof Error ? error.message : '알 수 없는 ��류가 발생했습니다.',
+          drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유그리기',
+          coordinates: '통신 오류로 전송 실패',
+          timestamp: new Date().toLocaleString('ko-KR')
+        });
+        setShowApiResponseModal(true);
+      }
+
       toast.error('서버로 데이터를 전송하는 중 오류가 발생했습니다.');
     } finally {
       setIsApiLoading(false);
     }
   };
 
-  // 캔버스 초기��� 함수
+  // 캔버스 초기화 함수
   const initializeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const videoElement = videoRef.current;
@@ -765,7 +792,7 @@ export default function VideoPlayer({
           setDetectionProgress(100);
           onRunObjectDetection(video.id);
           toast.success(
-            "객체 탐지가 완료되었습��다! 새로운 객체들이 발견되었습니다.",
+            "객체 탐지가 완료되었습니다! 새로운 객체들이 발견되었습니다.",
           );
 
           setTimeout(() => {
@@ -1374,7 +1401,7 @@ export default function VideoPlayer({
                 <button
                   onClick={() => {
                     if (!showObjectList && !selectedObjectId) {
-                      // 처음 ��릭 시 객체 목�� 열기
+                      // 처음 클릭 시 객체 목�� 열기
                       setShowObjectList(true);
                       setSelectedObjectId(null);
                     } else if (showObjectList && !selectedObjectId) {
