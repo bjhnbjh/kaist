@@ -249,7 +249,7 @@ function generateCompleteVttContent(data: WebVTTData, objects: any[]): string {
  * 기존 VTT와 새로운 데이터를 병합하여 업데이트된 VTT 생성
  */
 function createUpdatedVttContent(existingContent: string, newData: WebVTTData): string {
-  // 기�� 객체들 추출
+  // 기존 객체들 추출
   const existingObjects = extractObjectsFromVtt(existingContent);
   
   // 새로운 객체들과 병합 (시간 중복 방지)
@@ -263,7 +263,9 @@ function createUpdatedVttContent(existingContent: string, newData: WebVTTData): 
  * WebVTT 파일을 로컬에 저장
  */
 function saveWebVTTFile(webvttData: WebVTTData) {
-  initializeWebVTTFiles();
+  // 데이터 디렉토리 초기화
+  const DATA_DIR = getDataDirectory();
+  ensureDirectoryExists(DATA_DIR);
 
   // WebVTT 콘텐츠 생성
   const vttContent = generateCompleteVttContent(webvttData, webvttData.objects);
@@ -323,7 +325,7 @@ function saveWebVTTFile(webvttData: WebVTTData) {
  * 
  * @route POST /api/webvtt
  * @param {Request} req - Express 요청 객체 (WebVTTData 포함)
- * @param {Response} res - Express 응�� 객체
+ * @param {Response} res - Express 응답 객체
  */
 export const handleWebVTTSave: RequestHandler = (req, res) => {
   try {
@@ -385,5 +387,5 @@ export const handleWebVTTSave: RequestHandler = (req, res) => {
  * 2. Object(1), Object(2) 형태로 객체 번호 표시
  * 3. 좌표 정보 (position, polygon) 포함
  * 4. 불필요한 자막 정보 제거하여 간소화
- * 5. 기존 파일과 새로운 데이터 병합 지원
+ * 5. 기존 파일과 새로운 데이터 병�� 지원
  */
