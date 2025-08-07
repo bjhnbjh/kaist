@@ -5,7 +5,6 @@ import { createPortal } from "react-dom";
 import {
   CheckCircle,
   Upload,
-  Loader2,
   ChevronLeft,
   ChevronRight,
   Trash2,
@@ -253,7 +252,7 @@ const UploadProgress = memo(function UploadProgress({
         createPortal(
           <div className="modal-overlay">
             <div className="modal-box">
-              <h3>삭제 확인</h3>
+              <h3>삭�� 확인</h3>
               <p>진짜 삭제하시겠습니까?</p>
 
               <div className="confirm-checkbox">
