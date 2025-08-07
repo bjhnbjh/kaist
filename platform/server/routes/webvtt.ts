@@ -145,7 +145,7 @@ function extractObjectsFromVtt(content: string): any[] {
           } else if (dataLine.includes('"catefory"')) {
             const match = dataLine.match(/"catefory":"([^"]+)"/);
             if (match) obj.category = match[1];
-          } else if (dataLine.includes('"도메인"')) {
+          } else if (dataLine.includes('"도메��"')) {
             const match = dataLine.match(/"도메인":"([^"]+)"/);
             if (match) obj.dlReservoirDomain = match[1];
           } else if (dataLine.includes('"정보"')) {
@@ -252,11 +252,11 @@ function generateCompleteVttContent(data: WebVTTData, objects: any[]): string {
       vttLines.push('{');
       vttLines.push(`"이름":"Object(${objectNumber})${objectNumber}",`);
       vttLines.push(`"시간":${obj.videoCurrentTime || 0},`);
-      vttLines.push(`"code":"${obj.code || `CODE_RECT-${Math.floor(Math.random() * 1000)}`}",`);
+      vttLines.push(`"code":"${obj.code || ('CODE_RECT-' + Math.floor(Math.random() * 1000))}",`);
       vttLines.push(`"catefory":"${obj.category || "기타"}",`);
       vttLines.push(`"도메인":"${obj.dlReservoirDomain || "http://www.naver.com"}",`);
       vttLines.push(`"정보":"${obj.additionalInfo || "AI가 자동으로 탐지한 객체입니다."}",`);
-      vttLines.push(`"finallink":"${obj.dlReservoirDomain || "http://www.naver.com"}/00/${obj.code || `CODE_RECT-${Math.floor(Math.random() * 1000)}`}",`);
+      vttLines.push(`"finallink":"${(obj.dlReservoirDomain || "http://www.naver.com")}/00/${obj.code || ('CODE_RECT-' + Math.floor(Math.random() * 1000))}",`);
       
       // 좌표 정보 추가 - position과 polygon 모두 포함
       if (obj.coordinates || obj.position) {
@@ -312,7 +312,7 @@ function saveWebVTTFile(webvttData: WebVTTData) {
   // WebVTT 콘텐츠 생성
   const vttContent = generateCompleteVttContent(webvttData, webvttData.objects);
 
-  // 동영상 파일명을 정규화하여 폴더 찾기
+  // 동영상 파일���을 정규화하여 폴더 찾기
   const normalizedName = normalizeFileName(webvttData.videoFileName);
   const videoFolderPath = path.join(DATA_DIR, normalizedName);
 
