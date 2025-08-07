@@ -782,16 +782,7 @@ export default function VideoPlayer({
           dlReservoirDomain: obj.dlReservoirDomain,
           category: obj.category,
           confidence: obj.confidence,
-          videoCurrentTime: obj.videoCurrentTime || 0,
-          finallink: `${obj.dlReservoirDomain || "http://www.naver.com"}/00/${obj.code || `CODE_RECT-${Math.floor(Math.random() * 1000)}`}`,
-          position: objectDrawingMap.get(obj.id) ? {
-            type: objectDrawingMap.get(obj.id)?.type,
-            points: objectDrawingMap.get(obj.id)?.points,
-            startPoint: objectDrawingMap.get(obj.id)?.startPoint,
-            endPoint: objectDrawingMap.get(obj.id)?.endPoint,
-            clickPoint: objectDrawingMap.get(obj.id)?.clickPoint
-          } : null,
-          polygon: null  // 각 객체의 실제 생성 시�� 사용
+          videoCurrentTime: obj.videoCurrentTime || 0  // 각 객체의 실제 생성 시�� 사용
         })),
         duration: videoDuration,
         timestamp: Date.now()
@@ -888,7 +879,7 @@ export default function VideoPlayer({
       setHasObjectChanges(false);
 
       // 최종 저장 완�� 메시지 표시
-      toast.success("모든 데이터가 저장되었습니��.");
+      toast.success("모든 데이터가 저장되었습니다.");
 
       console.log("저장 후 비디오 정보:", {
         duration: currentDuration,
@@ -3076,7 +3067,7 @@ export default function VideoPlayer({
                   marginBottom: "8px",
                 }}
               >
-                {apiResponseData.success ? "API 전송 성공!" : "API 전�� 실패"}
+                {apiResponseData.success ? "API 전송 성공!" : "API 전송 실패"}
               </h3>
               <p
                 style={{

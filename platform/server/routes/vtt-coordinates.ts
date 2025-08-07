@@ -20,7 +20,7 @@ import path from "path";
 /**
  * 파일명을 안전하게 정규화하는 함수 (한글 지원)
  * @param {string} fileName - 원본 파일명
- * @returns {string} 정규화된 파일명
+ * @returns {string} 정규화��� 파일명
  */
 function normalizeFileName(fileName: string): string {
   const ext = path.extname(fileName);
@@ -45,12 +45,12 @@ function normalizeFileName(fileName: string): string {
 function extractCoordinatesFromVtt(content: string): any[] {
   const coordinates: any[] = [];
   const lines = content.split('\n');
-  
+
   let inCoordinatesSection = false;
-  
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    
+
     if (line === 'COORDINATES_DATA_START') {
       inCoordinatesSection = true;
       continue;
@@ -59,14 +59,26 @@ function extractCoordinatesFromVtt(content: string): any[] {
       continue;
     } else if (inCoordinatesSection && line.startsWith('{')) {
       try {
-        const coordData = JSON.parse(line);
-        coordinates.push(coordData);
+        const objectData = JSON.parse(line);
+        // Transform to the format expected by client
+        const transformedData = {
+          "이름": objectData["이름"] || objectData.name,
+          "시간": objectData["시간"] || objectData.videoTime,
+          "code": objectData.code,
+          "catefory": objectData["catefory"] || objectData.category,
+          "도메인": objectData["도메인"] || objectData.domain,
+          "정보": objectData["정보"] || objectData.info,
+          "finallink": objectData.finallink,
+          "position": objectData.position,
+          "polygon": objectData.polygon
+        };
+        coordinates.push(transformedData);
       } catch (e) {
-        console.warn('Failed to parse coordinates data:', line);
+        console.warn('Failed to parse object data:', line);
       }
     }
   }
-  
+
   return coordinates;
 }
 
@@ -94,7 +106,7 @@ export const handleVttCoordinatesRead: RequestHandler = (req, res) => {
   try {
     const { videoId, videoFileName } = req.query as any;
 
-    // 필수 파라미터 검증
+    // 필수 파��미터 검증
     if (!videoId || !videoFileName) {
       return res.status(400).json({
         success: false,

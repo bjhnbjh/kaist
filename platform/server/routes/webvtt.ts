@@ -64,7 +64,7 @@ function normalizeFileName(fileName: string): string {
  * 초 단위 시간을 WebVTT 형식으로 변환
  * 
  * 📝 수정 포인트:
- * - 시간 형식 변경: 반환 형식 수정 (현재: MM:SS:HH)
+ * - 시간 형식 변경: ��환 형식 수정 (현재: MM:SS:HH)
  * - 밀리초 정밀도 변경: ms 계산 로직 수정
  * 
  * @param {number} seconds - 초 단위 시간
@@ -101,6 +101,7 @@ interface WebVTTData {
     category?: string;
     confidence?: number;
     videoCurrentTime?: number;  // 객체가 생성된 동영상 시점
+    finallink?: string;  // 최�� 링크
     coordinates?: {  // 그리기 좌표 정보 (VTT에만 저장, 화면에는 표시 안함)
       type: "path" | "rectangle" | "click";
       points?: Array<{ x: number; y: number }>;
@@ -108,6 +109,8 @@ interface WebVTTData {
       endPoint?: { x: number; y: number };
       clickPoint?: { x: number; y: number };
     };
+    position?: any;  // 좌표들
+    polygon?: any;   // 추후 API를 통해 가져올 폴리곤 데이터
   }>;
   duration: number;
   timestamp: number;
@@ -142,7 +145,7 @@ function initializeWebVTTFiles() {
  * VTT에서 기존 객체 정보 추출 (단순화된 파싱)
  * 
  * 📝 수정 포인트:
- * - 파싱 규칙 변경: 이모지 패턴이나 라벨 형식 변경 시 여기 수정
+ * - ��싱 규칙 변경: 이모지 패턴이나 라벨 형식 변경 시 여기 수정
  * - 새로운 속성 파싱: 새로운 객체 속성 추가 시 파싱 로직 추가
  * 
  * @param {string} content - 기존 VTT 파일 내용
@@ -284,19 +287,22 @@ function generateCompleteVttContent(data: WebVTTData, objects: any[]): string {
   vttLines.push(`생성일: ${getKoreaTimeISO()}`);
   vttLines.push(`탐지된 객체 수: ${objects.length}`);
 
-  // 📍 좌표 정보를 NOTE 섹션에 JSON 형태로 저장 (화면에는 표시되지 않음)
-  if (objects.some(obj => obj.coordinates)) {
+  // 📍 객체 정보를 NOTE 섹션에 새로운 JSON 형태로 저장
+  if (objects.length > 0) {
     vttLines.push('COORDINATES_DATA_START');
     objects.forEach(obj => {
-      if (obj.coordinates) {
-        const coordData = {
-          objectId: obj.id,
-          objectName: obj.name,
-          videoTime: obj.videoCurrentTime || 0,
-          coordinates: obj.coordinates
-        };
-        vttLines.push(JSON.stringify(coordData));
-      }
+      const objectData = {
+        "이름": obj.name,
+        "시간": obj.videoCurrentTime || 0,
+        "code": obj.code || `CODE_RECT-${Math.floor(Math.random() * 1000)}`,
+        "catefory": obj.category || "기타",
+        "도메인": obj.dlReservoirDomain || "http://www.naver.com",
+        "정보": obj.additionalInfo || "AI가 자동으로 탐지한 객체입니다.",
+        "finallink": `${obj.dlReservoirDomain || "http://www.naver.com"}/00/${obj.code || `CODE_RECT-${Math.floor(Math.random() * 1000)}`}`,
+        "position": obj.coordinates || obj.position || null,
+        "polygon": obj.polygon || null
+      };
+      vttLines.push(JSON.stringify(objectData));
     });
     vttLines.push('COORDINATES_DATA_END');
   }
