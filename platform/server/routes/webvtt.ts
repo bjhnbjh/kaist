@@ -11,7 +11,7 @@ import path from "path";
  * 1. 탐지된 객체 정보를 WebVTT 형식으로 변환
  * 2. 시간 중복 방지 (같은 시간의 객체들을 0.1초씩 조정)
  * 3. 기존 VTT 파일과 새로운 객체 정보 병합
- * 4. 한글 파일명 지원 및 안전한 파일 저��
+ * 4. 한글 파일명 지원 및 안전한 파일 저장
  * 
  * 📝 API 수정 가이드:
  * - VTT 형식 변경: generateCompleteVttContent 함��� 수정
@@ -49,7 +49,7 @@ function normalizeFileName(fileName: string): string {
   // 파일명을 UTF-8로 정규화하고 불필요한 공백 제거
   let normalized = baseName.normalize('NFC').trim();
 
-  // 특수문자를 안전한 문자로 대��
+  // 특수문자를 안전한 문자로 대체
   normalized = normalized
     .replace(/[<>:"/\\|?*]/g, '_')  // 파일시스템에서 금지된 문자들
     .replace(/\s+/g, '_')           // 공백을 언더스코어로
@@ -125,7 +125,7 @@ const DATA_DIR = path.join(process.cwd(), 'data');
  * 
  * 📝 수정 포인트:
  * - 저장 경로 변경: DATA_DIR 수정
- * - 권한 설정: mkdir 옵션��� mode 추가
+ * - 권한 설정: mkdir 옵션에 mode 추가
  */
 function initializeWebVTTFiles() {
   // data 디렉토리가 없으면 생성
@@ -151,17 +151,37 @@ function initializeWebVTTFiles() {
 function extractObjectsFromVtt(content: string): any[] {
   const objects: any[] = [];
   const lines = content.split('\n');
-  
+
+  // 📍 좌표 데이터 추출 (NOTE 섹션에서)
+  const coordinatesMap = new Map();
+  let inCoordinatesSection = false;
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    
+
+    if (line === 'COORDINATES_DATA_START') {
+      inCoordinatesSection = true;
+      continue;
+    } else if (line === 'COORDINATES_DATA_END') {
+      inCoordinatesSection = false;
+      continue;
+    } else if (inCoordinatesSection && line.startsWith('{')) {
+      try {
+        const coordData = JSON.parse(line);
+        coordinatesMap.set(coordData.objectId, coordData.coordinates);
+      } catch (e) {
+        console.warn('Failed to parse coordinates data:', line);
+      }
+      continue;
+    }
+
     // 🎯 이모지로 시작하는 객체 이름 라인 찾기
     if (line.startsWith('🎯')) {
       const obj: any = {
         name: line.replace('🎯 ', ''),
         id: `existing-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       };
-      
+
       // 이전 라인에서 시간 정보 찾기
       if (i > 0 && lines[i-1].includes('-->')) {
         const timeMatch = lines[i-1].match(/^([\d:]+)\s*-->/);
@@ -171,7 +191,7 @@ function extractObjectsFromVtt(content: string): any[] {
           obj.videoCurrentTime = parseInt(timeParts[0]) * 60 + parseInt(timeParts[1]) + parseInt(timeParts[2]) / 100;
         }
       }
-      
+
       // 다음 라인들에서 추가 정보 수집
       for (let j = i + 1; j < lines.length && lines[j].trim() !== ''; j++) {
         const infoLine = lines[j].trim();
@@ -185,11 +205,16 @@ function extractObjectsFromVtt(content: string): any[] {
           obj.additionalInfo = infoLine.replace('💡 정보: ', '');
         }
       }
-      
+
+      // 📍 저장된 좌표 정보가 있으면 추가
+      if (coordinatesMap.has(obj.id)) {
+        obj.coordinates = coordinatesMap.get(obj.id);
+      }
+
       objects.push(obj);
     }
   }
-  
+
   return objects;
 }
 
