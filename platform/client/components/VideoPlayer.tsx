@@ -72,6 +72,22 @@ const formatTime = (seconds: number) => {
   return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}.${milliseconds.toString().padStart(2, "0")}`;
 };
 
+// CSS 애니메이션 스타일 추가
+const spinnerStyles = `
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
+// 스타일을 head에 추가
+if (typeof document !== 'undefined' && !document.getElementById('confirmation-modal-styles')) {
+  const style = document.createElement('style');
+  style.id = 'confirmation-modal-styles';
+  style.textContent = spinnerStyles;
+  document.head.appendChild(style);
+}
+
 export default function VideoPlayer({
   isOpen,
   onClose,
@@ -506,7 +522,7 @@ export default function VideoPlayer({
       }
     } catch (error) {
       // 네트워크 에러를 조용히 처리하고 로컬에서 계속 진행
-      console.log('ℹ️ 그리기 데이터 전송 실패, ��컬에서 계속 진행:', error instanceof Error ? error.message : 'Unknown error');
+      console.log('ℹ️ 그리기 데이터 전송 실패, 로컬에서 계속 진행:', error instanceof Error ? error.message : 'Unknown error');
 
       // API 에러가 발���해도 로컬에서 작업 계속 진행
       if (!apiResponseData || apiResponseData.success !== false) {
@@ -993,7 +1009,7 @@ export default function VideoPlayer({
 
       const webvttData = {
         videoId: video.id,
-        videoFileName: finalFileName, // 서버 파일명 우선 사��
+        videoFileName: finalFileName, // 서버 파일명 우선 사용
         videoFolder: finalVideoFolder, // 실제 업로드된 폴더명 또는 추정된 폴더명
         objects: detectedObjects.map(obj => ({
           id: obj.id,
@@ -1046,7 +1062,7 @@ export default function VideoPlayer({
    * 📝 수정 포인트:
    * - API URL 변경: window.location.origin 수정
    * - 저장 데이터 구조 변경: saveData 객체 수정
-   * - 응답 처리 변경: response 처리 로직 수정
+   * - 응답 처리 변경: response ��리 로직 수정
    * - 에러 처리 개선: try-catch 블록 수정
    */
   const saveDataToDb = async () => {
@@ -1091,7 +1107,7 @@ export default function VideoPlayer({
 
       if (response.ok) {
         const result = await response.json();
-        // 편집 데이터 저장 성공 알림 제거 (불필요)
+        // 편집 데이터 저장 성공 ��림 제거 (불필요)
         console.log('✅ 편집 데이터가 DB에 저장되었��니다.');
         console.log('Save data API response:', result);
       } else {
@@ -1779,7 +1795,7 @@ export default function VideoPlayer({
                       setShowObjectList(true);
                       setSelectedObjectId(null);
                     } else if (showObjectList && !selectedObjectId) {
-                      // 객체 ��목이 열려있��� 때 닫기
+                      // 객체 ��목이 열려����� 때 닫기
                       setShowObjectList(false);
                     } else if (selectedObjectId) {
                       // 객�� ��세 정보에서 ����기
