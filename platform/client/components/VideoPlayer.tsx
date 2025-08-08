@@ -318,11 +318,17 @@ export default function VideoPlayer({
     try {
       const apiUrl = getApiUrl();
 
+      // 🔍 이미지 크기 검증 및 최적화 로그
+      const imageSizeKB = (imageData.length * 3 / 4) / 1024;
+      if (imageSizeKB > 500) {
+        console.warn('⚠️ Large image detected:', `${imageSizeKB.toFixed(2)}KB`);
+      }
+
       console.log('📸 Saving screenshot to server:', {
-        drawingId,
-        videoId: video?.serverFileName || video?.file.name,
+        drawingId: drawingId.slice(0, 12) + '...',
+        videoId: (video?.serverFileName || video?.file.name)?.slice(0, 20) + '...',
         videoCurrentTime,
-        imageDataLength: imageData.length
+        imageSizeKB: `${imageSizeKB.toFixed(2)}KB`
       });
 
       const response = await fetch(`${apiUrl}/api/save-screenshot`, {
@@ -392,7 +398,7 @@ export default function VideoPlayer({
    * 📤 실패 응답:
    * {
    *   "success": false,
-   *   "message": "해당 그리기 영역의 스크린샷을 찾을 수 없습니다."
+   *   "message": "해당 그리기 영역의 스크린샷을 찾을 ��� 없습니다."
    * }
    *
    * 🔄 에러 처리:
@@ -537,7 +543,7 @@ export default function VideoPlayer({
         return createFallbackPreview(area);
       }
 
-      // 캔버스 좌표를 비디오 좌표로 변환하는 비율 계산
+      // 캔버스 좌표��� 비디오 좌표로 변환하는 비율 계산
       const scaleX = videoNaturalWidth / videoRect.width;
       const scaleY = videoNaturalHeight / videoRect.height;
 
@@ -708,7 +714,7 @@ export default function VideoPlayer({
     }
   };
 
-  // 확인 모달을 표시하고 미리보기 생성
+  // 확인 모달을 표��하고 미리보기 생성
   const showConfirmationDialog = (area: DrawnArea) => {
     const previewDataUrl = createAreaPreview(area);
     setConfirmationModalData({ area, previewDataUrl });
@@ -1289,7 +1295,7 @@ export default function VideoPlayer({
         uploadDate: video.uploadDate
       });
 
-      // videoFolder��� undefined일 때 파일명 기반으로 폴더명 추정
+      // videoFolder��� undefined일 때 ��일명 기반으로 폴더명 추정
       let finalVideoFolder = video.videoFolder;
       const finalFileName = video.serverFileName || video.file.name;
 
@@ -1401,7 +1407,7 @@ export default function VideoPlayer({
 
       if (response.ok) {
         const result = await response.json();
-        // 편집 데이터 저장 성공 ��림 제거 (불필요)
+        // 편집 데이터 저장 성공 ��림 제��� (불필요)
         console.log('✅ 편집 데이터가 DB에 저장되었��니다.');
         console.log('Save data API response:', result);
       } else {
@@ -3576,7 +3582,7 @@ export default function VideoPlayer({
               <button
                 onClick={async () => {
                   if (modalObjectInfo && video && onAddNewObject) {
-                    // 그리기 영역을 ���로운 객�������로 추가 - 팝업창에서 입력한 모든 ��보 포함
+                    // 그리기 영역을 ���로운 객�������로 추가 - 팝업창에서 입력한 모든 ���보 포함
                     const addedObjectId = onAddNewObject(video.id, modalObjectInfo.name, {
                       code: modalObjectInfo.code,
                       additionalInfo: modalObjectInfo.additionalInfo,
