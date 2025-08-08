@@ -171,7 +171,7 @@ export default function VideoPlayer({
    * 🌐 API URL 설정 및 외부 서버 연결 가이드
    * ===================================
    *
-   * 🔧 다른 API 서버 연결 방법:
+   * ���� 다른 API 서버 연결 방법:
    * 1. return 값을 실제 API 서버 URL로 변경
    * 2. 예시: return "https://your-api-server.com";
    * 3. 환경변수 사용: return process.env.REACT_APP_API_URL || window.location.origin;
@@ -189,7 +189,7 @@ export default function VideoPlayer({
     // return "https://your-api-server.com"; // 외부 API 서버 사용 시
     // return process.env.REACT_APP_API_URL || window.location.origin; // 환경변수 사용 시
 
-    // 현재: 같은 도��인 사용 (개발용)
+    // 현재: 같은 도메인 사용 (개발용)
     return window.location.origin;
   };
 
@@ -285,7 +285,7 @@ export default function VideoPlayer({
         if (result.success && result.coordinates) {
           setVttCoordinates(result.coordinates);
           // VTT 좌표 로드 성공 알림 제거 (불필요)
-          console.log(`✅ VTT에서 ${result.coordinatesCount}개��� 좌표 데이터를 ���러���습니다.`);
+          console.log(`✅ VTT에서 ${result.coordinatesCount}개��� 좌표 데이터를 ���러�����습니다.`);
         } else {
           setVttCoordinates([]);
           console.log('ℹ️ 저장된 좌표 데이터가 없습니다.');
@@ -308,7 +308,7 @@ export default function VideoPlayer({
     }
   }, [video]);
 
-  // 그리기 영역 미리보�� 생성
+  // 그리기 영역 미리보기 생성
   const createAreaPreview = (area: DrawnArea): string => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d')!;
@@ -473,7 +473,7 @@ export default function VideoPlayer({
           // 현재 그리기 영역을 저장하여 객체 생성 시 좌표 정보 연결
           setCurrentDrawingArea(area);
 
-          // 그리기로 추가되는 객체는 totalObjectsCreated + 1로 번호 생성
+          // ��리기로 추가되는 객체는 totalObjectsCreated + 1로 번호 생성
           const nextObjectNumber = video ? video.totalObjectsCreated + 1 : detectedObjects.length + 1;
           setModalObjectInfo({
             name: `Object(${nextObjectNumber})`,
@@ -520,7 +520,7 @@ export default function VideoPlayer({
     }
   };
 
-  // 캔버스 초기화 ��수
+  // 캔버스 초기화 함수
   const initializeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const videoElement = videoRef.current;
@@ -611,7 +611,7 @@ export default function VideoPlayer({
     if (vttOverlayEnabled && vttCoordinates.length > 0) {
       const currentTime = videoRef.current?.currentTime || 0;
 
-      // 현재 시간에 해당하는 좌표들 찾기 (±0.5초 범위)
+      // 현재 시간에 해당하�� 좌표들 찾기 (±0.5초 범위)
       const activeCoordinates = vttCoordinates.filter(coord =>
         Math.abs(coord.videoTime - currentTime) <= 0.5
       );
@@ -745,8 +745,8 @@ export default function VideoPlayer({
         };
         setDrawnAreas((prev) => [...prev, newClickArea]);
 
-        // 클릭 완료 시 즉시 API로 전송
-        sendDrawingToApi(newClickArea);
+        // 클릭 완료 시 확인 모달 표시
+        showConfirmationDialog(newClickArea);
       } else {
         setCurrentPath([coords]);
       }
@@ -860,8 +860,8 @@ export default function VideoPlayer({
             };
             setDrawnAreas((prev) => [...prev, newArea]);
 
-            // 그리기 완료 시 API로 전송
-            sendDrawingToApi(newArea);
+            // 그리기 완료 시 확인 모달 표시
+            showConfirmationDialog(newArea);
           }
 
           setRectangleStart(null);
@@ -889,8 +889,8 @@ export default function VideoPlayer({
           };
           setDrawnAreas((prev) => [...prev, newArea]);
 
-          // 그리기 완료 시 API로 전송
-          sendDrawingToApi(newArea);
+          // 그리기 완료 시 확인 모달 표시
+          showConfirmationDialog(newArea);
         }
 
         setCurrentPath([]);
@@ -979,7 +979,7 @@ export default function VideoPlayer({
         uploadDate: video.uploadDate
       });
 
-      // videoFolder��� undefined�� 때 파일명 기반으로 폴더명 추정
+      // videoFolder��� undefined일 때 파일명 기반으로 폴더명 추정
       let finalVideoFolder = video.videoFolder;
       const finalFileName = video.serverFileName || video.file.name;
 
@@ -1178,7 +1178,7 @@ export default function VideoPlayer({
         category?: string;
       } = {};
 
-      // 편���된 값이 있을 때만 업데이���에 포함
+      // 편집된 값이 있을 때만 업데이���에 포함
       if (editedObjectName.trim()) updates.name = editedObjectName.trim();
       if (editedObjectCode.trim()) updates.code = editedObjectCode.trim();
       if (editedObjectInfo.trim()) updates.additionalInfo = editedObjectInfo.trim();
@@ -1355,7 +1355,7 @@ export default function VideoPlayer({
   // 비디오 모달 열릴 때 VTT 좌표 자동 로드
   useEffect(() => {
     if (isOpen && video && canvasInitialized) {
-      // 잠시 후 VTT 좌표 로드 (캔버스 초기화 완�� 후)
+      // 잠시 후 VTT 좌표 로드 (캔���스 초기화 완�� 후)
       const timer = setTimeout(() => {
         loadVttCoordinates();
       }, 1000);
@@ -1782,7 +1782,7 @@ export default function VideoPlayer({
                       // 객체 ��목이 열려있��� 때 닫기
                       setShowObjectList(false);
                     } else if (selectedObjectId) {
-                      // 객�� ��세 정보에서 ��기
+                      // 객�� ��세 정보에서 ����기
                       setShowObjectList(false);
                       setSelectedObjectId(null);
                     }
@@ -1886,7 +1886,7 @@ export default function VideoPlayer({
                         alignItems: "center",
                         justifyContent: "center",
                       }}
-                      title="새로��침"
+                      title="새로고침"
                     >
                       <RefreshCw style={{ width: 14, height: 14 }} />
                     </button>
@@ -2640,7 +2640,7 @@ export default function VideoPlayer({
                     <div style={{ fontSize: "0.85rem" }}>
                       "탐지된 객체" 버튼을 클릭하여
                       <br />
-                      객체 목록을 확인해주세요
+                      객체 목��을 확인해주세요
                     </div>
                   </div>
                 )}
@@ -2920,7 +2920,7 @@ export default function VideoPlayer({
                   margin: 0,
                 }}
               >
-                새 객체 정보 입력
+                새 객체 정보 입���
               </h3>
               <button
                 onClick={() => setShowInfoModal(false)}
@@ -3203,7 +3203,7 @@ export default function VideoPlayer({
                       setObjectDrawingMap(prev => new Map(prev.set(addedObjectId, currentDrawingArea)));
                     }
 
-                    // 좌표를 ��체명과 연결
+                    // 좌표를 객체명과 연결
                     if (currentDrawingArea && addedObjectId) {
                       const linked = await linkCoordinatesWithObject(currentDrawingArea.id, modalObjectInfo.name);
                       if (linked) {
