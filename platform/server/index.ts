@@ -67,8 +67,21 @@ export function createServer() {
   });
 
   // 📸 정적 파일 서빙 - data 폴더의 이미지와 동영상 파일 접근 허용
-  // /data/폴더명/파일명 형태로 접근 가능
-  app.use('/data', express.static(path.join(__dirname, '../data')));
+  // /data/폴더명/파일명 형태��� 접근 가능
+  // 예시: http://localhost:8080/data/동영상폴더/스크린샷.png
+  app.use('/data', express.static(path.join(__dirname, '../data'), {
+    setHeaders: (res, filePath) => {
+      // 이미지 파일에 대한 CORS 헤더 설정
+      if (filePath.match(/\.(png|jpg|jpeg|gif|webp)$/i)) {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      }
+      // 동영상 파일에 대한 적절한 Content-Type 설정
+      if (filePath.match(/\.(mp4|webm|ogg)$/i)) {
+        res.setHeader('Accept-Ranges', 'bytes');
+      }
+    }
+  }));
 
   // ========================================
   // 🌐 API 라우트 정의
@@ -93,7 +106,7 @@ export function createServer() {
    * 📝 수정 방법:
    * - server/routes/upload.ts의 handleVideoFileUpload 함수 수정
    * - multer 설정 변경 시 uploadMiddleware 수정
-   * - 파일 저장 경로 변경 시 storage.destination 수정
+   * - ��일 저장 경로 변경 시 storage.destination 수정
    */
   app.post("/api/upload-file", uploadMiddleware, handleVideoFileUpload);
 
