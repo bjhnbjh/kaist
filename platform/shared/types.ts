@@ -42,4 +42,5 @@ export interface UploadItem {
   uploadSpeed?: number; // 업로드 속도 (선택사항)
   timeRemaining?: number; // 남은 시간 (선택사항)
   uploadDate?: Date; // 업로드 시작 날짜 (선택사항)
+  file?: File; // 실제 파일 객체 (선택사항)
 }

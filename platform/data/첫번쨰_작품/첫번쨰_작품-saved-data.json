@@ -1,0 +1,33 @@
+{
+  "videoId": "video-1754638125453-jcj68euym",
+  "videoFileName": "첫번쨰 작품.mp4",
+  "objects": [
+    {
+      "id": "video-1754638125453-jcj68euym-new-1754638207208-lw3ujz5zg",
+      "name": "Object(1)",
+      "code": "CODE_RECT-175",
+      "additionalInfo": "AI가 자동으로 탐지한 객체입니다.",
+      "dlReservoirDomain": "http://www.naver.com",
+      "category": "기타",
+      "confidence": 0.9676227825500403,
+      "selected": false
+    },
+    {
+      "id": "video-1754638125453-jcj68euym-new-1754638297474-xv23hoobj",
+      "name": "Object(2)",
+      "code": "CODE_CLICK-17",
+      "additionalInfo": "클릭으로 생성된 객체입니다.",
+      "dlReservoirDomain": "http://www.naver.com",
+      "category": "기타",
+      "confidence": 0.8781562385742623,
+      "selected": false
+    }
+  ],
+  "drawings": [],
+  "duration": 35.041667,
+  "totalFrames": 1051,
+  "timestamp": 1754638302943,
+  "videoFolder": "첫번쨰_작품",
+  "savedAt": "2025-08-08T16:31:45.940+09:00",
+  "version": 1
+}

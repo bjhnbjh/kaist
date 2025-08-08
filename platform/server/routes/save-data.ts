@@ -25,75 +25,19 @@ import { normalizeFileName, findActualVideoFolder, getKoreaTimeISO, DATA_DIR } f
 // 🛠️ 유틸리티 함수들
 // ========================================
 
-/**
- * 한국시간(KST) 기준으로 ISO 문자열 반환
- * @returns {string} KST 시간대의 ISO 문자열
- */
-function getKoreaTimeISO(): string {
-  const now = new Date();
-  const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
-  return koreaTime.toISOString().replace('Z', '+09:00');
-}
+// ⬆️ getKoreaTimeISO 함수는 file-utils.ts에서 import됩니다
 
-/**
- * 파일명을 안전하게 정규화하는 함수 (upload API와 동일)
- * @param {string} fileName - 원본 파일명
- * @returns {string} 정규화된 파일명
- */
-function normalizeFileName(fileName: string): string {
-  const ext = path.extname(fileName);
-  const baseName = path.basename(fileName, ext);
-
-  let normalized = baseName.normalize('NFC').trim();
-
-  normalized = normalized
-    .replace(/[<>:"/\\|?*]/g, '_')
-    .replace(/\s+/g, '_')
-    .replace(/[^\w가-힣\-_.()]/g, '')
-    .replace(/_{2,}/g, '_')
-    .replace(/^_+|_+$/g, '');
-
-  return normalized || 'unnamed';
-}
-
-/**
- * 실제 업로드된 비디오 폴더명 찾기 함수
- * 같은 파일명으로 중복 업로드된 경우 정확한 폴더를 찾음
- */
-function findActualVideoFolder(videoFileName: string): string {
-  const normalizedName = normalizeFileName(videoFileName);
-  let actualFolderName = normalizedName;
-
-  // 기본 폴더가 있는지 확인
-  const baseFolderPath = path.join(DATA_DIR, normalizedName);
-  if (fs.existsSync(baseFolderPath)) {
-    return normalizedName;
-  }
-
-  // 중복 폴더들 중에서 찾기 (1), (2), (3) 등
-  for (let i = 1; i <= 20; i++) {
-    const candidateFolderName = `${normalizedName}(${i})`;
-    const candidateFolderPath = path.join(DATA_DIR, candidateFolderName);
-
-    if (fs.existsSync(candidateFolderPath)) {
-      // 해당 폴더에 실제 영상 파일이 있는지 확인
-      const videoFilePath = path.join(candidateFolderPath, videoFileName);
-      if (fs.existsSync(videoFilePath)) {
-        // 가장 최근에 수정된 폴더를 사용
-        actualFolderName = candidateFolderName;
-      }
-    }
-  }
-
-  return actualFolderName;
-}
+// 🔧 이미 import된 함수들을 사용합니다 (file-utils.ts에서)
+// - normalizeFileName: 파일명 정규화
+// - findActualVideoFolder: 실제 비디오 폴더 찾기
+// - getKoreaTimeISO: 한국 시간 ISO 문자열 생성
 
 // ========================================
 // 📊 타입 정의
 // ========================================
 
 /**
- * 편집 데이터 ���장 요청 인터페이스
+ * 편집 데이터 ���장 요청 인터페��스
  * 
  * 📝 수정 포인트:
  * - 새로운 데이터 타입 추가: 이 인터페이스��� 필드 추가
@@ -168,7 +112,7 @@ function initializeSaveDataFiles() {
  * 편집 데이터를 동영상 폴더에 저장
  * 
  * 📝 수정 포인트:
- * - 버전 관리 방식 변경: 버전 증가 로직 수정
+ * - 버전 관리 방식 변경: 버전 증�� 로직 수정
  * - 프로젝트 레코드 구조 변경: projectRecord 객�� 수정
  * - 파일명 규칙 변경: 저장 파일명 형식 수정
  * 
@@ -239,7 +183,7 @@ function updateProjectIndex(projectRecord: any) {
     const indexContent = fs.readFileSync(SAVED_DATA_INDEX, 'utf8');
     const indexData = JSON.parse(indexContent);
 
-    // 같은 비디오ID의 기존 레코드가 있으면 업데이트, 없으면 추가
+    // 같은 비디오ID의 기존 레코드가 있으면 업데이트, ���으면 추가
     const existingIndex = indexData.savedProjects.findIndex(
       (project: any) => project.videoId === projectRecord.videoId
     );

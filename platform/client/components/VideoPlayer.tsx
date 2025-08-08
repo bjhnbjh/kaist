@@ -30,6 +30,11 @@ interface DrawnArea {
   clickPoint?: DrawingPoint;
 }
 
+interface ConfirmationModalData {
+  area: DrawnArea;
+  previewDataUrl: string;
+}
+
 interface VideoPlayerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -66,6 +71,22 @@ const formatTime = (seconds: number) => {
   const milliseconds = Math.floor((seconds % 1) * 100); // 100분의 1초 단위
   return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}.${milliseconds.toString().padStart(2, "0")}`;
 };
+
+// CSS 애니메이션 스타일 추가
+const spinnerStyles = `
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
+// 스타일을 head에 추가
+if (typeof document !== 'undefined' && !document.getElementById('confirmation-modal-styles')) {
+  const style = document.createElement('style');
+  style.id = 'confirmation-modal-styles';
+  style.textContent = spinnerStyles;
+  document.head.appendChild(style);
+}
 
 export default function VideoPlayer({
   isOpen,
@@ -134,6 +155,11 @@ export default function VideoPlayer({
     videoTime?: number;
     timestamp?: string;
   } | null>(null);
+
+  // 확인 모달 상태
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [confirmationModalData, setConfirmationModalData] = useState<ConfirmationModalData | null>(null);
+
   // 그리기 영역과 생성된 객체 간의 매핑 추적
   const [currentDrawingArea, setCurrentDrawingArea] = useState<DrawnArea | null>(null);
   const [objectDrawingMap, setObjectDrawingMap] = useState<Map<string, DrawnArea>>(new Map());
@@ -161,7 +187,7 @@ export default function VideoPlayer({
    * 🌐 API URL 설정 및 외부 서버 연결 가이드
    * ===================================
    *
-   * 🔧 다른 API 서버 연결 방법:
+   * ���� 다른 API 서버 연결 방법:
    * 1. return 값을 실제 API 서버 URL로 변경
    * 2. 예시: return "https://your-api-server.com";
    * 3. 환경변수 사용: return process.env.REACT_APP_API_URL || window.location.origin;
@@ -275,7 +301,7 @@ export default function VideoPlayer({
         if (result.success && result.coordinates) {
           setVttCoordinates(result.coordinates);
           // VTT 좌표 로드 성공 알림 제거 (불필요)
-          console.log(`✅ VTT에서 ${result.coordinatesCount}개��� 좌표 데이터를 ���러���습니다.`);
+          console.log(`✅ VTT에서 ${result.coordinatesCount}개��� 좌표 데이터를 ���러�����습니다.`);
         } else {
           setVttCoordinates([]);
           console.log('ℹ️ 저장된 좌표 데이터가 없습니다.');
@@ -298,7 +324,224 @@ export default function VideoPlayer({
     }
   }, [video]);
 
-  // 그리기 완료시 API로 데이터 전송
+  /**
+   * 비디오 프레임에서 선택된 영역을 캡쳐하여 미리보기 이미지 생성
+   *
+   * @param area - 그리기 영역 정보 (사각형, 클��, 자유그리기)
+   * @returns 캡쳐된 영역의 데이터 URL
+   *
+   * 🎯 주요 기능:
+   * - 실제 비디오 프레임에서 선택된 영역만 잘라내기
+   * - 영역 위에 반투명 오버레이로 선택 표시
+   * - 클릭의 경우 주변 영역을 포함하여 캡쳐
+   */
+  const createAreaPreview = (area: DrawnArea): string => {
+    const videoElement = videoRef.current;
+    if (!videoElement) {
+      return createFallbackPreview(area);
+    }
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d')!;
+    const previewSize = 200;
+
+    canvas.width = previewSize;
+    canvas.height = previewSize;
+
+    try {
+      // 비디오 크기 가져오기
+      const videoRect = videoElement.getBoundingClientRect();
+      const videoNaturalWidth = videoElement.videoWidth;
+      const videoNaturalHeight = videoElement.videoHeight;
+
+      if (videoNaturalWidth === 0 || videoNaturalHeight === 0) {
+        return createFallbackPreview(area);
+      }
+
+      // 캔버스 좌표를 비디오 좌표로 변환하는 비율 계산
+      const scaleX = videoNaturalWidth / videoRect.width;
+      const scaleY = videoNaturalHeight / videoRect.height;
+
+      let cropX, cropY, cropWidth, cropHeight;
+
+      if (area.type === 'rectangle' && area.startPoint && area.endPoint) {
+        // 사각형 영역 캡쳐
+        cropX = Math.min(area.startPoint.x, area.endPoint.x) * scaleX;
+        cropY = Math.min(area.startPoint.y, area.endPoint.y) * scaleY;
+        cropWidth = Math.abs(area.endPoint.x - area.startPoint.x) * scaleX;
+        cropHeight = Math.abs(area.endPoint.y - area.startPoint.y) * scaleY;
+      } else if (area.type === 'click' && area.clickPoint) {
+        // 클릭 포인트 주변 영역 캡쳐 (100x100 픽셀 영역)
+        const surroundSize = 50; // 클릭 지점 주변 50픽셀씩
+        cropX = Math.max(0, (area.clickPoint.x - surroundSize) * scaleX);
+        cropY = Math.max(0, (area.clickPoint.y - surroundSize) * scaleY);
+        cropWidth = Math.min(surroundSize * 2 * scaleX, videoNaturalWidth - cropX);
+        cropHeight = Math.min(surroundSize * 2 * scaleY, videoNaturalHeight - cropY);
+      } else if (area.type === 'path' && area.points.length > 1) {
+        // 자유그리기 영역의 바운딩 박스 캡쳐
+        const minX = Math.min(...area.points.map(p => p.x));
+        const maxX = Math.max(...area.points.map(p => p.x));
+        const minY = Math.min(...area.points.map(p => p.y));
+        const maxY = Math.max(...area.points.map(p => p.y));
+
+        // 약간의 패딩 추가
+        const padding = 10;
+        cropX = Math.max(0, (minX - padding) * scaleX);
+        cropY = Math.max(0, (minY - padding) * scaleY);
+        cropWidth = Math.min((maxX - minX + padding * 2) * scaleX, videoNaturalWidth - cropX);
+        cropHeight = Math.min((maxY - minY + padding * 2) * scaleY, videoNaturalHeight - cropY);
+      } else {
+        return createFallbackPreview(area);
+      }
+
+      // 잘린 영역이 너무 작으면 최소 크기 보장
+      if (cropWidth < 20 || cropHeight < 20) {
+        const centerX = cropX + cropWidth / 2;
+        const centerY = cropY + cropHeight / 2;
+        cropWidth = Math.max(cropWidth, 40);
+        cropHeight = Math.max(cropHeight, 40);
+        cropX = Math.max(0, centerX - cropWidth / 2);
+        cropY = Math.max(0, centerY - cropHeight / 2);
+      }
+
+      // 비디오 프레임을 캔버스에 그리기 (잘린 영역만)
+      const scale = Math.min(previewSize / cropWidth, previewSize / cropHeight);
+      const scaledWidth = cropWidth * scale;
+      const scaledHeight = cropHeight * scale;
+      const offsetX = (previewSize - scaledWidth) / 2;
+      const offsetY = (previewSize - scaledHeight) / 2;
+
+      // 배경을 검은색으로 설정
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, previewSize, previewSize);
+
+      // 비디오 프레임의 해당 영역을 그리기
+      ctx.drawImage(
+        videoElement,
+        cropX, cropY, cropWidth, cropHeight,
+        offsetX, offsetY, scaledWidth, scaledHeight
+      );
+
+      // 선택 영역 표시를 위한 오버레이 그리기
+      drawSelectionOverlay(ctx, area, cropX, cropY, scaleX, scaleY, offsetX, offsetY, scale, previewSize);
+
+      return canvas.toDataURL();
+    } catch (error) {
+      console.warn('비디오 프레임 캡쳐 실패:', error);
+      return createFallbackPreview(area);
+    }
+  };
+
+  /**
+   * 비디오 캡쳐가 실패했을 때 사용하는 대체 미리보기 생성
+   */
+  const createFallbackPreview = (area: DrawnArea): string => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d')!;
+    const previewSize = 200;
+
+    canvas.width = previewSize;
+    canvas.height = previewSize;
+
+    // 회색 배경
+    ctx.fillStyle = '#f3f4f6';
+    ctx.fillRect(0, 0, previewSize, previewSize);
+
+    // 중앙에 선택 영역 표시
+    const centerX = previewSize / 2;
+    const centerY = previewSize / 2;
+
+    ctx.strokeStyle = area.color || '#ef4444';
+    ctx.lineWidth = 3;
+
+    if (area.type === 'rectangle') {
+      ctx.strokeRect(centerX - 40, centerY - 30, 80, 60);
+    } else if (area.type === 'click') {
+      ctx.beginPath();
+      ctx.moveTo(centerX - 15, centerY);
+      ctx.lineTo(centerX + 15, centerY);
+      ctx.moveTo(centerX, centerY - 15);
+      ctx.lineTo(centerX, centerY + 15);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 8, 0, 2 * Math.PI);
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 40, 0, 2 * Math.PI);
+      ctx.stroke();
+    }
+
+    // "미리보기 없음" 텍스트
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('미리보기 없음', centerX, previewSize - 20);
+
+    return canvas.toDataURL();
+  };
+
+  /**
+   * 캡쳐된 이미지 위에 선택 영역 오버레이 그리기
+   */
+  const drawSelectionOverlay = (
+    ctx: CanvasRenderingContext2D,
+    area: DrawnArea,
+    cropX: number,
+    cropY: number,
+    scaleX: number,
+    scaleY: number,
+    offsetX: number,
+    offsetY: number,
+    scale: number,
+    previewSize: number
+  ) => {
+    // 반투명 오버레이
+    ctx.fillStyle = 'rgba(239, 68, 68, 0.2)';
+
+    if (area.type === 'rectangle' && area.startPoint && area.endPoint) {
+      const rectX = ((Math.min(area.startPoint.x, area.endPoint.x) * scaleX) - cropX) * scale + offsetX;
+      const rectY = ((Math.min(area.startPoint.y, area.endPoint.y) * scaleY) - cropY) * scale + offsetY;
+      const rectWidth = Math.abs(area.endPoint.x - area.startPoint.x) * scaleX * scale;
+      const rectHeight = Math.abs(area.endPoint.y - area.startPoint.y) * scaleY * scale;
+
+      ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(rectX, rectY, rectWidth, rectHeight);
+    } else if (area.type === 'click' && area.clickPoint) {
+      const clickX = ((area.clickPoint.x * scaleX) - cropX) * scale + offsetX;
+      const clickY = ((area.clickPoint.y * scaleY) - cropY) * scale + offsetY;
+
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(clickX - 10, clickY);
+      ctx.lineTo(clickX + 10, clickY);
+      ctx.moveTo(clickX, clickY - 10);
+      ctx.lineTo(clickX, clickY + 10);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(clickX, clickY, 6, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.8)';
+      ctx.fill();
+    }
+  };
+
+  // 확인 모달을 표시하고 미리보기 생성
+  const showConfirmationDialog = (area: DrawnArea) => {
+    const previewDataUrl = createAreaPreview(area);
+    setConfirmationModalData({ area, previewDataUrl });
+    setShowConfirmationModal(true);
+
+    // 비디오 일시정지
+    if (videoRef.current && !videoRef.current.paused) {
+      videoRef.current.pause();
+    }
+  };
+
+  // 실제 API 전송 함수
   const sendDrawingToApi = async (area: DrawnArea) => {
     try {
       setIsApiLoading(true);
@@ -356,7 +599,7 @@ export default function VideoPlayer({
           // 현재 그리기 영역을 저장하여 객체 생성 시 좌표 정보 연결
           setCurrentDrawingArea(area);
 
-          // 그리기로 추가되는 객체는 totalObjectsCreated + 1로 번호 생성
+          // ��리기로 추가되는 객체는 totalObjectsCreated + 1로 번호 생성
           const nextObjectNumber = video ? video.totalObjectsCreated + 1 : detectedObjects.length + 1;
           setModalObjectInfo({
             name: `Object(${nextObjectNumber})`,
@@ -494,7 +737,7 @@ export default function VideoPlayer({
     if (vttOverlayEnabled && vttCoordinates.length > 0) {
       const currentTime = videoRef.current?.currentTime || 0;
 
-      // 현재 시간에 해당하는 좌표들 찾기 (±0.5초 범위)
+      // 현재 시간에 해당하�� 좌표들 찾기 (±0.5초 범위)
       const activeCoordinates = vttCoordinates.filter(coord =>
         Math.abs(coord.videoTime - currentTime) <= 0.5
       );
@@ -628,8 +871,8 @@ export default function VideoPlayer({
         };
         setDrawnAreas((prev) => [...prev, newClickArea]);
 
-        // 클릭 완료 시 즉시 API로 전송
-        sendDrawingToApi(newClickArea);
+        // 클릭 완료 시 확인 모달 표시
+        showConfirmationDialog(newClickArea);
       } else {
         setCurrentPath([coords]);
       }
@@ -743,8 +986,8 @@ export default function VideoPlayer({
             };
             setDrawnAreas((prev) => [...prev, newArea]);
 
-            // 그리기 완료 시 API로 전송
-            sendDrawingToApi(newArea);
+            // 그리기 완료 시 확인 모달 표시
+            showConfirmationDialog(newArea);
           }
 
           setRectangleStart(null);
@@ -772,8 +1015,8 @@ export default function VideoPlayer({
           };
           setDrawnAreas((prev) => [...prev, newArea]);
 
-          // 그리기 완료 시 API로 전송
-          sendDrawingToApi(newArea);
+          // 그리기 완료 시 확인 모달 표시
+          showConfirmationDialog(newArea);
         }
 
         setCurrentPath([]);
@@ -929,7 +1172,7 @@ export default function VideoPlayer({
    * 📝 수정 포인트:
    * - API URL 변경: window.location.origin 수정
    * - 저장 데이터 구조 변경: saveData 객체 수정
-   * - 응답 처리 변경: response 처리 로직 수정
+   * - 응답 처리 변경: response ��리 로직 수정
    * - 에러 처리 개선: try-catch 블록 수정
    */
   const saveDataToDb = async () => {
@@ -974,7 +1217,7 @@ export default function VideoPlayer({
 
       if (response.ok) {
         const result = await response.json();
-        // 편집 데이터 저장 성공 알림 제거 (불필요)
+        // 편집 데이터 저장 성공 ��림 제거 (불필요)
         console.log('✅ 편집 데이터가 DB에 저장되었��니다.');
         console.log('Save data API response:', result);
       } else {
@@ -1073,7 +1316,7 @@ export default function VideoPlayer({
         onUpdateObject(video.id, selectedObjectId, updates);
         setHasObjectChanges(true);
         // 객체 정보 업데이트 알림 제거 (불필요)
-        console.log('✅ 객체 정보가 업데이트되었습니다.');
+        console.log('✅ 객체 정보가 업데이트되��습니다.');
       }
     }
     setIsEditing(false);
@@ -1238,7 +1481,7 @@ export default function VideoPlayer({
   // 비디오 모달 열릴 때 VTT 좌표 자동 로드
   useEffect(() => {
     if (isOpen && video && canvasInitialized) {
-      // 잠시 후 VTT 좌표 로드 (캔버스 초기화 완�� 후)
+      // 잠시 후 VTT 좌표 로드 (캔���스 초기화 완�� 후)
       const timer = setTimeout(() => {
         loadVttCoordinates();
       }, 1000);
@@ -1662,10 +1905,10 @@ export default function VideoPlayer({
                       setShowObjectList(true);
                       setSelectedObjectId(null);
                     } else if (showObjectList && !selectedObjectId) {
-                      // 객체 ��목이 열려있��� 때 닫기
+                      // 객체 ��목이 열려����� 때 닫기
                       setShowObjectList(false);
                     } else if (selectedObjectId) {
-                      // 객�� ��세 정보에서 ��기
+                      // 객�� ��세 정보에서 ����기
                       setShowObjectList(false);
                       setSelectedObjectId(null);
                     }
@@ -2523,7 +2766,7 @@ export default function VideoPlayer({
                     <div style={{ fontSize: "0.85rem" }}>
                       "탐지된 객체" 버튼을 클릭하여
                       <br />
-                      객체 목록을 확인해주세요
+                      객체 목��을 확인해주세요
                     </div>
                   </div>
                 )}
@@ -2567,7 +2810,7 @@ export default function VideoPlayer({
                   </div>
                   <button
                     onClick={() => {
-                      // 일괄 삭제를 위해 확인 모달을 열어서 전체 선택 삭제로 처리
+                      // 일괄 삭제를 위해 확인 모달을 열어서 ��체 선택 삭제로 처리
                       if (selectedObjectIds.length > 0) {
                         setObjectToDelete("BULK_DELETE");
                         setShowDeleteConfirmModal(true);
@@ -2803,7 +3046,7 @@ export default function VideoPlayer({
                   margin: 0,
                 }}
               >
-                새 객체 정보 입력
+                새 객체 정보 입���
               </h3>
               <button
                 onClick={() => setShowInfoModal(false)}
@@ -3232,6 +3475,268 @@ export default function VideoPlayer({
                 }}
               >
                 확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 전송 확인 모달 */}
+      {showConfirmationModal && confirmationModalData && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.8)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2000,
+            padding: "20px",
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowConfirmationModal(false);
+              setConfirmationModalData(null);
+            }
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              borderRadius: "12px",
+              padding: "24px",
+              maxWidth: "600px",
+              width: "100%",
+              maxHeight: "80vh",
+              overflow: "auto",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "20px",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 제목 */}
+            <div style={{ textAlign: "center" }}>
+              <h3
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: "600",
+                  color: "#374151",
+                  margin: 0,
+                  marginBottom: "8px",
+                }}
+              >
+                선택 영역 전송 확인
+              </h3>
+              <p
+                style={{
+                  fontSize: "0.9rem",
+                  color: "#6b7280",
+                  margin: 0,
+                }}
+              >
+                선택한 영역을 API로 전송하시겠습니까?
+              </p>
+            </div>
+
+            {/* 미리보기와 정보 */}
+            <div
+              style={{
+                display: "flex",
+                gap: "20px",
+                alignItems: "flex-start",
+              }}
+            >
+              {/* 왼쪽: 미리보기 이미지 */}
+              <div
+                style={{
+                  flex: "0 0 200px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                <div
+                  style={{
+                    background: "#f8fafc",
+                    border: "2px solid #e2e8f0",
+                    borderRadius: "8px",
+                    padding: "8px",
+                  }}
+                >
+                  <img
+                    src={confirmationModalData.previewDataUrl}
+                    alt="Selected area preview"
+                    style={{
+                      width: "200px",
+                      height: "200px",
+                      objectFit: "contain",
+                      display: "block",
+                    }}
+                  />
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "#6b7280",
+                    textAlign: "center",
+                    fontStyle: "italic",
+                  }}
+                >
+                  선택된 영역
+                </div>
+              </div>
+
+              {/* 오른쪽: 상세 정보 */}
+              <div
+                style={{
+                  flex: "1",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                }}
+              >
+                <div
+                  style={{
+                    background: "#f8fafc",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "8px",
+                    padding: "16px",
+                  }}
+                >
+                  <div style={{ marginBottom: "12px" }}>
+                    <strong style={{ color: "#374151" }}>그리기 타입:</strong>
+                    <span style={{ marginLeft: "8px", color: "#6b7280" }}>
+                      {confirmationModalData.area.type === 'click' ? '클릭 좌표'
+                        : confirmationModalData.area.type === 'rectangle' ? '네모박스'
+                        : '자유그리기'}
+                    </span>
+                  </div>
+
+                  <div style={{ marginBottom: "12px" }}>
+                    <strong style={{ color: "#374151" }}>좌표 정보:</strong>
+                    <span style={{ marginLeft: "8px", color: "#6b7280", fontFamily: "monospace" }}>
+                      {confirmationModalData.area.type === 'click' && confirmationModalData.area.clickPoint
+                        ? `(${confirmationModalData.area.clickPoint.x}, ${confirmationModalData.area.clickPoint.y})`
+                        : confirmationModalData.area.type === 'rectangle' && confirmationModalData.area.startPoint && confirmationModalData.area.endPoint
+                        ? `(${confirmationModalData.area.startPoint.x}, ${confirmationModalData.area.startPoint.y}) ~ (${confirmationModalData.area.endPoint.x}, ${confirmationModalData.area.endPoint.y})`
+                        : '복수 좌표'}
+                    </span>
+                  </div>
+
+                  <div style={{ marginBottom: "12px" }}>
+                    <strong style={{ color: "#374151" }}>동영상 시간:</strong>
+                    <span style={{ marginLeft: "8px", color: "#6b7280" }}>
+                      {formatTime(videoRef.current?.currentTime || 0)}
+                    </span>
+                  </div>
+
+                  <div>
+                    <strong style={{ color: "#374151" }}>동영상 파일:</strong>
+                    <span style={{ marginLeft: "8px", color: "#6b7280" }}>
+                      {video?.serverFileName || video?.file.name || 'Unknown'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 주의사항 */}
+                <div
+                  style={{
+                    background: "#fef3c7",
+                    border: "1px solid #f59e0b",
+                    borderRadius: "6px",
+                    padding: "12px",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "0.85rem",
+                      color: "#92400e",
+                      lineHeight: "1.4",
+                    }}
+                  >
+                    <strong>📌 확인사항:</strong><br/>
+                    • 선택한 영역이 정확한지 확인해주세요<br/>
+                    • 전송 후에는 되돌릴 수 없습니다<br/>
+                    • API 응답을 받기까지 잠시 기다려주세요
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 버튼 */}
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                justifyContent: "flex-end",
+                borderTop: "1px solid #e5e7eb",
+                paddingTop: "16px",
+              }}
+            >
+              <button
+                onClick={() => {
+                  setShowConfirmationModal(false);
+                  setConfirmationModalData(null);
+                }}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  border: "1px solid #d1d5db",
+                  background: "white",
+                  color: "#374151",
+                  fontSize: "0.9rem",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                취소
+              </button>
+              <button
+                onClick={async () => {
+                  if (confirmationModalData) {
+                    setShowConfirmationModal(false);
+                    await sendDrawingToApi(confirmationModalData.area);
+                    setConfirmationModalData(null);
+                  }
+                }}
+                disabled={isApiLoading}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  border: "none",
+                  background: isApiLoading ? "#9ca3af" : "#3b82f6",
+                  color: "white",
+                  fontSize: "0.9rem",
+                  fontWeight: "500",
+                  cursor: isApiLoading ? "not-allowed" : "pointer",
+                  opacity: isApiLoading ? 0.6 : 1,
+                  transition: "all 0.2s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                {isApiLoading && (
+                  <div
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      border: "2px solid transparent",
+                      borderTop: "2px solid white",
+                      borderRadius: "50%",
+                      animation: "spin 1s linear infinite",
+                    }}
+                  />
+                )}
+                {isApiLoading ? "전송 중..." : "전송"}
               </button>
             </div>
           </div>

@@ -1,0 +1,58 @@
+WEBVTT
+NOTE
+동영상: 첫번쨰 작품(3).mp4
+생성일: 2025-08-08T16:46:56.207+09:00
+탐지된 객체 수: 2
+COORDINATES_DATA_START
+object1
+{
+  "이름": "Object(1)",
+  "시간": 16.239175,
+  "code": "CODE_RECT-175",
+  "catefory": "기타",
+  "도메인": "http://www.naver.com",
+  "정보": "AI가 자동으로 탐지한 객체입니다.",
+  "finallink": "http://www.naver.com/00/CODE_RECT-175",
+  "position": {
+    "type": "rectangle",
+    "points": [],
+    "startPoint": {
+      "x": 611,
+      "y": 80.5
+    },
+    "endPoint": {
+      "x": 979,
+      "y": 562.5
+    },
+    "clickPoint": null,
+    "videoCurrentTime": 16.239175
+  },
+  "polygon": null
+}
+object2
+{
+  "이름": "Object(2)",
+  "시간": 16.239175,
+  "code": "CODE_CLICK-17",
+  "catefory": "기타",
+  "도메인": "http://www.naver.com",
+  "정보": "클릭으로 생성된 객체입니다.",
+  "finallink": "http://www.naver.com/00/CODE_CLICK-17",
+  "position": {
+    "type": "click",
+    "points": [],
+    "startPoint": null,
+    "endPoint": null,
+    "clickPoint": {
+      "x": 569,
+      "y": 628.5
+    },
+    "videoCurrentTime": 16.239175
+  },
+  "polygon": null
+}
+COORDINATES_DATA_END
+
+1
+00:00:00.000 --> 00:35:04
+탐지된 객체: Object(1), Object(2)

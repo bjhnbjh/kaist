@@ -18,58 +18,9 @@ import { normalizeFileName, findActualVideoFolder, DATA_DIR } from "../utils/fil
 // 🛠️ 공통 유틸리티 사용
 // ========================================
 
-/**
- * 파일명을 안전하게 정규화하는 함수 (한글 지원)
- * @param {string} fileName - 원본 파일명
- * @returns {string} 정규화된 파일명
- */
-function normalizeFileName(fileName: string): string {
-  const ext = path.extname(fileName);
-  const baseName = path.basename(fileName, ext);
-
-  let normalized = baseName.normalize('NFC').trim();
-  normalized = normalized
-    .replace(/[<>:"/\\|?*]/g, '_')
-    .replace(/\s+/g, '_')
-    .replace(/[^\w가-힣\-_.()]/g, '')
-    .replace(/_{2,}/g, '_')
-    .replace(/^_+|_+$/g, '');
-
-  return normalized || 'unnamed';
-}
-
-/**
- * 실제 업로드된 비디오 폴더명 찾기 함수
- * 같은 파일명으로 중복 업로드된 경우 정확한 폴더를 찾기
- */
-function findActualVideoFolder(videoFileName: string): string {
-  const DATA_DIR = path.join(process.cwd(), 'data');
-  const normalizedName = normalizeFileName(videoFileName);
-  let actualFolderName = normalizedName;
-
-  // 기본 폴더가 있는지 확인
-  const baseFolderPath = path.join(DATA_DIR, normalizedName);
-  if (fs.existsSync(baseFolderPath)) {
-    return normalizedName;
-  }
-
-  // 중복 폴더들 중에서 찾기 (1), (2), (3) 등
-  for (let i = 1; i <= 20; i++) {
-    const candidateFolderName = `${normalizedName}(${i})`;
-    const candidateFolderPath = path.join(DATA_DIR, candidateFolderName);
-
-    if (fs.existsSync(candidateFolderPath)) {
-      // 해당 폴더에 실제 영상 파일이 있는지 확인
-      const videoFilePath = path.join(candidateFolderPath, videoFileName);
-      if (fs.existsSync(videoFilePath)) {
-        // 가장 최근에 수정된 폴더를 사용
-        actualFolderName = candidateFolderName;
-      }
-    }
-  }
-
-  return actualFolderName;
-}
+// 🔧 이미 import된 함수들을 사용합니다 (file-utils.ts에서)
+// - normalizeFileName: 파일명 정규화 (한글 지원)
+// - findActualVideoFolder: 실제 비디오 폴더 찾기
 
 /**
  * VTT 파일에서 좌표 데이터 추출
