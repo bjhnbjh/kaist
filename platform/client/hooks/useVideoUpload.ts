@@ -357,13 +357,17 @@ export function useVideoUpload() {
         const hasDetectedObjects = video && video.detectedObjects.length > 0;
         setHasRunDetection(hasDetectedObjects);
 
+        console.log('DEBUG: adminPanelVisible =', adminPanelVisible);
         if (!adminPanelVisible) {
+          console.log('DEBUG: Opening admin panel...');
           setPanelAnimating(true);
           setAdminPanelVisible(true);
           const timeoutId = setTimeout(() => {
             setPanelAnimating(false);
           }, 300);
           return () => clearTimeout(timeoutId);
+        } else {
+          console.log('DEBUG: Admin panel already visible');
         }
       }
     },
