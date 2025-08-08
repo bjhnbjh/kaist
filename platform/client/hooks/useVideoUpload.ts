@@ -199,7 +199,7 @@ export function useVideoUpload() {
     setSelectedVideoId(null);
     setAdminPanelVisible(false);
 
-    // 업로드 진행 시뮬레이션
+    // 업로�� 진행 시뮬레이션
     let progress = 0;
     let uploadInterval: NodeJS.Timeout;
     let processTimeoutId: NodeJS.Timeout;
@@ -240,7 +240,7 @@ export function useVideoUpload() {
             // 비디오 메타데이터 추출 및 파일 업로드
             extractVideoMetadata(file).then(async (metadata) => {
               try {
-                console.log(`🎬 업로드 프로세스 시작 - 원본 파일: "${file.name}"`);
+                console.log(`🎬 업로드 프로세스 시작 - ��본 파일: "${file.name}"`);
 
                 // 파일명 충돌 체크 및 자동 리네임
                 const renamedFile = await checkAndRenameFile(file);
@@ -362,7 +362,6 @@ export function useVideoUpload() {
         // videos 배열에 해당 ID의 비디오가 없다면 uploads에서 찾아서 추가 (비동기로 처리)
         if (!video) {
           const upload = uploads.find(u => u.id === videoId && u.status === 'completed');
-          console.log('DEBUG: Found upload for missing video:', upload);
 
           if (upload && upload.file) {
             // 렌더링 후에 상태 업데이트 실행
@@ -378,14 +377,12 @@ export function useVideoUpload() {
                 videoFolder: upload.filename,
                 serverFileName: upload.filename,
               };
-              console.log('DEBUG: Creating missing video:', newVideo);
               setVideos(prev => [...prev, newVideo]);
             }, 0);
           }
         }
 
         if (!adminPanelVisible) {
-          console.log('DEBUG: Opening admin panel...');
           setPanelAnimating(true);
           setAdminPanelVisible(true);
           const timeoutId = setTimeout(() => {
