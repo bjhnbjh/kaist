@@ -75,7 +75,7 @@ interface SaveScreenshotResponse {
  * @param drawingId - 그리기 영역 고유 ID
  * @param imageData - base64 이미지 데이터
  * @param videoCurrentTime - 동영상 현재 시간 (초)
- * @returns {imagePath, imageUrl, metadata} - 저장 결과 정��
+ * @returns {imagePath, imageUrl, metadata} - 저장 결과 정보
  */
 function saveImageToFile(
   videoId: string,
@@ -165,13 +165,80 @@ function saveImageToFile(
 // ========================================
 
 /**
- * 스크린샷 저장 핸들러
- * 
- * 📝 수정 포인트:
- * - 이미지 검증: 이미지 크기, 형식 검증 추가
- * - 압축 처리: 이미지 압축 로직 추가
- * - 메타데이터 저장: 이미지 정보를 별도 JSON 파일로 저장
- * 
+ * ===================================
+ * 📸 스크린샷 저장 API 핸들러
+ * ===================================
+ *
+ * 🔧 기능 상세:
+ * 1. base64 이미지 데이터 수신 및 검증
+ * 2. 이미지 크기 제한 (최대 5MB)
+ * 3. 중복 파일 자동 정리
+ * 4. PNG 형식으로 로컬 저장
+ * 5. 웹 접근 가능한 URL 반환
+ *
+ * 📋 요청 형식 (POST):
+ * Content-Type: application/json
+ * {
+ *   "videoId": "동영상파일명_또는_폴더명",          // 필수
+ *   "drawingId": "drawing_abc123",               // 필수: 8자 이상 고유 ID
+ *   "imageData": "data:image/png;base64,iVBORw...", // 필수: 완전한 data URL 형식
+ *   "videoCurrentTime": 125.5,                   // 선택: 0 이상의 초 단위
+ *   "timestamp": 1642345678901                   // 선택: Unix timestamp
+ * }
+ *
+ * 📤 성공 응답 (200):
+ * {
+ *   "success": true,
+ *   "message": "스크린샷이 성공적으로 저장되었습니다.",
+ *   "imagePath": "/절대/경로/파일명.png",
+ *   "imageUrl": "/data/폴더명/파일명.png",         // 웹에서 바로 접근 가능
+ *   "drawingId": "drawing_abc123",
+ *   "timestamp": "2024-01-16T12:34:56.789Z"
+ * }
+ *
+ * 📤 오류 응답:
+ * 400 Bad Request:
+ * - 필수 필드 누락: videoId, drawingId, imageData
+ * - 잘못된 이미지 형식: data:image/... 형식이 아님
+ * - 이미지 크기 초과: 5MB 초과
+ *
+ * 404 Not Found:
+ * - 동영상 폴더를 찾을 수 없음
+ *
+ * 500 Internal Server Error:
+ * - 파일 시스템 오류
+ * - 이미지 저장 실패
+ *
+ * 📝 커스터마이징 방법:
+ *
+ * 1. 이미지 크기 제한 변경:
+ *    - 라인 94: maxSizeBytes = 10 * 1024 * 1024; // 10MB로 변경
+ *
+ * 2. 이미지 압축 추가:
+ *    npm install sharp
+ *    import sharp from 'sharp';
+ *    const compressedBuffer = await sharp(Buffer.from(base64Data, 'base64'))
+ *      .jpeg({ quality: 80 })
+ *      .toBuffer();
+ *
+ * 3. 클라우드 저장소 연동:
+ *    - AWS S3: aws-sdk 사용
+ *    - Google Cloud: @google-cloud/storage 사용
+ *    - 라인 125-140 영역을 클라우드 업로드 로직으로 교체
+ *
+ * 4. 파일명 형식 변경:
+ *    - 라인 113: imageFileName 생성 로직 수정
+ *    - 예시: `${videoFolderName}-${Date.now()}-${drawingId}.jpg`
+ *
+ * 5. 메타데이터 파일 저장:
+ *    const metaFilePath = imagePath.replace('.png', '.json');
+ *    fs.writeFileSync(metaFilePath, JSON.stringify(metadata, null, 2));
+ *
+ * 6. 이미지 리사이징:
+ *    const resizedBuffer = await sharp(Buffer.from(base64Data, 'base64'))
+ *      .resize(800, 600, { fit: 'inside' })
+ *      .toBuffer();
+ *
  * @route POST /api/save-screenshot
  * @param {Request} req - Express 요청 객체 (SaveScreenshotRequest 포함)
  * @param {Response} res - Express 응답 객체
@@ -318,7 +385,7 @@ export const handleGetScreenshot: RequestHandler = (req, res) => {
  *    - 이미지 크기 제한: 최대 파일 크기 검증
  *    - 악성 파일 검사: 이미지 헤더 검증
  * 
- * 📡 ��라이언트 연동:
+ * 📡 클라이언트 연동:
  * - 그리기 완료 시 canvas.toDataURL()로 이미지 데이터 생성
  * - fetch API로 /api/save-screenshot 호출
  * - 반환된 imageUrl로 나중에 이미지 표시
