@@ -144,7 +144,7 @@ export default function VideoPlayer({
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [confirmationModalData, setConfirmationModalData] = useState<ConfirmationModalData | null>(null);
 
-  // 그���기 영역과 생성된 객체 간의 매핑 추적
+  // 그리기 영역과 생성된 객체 간의 매핑 추적
   const [currentDrawingArea, setCurrentDrawingArea] = useState<DrawnArea | null>(null);
   const [objectDrawingMap, setObjectDrawingMap] = useState<Map<string, DrawnArea>>(new Map());
   // VTT 기반 좌표 오버레이
@@ -189,7 +189,7 @@ export default function VideoPlayer({
     // return "https://your-api-server.com"; // 외부 API 서버 사용 시
     // return process.env.REACT_APP_API_URL || window.location.origin; // 환경변수 사용 시
 
-    // 현재: 같은 도메인 사용 (개발용)
+    // 현재: 같은 도��인 사용 (개발용)
     return window.location.origin;
   };
 
@@ -308,7 +308,114 @@ export default function VideoPlayer({
     }
   }, [video]);
 
-  // 그리기 완료시 API로 데이터 전송
+  // 그리기 영역 미리보�� 생성
+  const createAreaPreview = (area: DrawnArea): string => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d')!;
+    const previewSize = 200;
+
+    canvas.width = previewSize;
+    canvas.height = previewSize;
+
+    // 배경을 흰색으로 설정
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, previewSize, previewSize);
+
+    // 원본 캔버스 크기 가져오기
+    const originalCanvas = canvasRef.current;
+    if (!originalCanvas) return canvas.toDataURL();
+
+    const originalWidth = originalCanvas.width;
+    const originalHeight = originalCanvas.height;
+
+    if (area.type === 'rectangle' && area.startPoint && area.endPoint) {
+      // 네모박스의 경우
+      const rectWidth = Math.abs(area.endPoint.x - area.startPoint.x);
+      const rectHeight = Math.abs(area.endPoint.y - area.startPoint.y);
+
+      // 비율 계산하여 미리보기 크기에 맞게 조정
+      const scale = Math.min(previewSize / rectWidth, previewSize / rectHeight) * 0.8;
+      const scaledWidth = rectWidth * scale;
+      const scaledHeight = rectHeight * scale;
+
+      const centerX = previewSize / 2;
+      const centerY = previewSize / 2;
+
+      ctx.strokeStyle = area.color;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(
+        centerX - scaledWidth / 2,
+        centerY - scaledHeight / 2,
+        scaledWidth,
+        scaledHeight
+      );
+    } else if (area.type === 'click' && area.clickPoint) {
+      // 클릭 포인트의 경우
+      const centerX = previewSize / 2;
+      const centerY = previewSize / 2;
+      const size = 12;
+
+      ctx.strokeStyle = area.color;
+      ctx.lineWidth = 3;
+
+      // 십자가 그리기
+      ctx.beginPath();
+      ctx.moveTo(centerX - size, centerY);
+      ctx.lineTo(centerX + size, centerY);
+      ctx.moveTo(centerX, centerY - size);
+      ctx.lineTo(centerX, centerY + size);
+      ctx.stroke();
+
+      // 원 그리기
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, size/2, 0, 2 * Math.PI);
+      ctx.stroke();
+    } else if (area.type === 'path' && area.points.length > 1) {
+      // 자유그리기의 경우
+      const minX = Math.min(...area.points.map(p => p.x));
+      const maxX = Math.max(...area.points.map(p => p.x));
+      const minY = Math.min(...area.points.map(p => p.y));
+      const maxY = Math.max(...area.points.map(p => p.y));
+
+      const pathWidth = maxX - minX;
+      const pathHeight = maxY - minY;
+
+      const scale = Math.min(previewSize / pathWidth, previewSize / pathHeight) * 0.8;
+
+      const offsetX = previewSize / 2 - (minX + pathWidth / 2) * scale;
+      const offsetY = previewSize / 2 - (minY + pathHeight / 2) * scale;
+
+      ctx.strokeStyle = area.color;
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      ctx.beginPath();
+      const firstPoint = area.points[0];
+      ctx.moveTo(firstPoint.x * scale + offsetX, firstPoint.y * scale + offsetY);
+
+      area.points.forEach(point => {
+        ctx.lineTo(point.x * scale + offsetX, point.y * scale + offsetY);
+      });
+      ctx.stroke();
+    }
+
+    return canvas.toDataURL();
+  };
+
+  // 확인 모달을 표시하고 미리보기 생성
+  const showConfirmationDialog = (area: DrawnArea) => {
+    const previewDataUrl = createAreaPreview(area);
+    setConfirmationModalData({ area, previewDataUrl });
+    setShowConfirmationModal(true);
+
+    // 비디오 일시정지
+    if (videoRef.current && !videoRef.current.paused) {
+      videoRef.current.pause();
+    }
+  };
+
+  // 실제 API 전송 함수
   const sendDrawingToApi = async (area: DrawnArea) => {
     try {
       setIsApiLoading(true);
@@ -357,7 +464,7 @@ export default function VideoPlayer({
         setShowApiResponseModal(true);
 
         // 그리기 영역 전송 성공 로그만 남기고 알림 제거
-        console.log(`✅ ${area.type === 'click' ? '클��� 좌표' : '그리기 영역'}가 서버에 전송되었습니다.`);
+        console.log(`✅ ${area.type === 'click' ? '클릭 좌표' : '그리기 영역'}가 서버에 전송되었습니다.`);
 
         // 잠시 후 정보 입력 모달 표시
         setTimeout(() => {
@@ -413,7 +520,7 @@ export default function VideoPlayer({
     }
   };
 
-  // 캔버스 초기화 함수
+  // 캔버스 초기화 ��수
   const initializeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const videoElement = videoRef.current;
@@ -604,7 +711,7 @@ export default function VideoPlayer({
               coords.y <= maxY
             );
           } else if (area.type === "click" && area.clickPoint) {
-            // 클릭 포인��� 삭제를 위한 범위 체크 (15px 범위)
+            // 클릭 포인트 삭제를 위한 범위 체크 (15px 범위)
             return (
               Math.abs(area.clickPoint.x - coords.x) < 15 &&
               Math.abs(area.clickPoint.y - coords.y) < 15
@@ -872,7 +979,7 @@ export default function VideoPlayer({
         uploadDate: video.uploadDate
       });
 
-      // videoFolder��� undefined일 때 파일명 기반으로 폴더명 추정
+      // videoFolder��� undefined�� 때 파일명 기반으로 폴더명 추정
       let finalVideoFolder = video.videoFolder;
       const finalFileName = video.serverFileName || video.file.name;
 
@@ -940,7 +1047,7 @@ export default function VideoPlayer({
    * - API URL 변경: window.location.origin 수정
    * - 저장 데이터 구조 변경: saveData 객체 수정
    * - 응답 처리 변경: response 처리 로직 수정
-   * - 에러 처리 개선: try-catch 블��� 수정
+   * - 에러 처리 개선: try-catch 블록 수정
    */
   const saveDataToDb = async () => {
     if (!video) return;
@@ -1071,7 +1178,7 @@ export default function VideoPlayer({
         category?: string;
       } = {};
 
-      // 편집된 값이 있을 때만 업데이���에 포함
+      // 편���된 값이 있을 때만 업데이���에 포함
       if (editedObjectName.trim()) updates.name = editedObjectName.trim();
       if (editedObjectCode.trim()) updates.code = editedObjectCode.trim();
       if (editedObjectInfo.trim()) updates.additionalInfo = editedObjectInfo.trim();
@@ -1779,7 +1886,7 @@ export default function VideoPlayer({
                         alignItems: "center",
                         justifyContent: "center",
                       }}
-                      title="새로고침"
+                      title="새로��침"
                     >
                       <RefreshCw style={{ width: 14, height: 14 }} />
                     </button>
@@ -1801,7 +1908,7 @@ export default function VideoPlayer({
                         gap: "4px",
                         transition: "background-color 0.2s ease",
                       }}
-                      title="탐지된 객체 목록으로 돌���가기"
+                      title="탐지된 객체 목록으로 돌아가기"
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = "#f3f4f6";
                       }}
@@ -3096,7 +3203,7 @@ export default function VideoPlayer({
                       setObjectDrawingMap(prev => new Map(prev.set(addedObjectId, currentDrawingArea)));
                     }
 
-                    // 좌표를 객체명과 연결
+                    // 좌표를 ��체명과 연결
                     if (currentDrawingArea && addedObjectId) {
                       const linked = await linkCoordinatesWithObject(currentDrawingArea.id, modalObjectInfo.name);
                       if (linked) {
