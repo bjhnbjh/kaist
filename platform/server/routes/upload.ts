@@ -41,7 +41,7 @@ function getKoreaTimeISO(): string {
  * 📝 수정 포인트:
  * - 허용할 특수문자 변경: 정규식 패턴 수정
  * - 파일명 길이 제한: 여기에 추가 로직 구현
- * - 금지 단어 필터링: 여기에 추가 로직 구현
+ * - 금지 단어 랜터링: 여기에 추가 로직 구현
  * 
  * @param {string} fileName - 원본 파일명
  * @returns {string} 정규화된 파일명
@@ -57,7 +57,7 @@ function normalizeFileName(fileName: string): string {
     // 파일명을 UTF-8로 정규화
     let normalized = baseName.normalize('NFC').trim();
 
-    // 한국�� 인코딩 문제 복구 시도
+    // 한국어 인코딩 문제 복구 시도
     if (normalized.includes('ì') || normalized.includes('ë') || normalized.includes('°')) {
       try {
         const buffer = Buffer.from(normalized, 'latin1');
@@ -87,14 +87,14 @@ function normalizeFileName(fileName: string): string {
  * 업로드 데이터 인터페이스
  * 
  * 📝 수정 포인트:
- * - 새로운 메타데이터 추가 시 이 인터페이스에 필드 추가
+ * - 새로운 메타데이터가 시 이 인터페이스에 필드 추가
  * - 파일 정보 구조 변경 시 여기 수정
  */
 interface UploadData {
   id: string;                    // 고유 식별자
   fileName: string;              // 원본 파일명
   fileSize: number;              // 파일 크기 (바이트)
-  fileType: string;              // MIME 타입
+  fileType: string;              // MIME 삽입
   duration: number;              // 동영상 길이 (초)
   timestamp: number;             // 업로드 타임스탬프
   metadata?: {                   // 선택적 메타데이터
@@ -132,7 +132,7 @@ const storage = multer.diskStorage({
     let videoFolderName = normalizedName;
     let videoFolderPath = path.join(DATA_DIR, videoFolderName);
 
-    // 🔄 중복 폴더 처리: (1), (2), (3) 형태로 번호 추가
+    // 🔄 중복 폴더 처리: (1), (2), (3) 형식으로 추가
     let counter = 1;
     while (fs.existsSync(videoFolderPath)) {
       videoFolderName = `${normalizedName}(${counter})`;
@@ -145,7 +145,7 @@ const storage = multer.diskStorage({
       fs.mkdirSync(videoFolderPath, { recursive: true });
     }
 
-    // Express 요청 객체에 폴더 정보 저장 (나중에 사용)
+    // Express 요청 폴더 정보 저장 (나중에 사용)
     (req as any).videoFolder = videoFolderName;
     (req as any).videoFolderPath = videoFolderPath;
 
@@ -154,29 +154,27 @@ const storage = multer.diskStorage({
   },
   
   filename: (req, file, cb) => {
-    // 파일명 인코딩 문제 해결
-    let cleanedName = file.originalname;
+    // 폴더명과 일치하도록 파일명을 정규화된 형태로 변경
+    const videoFolderName = (req as any).videoFolder;
+    const ext = path.extname(file.originalname);
 
-    // 한국어 인코딩 문제 복구
-    if (cleanedName.includes('ì') || cleanedName.includes('ë') || cleanedName.includes('°')) {
-      try {
-        const buffer = Buffer.from(cleanedName, 'latin1');
-        cleanedName = buffer.toString('utf8');
-        console.log('🔧 Corrected filename:', cleanedName);
-      } catch (error) {
-        console.log('⚠️ Failed to correct filename, using original');
-      }
-    }
+    // 폴더명 + 확장자로 파일명 생성 (일관성 보장)
+    const finalFileName = `${videoFolderName}${ext}`;
 
-    cb(null, cleanedName);
+    console.log(`📁 Folder: ${videoFolderName}, 📄 File: ${finalFileName}`);
+
+    // Express 요청 객체에 최종 파일명 저장
+    (req as any).finalFileName = finalFileName;
+
+    cb(null, finalFileName);
   }
 });
 
 /**
- * 파일 필터 - 동영상 파일만 허용
+ * 파일 필터 - 동영상 파일 허용
  * 
  * 📝 수정 포인트:
- * - 허용할 파일 형��� 변경: mimetype 조건 수정
+ * - 허용할 파일 형식 변경: mimetype 조건 수정
  * - 파일 크기 제한 변경: limits.fileSize 수정
  */
 const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
@@ -216,7 +214,7 @@ export const uploadMiddleware = multer({
  * 
  * @param {UploadData} uploadData - 저장할 업로드 데이터
  * @param {string} filePath - 저장된 파일의 실제 경로
- * @param {string} videoFolder - 동영상 폴더���
+ * @param {string} videoFolder - 동영상 폴더생성
  * @returns {object} 저장된 레코드 정보
  */
 function saveUploadData(uploadData: UploadData, filePath?: string, videoFolder?: string) {
@@ -252,6 +250,15 @@ function saveUploadData(uploadData: UploadData, filePath?: string, videoFolder?:
 
     fs.writeFileSync(localUploadsFile, JSON.stringify(localUploadData, null, 2));
     console.log(`💾 Local upload data saved: ${localUploadsFile}`);
+
+    // 3. 좌표 파일 자동 생성 (파일이름-좌표.json)
+    const coordinateFileName = `${videoFolder}-좌표.json`;
+    const coordinateFilePath = path.join(videoFolderPath, coordinateFileName);
+
+    // 빈 좌표 파일 초기화
+    const initialCoordinateData = [];
+    fs.writeFileSync(coordinateFilePath, JSON.stringify(initialCoordinateData, null, 2));
+    console.log(`📍 Coordinate file created: ${coordinateFilePath}`);
   }
 
   console.log(`📋 Global upload data updated: ${UPLOADS_FILE}`);
@@ -400,7 +407,7 @@ export const handleVideoDelete: RequestHandler = (req, res) => {
     // 파일명 정규화하여 폴더명 찾기
     const normalizedName = normalizeFileName(videoFileName);
     
-    // 가능한 모든 폴더명 검사 (원본, (1), (2), (3) 등)
+    // 가능한 모든 폴더명 검사 (원본, (1), (2), (3) 형식)
     const possibleFolders = [normalizedName];
     for (let i = 1; i <= 10; i++) {
       possibleFolders.push(`${normalizedName}(${i})`);

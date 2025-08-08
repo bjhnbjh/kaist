@@ -13,6 +13,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
+import { VideoInfo, DetectedObject } from "../../shared/types";
 
 interface DrawingPoint {
   x: number;
@@ -29,27 +30,6 @@ interface DrawnArea {
   clickPoint?: DrawingPoint;
 }
 
-interface VideoInfo {
-  id: string;
-  file: File;
-  duration: number;
-  currentTime: number;
-  detectedObjects: any[];
-  totalObjectsCreated: number;
-}
-
-interface DetectedObject {
-  id: string;
-  name: string;
-  confidence: number;
-  selected: boolean;
-  code?: string;
-  additionalInfo?: string;
-  dlReservoirDomain?: string;
-  category?: string;
-  videoCurrentTime?: number;
-}
-
 interface VideoPlayerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -63,6 +43,7 @@ interface VideoPlayerProps {
     additionalInfo?: string;
     dlReservoirDomain?: string;
     category?: string;
+    videoCurrentTime?: number;
   }) => string;
   onDeleteObject?: (videoId: string, objectId: string) => void;
   onUpdateObject?: (
@@ -175,40 +156,147 @@ export default function VideoPlayer({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // API URL 설정 (현재 서버 사용)
+  /**
+   * ===================================
+   * 🌐 API URL 설정 및 외부 서버 연결 가이드
+   * ===================================
+   *
+   * 🔧 다른 API 서버 연결 방법:
+   * 1. return 값을 실제 API 서버 URL로 변경
+   * 2. 예시: return "https://your-api-server.com";
+   * 3. 환경변수 사용: return process.env.REACT_APP_API_URL || window.location.origin;
+   *
+   * 🔐 인증이 필요한 경우:
+   * - 각 fetch 요청에 Authorization 헤더 추가
+   * - 예시: headers: { 'Authorization': `Bearer ${token}` }
+   *
+   * 🌍 CORS 설정 확인:
+   * - API 서버에서 클라이언트 도메인을 허용하도록 설정
+   * - 서버 측: app.use(cors({ origin: "https://your-client-domain.com" }))
+   */
   const getApiUrl = () => {
-    // 현재 페이지와 같은 도메��� 사용
+    // 🌐 API 서버 URL - 다른 서버 사용 시 아래 주석을 해제하고 수정하세요
+    // return "https://your-api-server.com"; // 외부 API 서버 사용 시
+    // return process.env.REACT_APP_API_URL || window.location.origin; // 환경변수 사용 시
+
+    // 현재: 같은 도메인 사용 (개발용)
     return window.location.origin;
   };
 
+  // 좌표와 객체명 연결 함수
+  const linkCoordinatesWithObject = async (drawingId: string, objectName: string) => {
+    try {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/drawing/link`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          videoId: video?.serverFileName || video?.file.name,
+          drawingId: drawingId,
+          objectName: objectName
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Coordinates linked successfully:', result);
+        return true;
+      } else {
+        console.error('❌ Failed to link coordinates:', response.status);
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Error linking coordinates:', error);
+      return false;
+    }
+  };
+
+  // 임시 좌표 취소 함수
+  const cancelTemporaryCoordinates = async (drawingId: string) => {
+    try {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/drawing/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          videoId: video?.serverFileName || video?.file.name,
+          drawingId: drawingId
+        })
+      });
+
+      if (response.ok) {
+        console.log('✅ Temporary coordinates cancelled');
+        return true;
+      } else {
+        console.error('❌ Failed to cancel coordinates:', response.status);
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Error cancelling coordinates:', error);
+      return false;
+    }
+  };
+
   // VTT 좌표 데이터 로드
-  const loadVttCoordinates = async () => {
+  const loadVttCoordinates = useCallback(async () => {
     if (!video) return;
 
     try {
       const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/api/vtt-coordinates?videoId=${video.id}&videoFileName=${encodeURIComponent(video.file.name)}`);
+      const videoFileName = video.serverFileName || video.file.name;
+
+      console.log(`🔍 Loading VTT coordinates for:`, {
+        originalFileName: video.file.name,
+        serverFileName: video.serverFileName,
+        videoFileName: videoFileName,
+        videoFolder: video.videoFolder,
+        videoId: video.id
+      });
+
+      const params = new URLSearchParams({
+        videoId: videoFileName,
+        videoFileName: videoFileName,
+      });
+
+      if (video.videoFolder) {
+        params.append('videoFolder', video.videoFolder);
+      }
+
+      const response = await fetch(`${apiUrl}/api/vtt-coordinates?${params}`);
 
       if (response.ok) {
         const result = await response.json();
-        console.log('VTT 좌표 데이터 로드됨:', result);
+        console.log('✅ VTT 좌표 데이터 로드됨:', result);
 
         if (result.success && result.coordinates) {
           setVttCoordinates(result.coordinates);
-          toast.success(`VTT에서 ${result.coordinatesCount}개의 좌표 데이터를 불러왔습니다.`);
+          // VTT 좌표 로드 성공 알림 제거 (불필요)
+          console.log(`✅ VTT에서 ${result.coordinatesCount}개��� 좌표 데이터를 ���러���습니다.`);
         } else {
           setVttCoordinates([]);
-          toast.info('저장된 좌표 데��터가 없습니다.');
+          console.log('ℹ️ 저장된 좌표 데이터가 없습니다.');
         }
       } else {
-        console.warn('VTT 좌표 데이터 로드 실패:', response.status);
-        setVttCoordinates([]);
+        // VTT 파일이 없는 경우 조용히 처리 (에러가 아님)
+        if (response.status === 404) {
+          console.log('📄 VTT 파일이 아직 생성되지 않았습니다.');
+          setVttCoordinates([]);
+        } else {
+          const errorText = await response.text();
+          console.warn(`❌ VTT 좌표 데이터 로드 실패: ${response.status}`, errorText);
+          setVttCoordinates([]);
+        }
       }
     } catch (error) {
-      console.error('VTT 좌표 데이터 로��� 오류:', error);
+      // 네트워크 에러나 파싱 에러를 조용히 처리
+      console.log('ℹ️ VTT 좌표 데이터를 불러올 수 없습니다:', error instanceof Error ? error.message : 'Unknown error');
       setVttCoordinates([]);
     }
-  };
+  }, [video]);
 
   // 그리기 완료시 API로 데이터 전송
   const sendDrawingToApi = async (area: DrawnArea) => {
@@ -226,9 +314,9 @@ export default function VideoPlayer({
         points: area.points,
         startPoint: area.startPoint,
         endPoint: area.endPoint,
-        clickPoint: area.clickPoint, // 클릭 포인트 추가
-        videoId: video?.id,
-        videoCurrentTime: currentVideoTime,  // 실제 동영상 시간 추가
+        clickPoint: area.clickPoint, // 클��� 포인트 추가
+        videoId: video?.serverFileName || video?.file.name,
+        videoCurrentTime: currentVideoTime,  // 실제 동영��� 시간 추가
         timestamp: Date.now()
       };
 
@@ -258,8 +346,8 @@ export default function VideoPlayer({
         });
         setShowApiResponseModal(true);
 
-        // 성공 토스트 표시
-        toast.success(`${area.type === 'click' ? '클릭 좌표' : '그리기 영역'}가 서버로 전송되었습니다.`);
+        // 그리기 영역 전송 성공 로그만 남기고 알림 제거
+        console.log(`✅ ${area.type === 'click' ? '클릭 좌표' : '그리기 영역'}가 서버에 전송되었습니다.`);
 
         // 잠시 후 정보 입력 모달 표시
         setTimeout(() => {
@@ -283,12 +371,12 @@ export default function VideoPlayer({
 
         return result;
       } else {
-        const errorResult = await response.json().catch(() => ({ message: 'API 응답 오��' }));
+        const errorResult = await response.json().catch(() => ({ message: 'API 응답 오류' }));
 
         // API 오류 응답 상세 정보 설정
         setApiResponseData({
           success: false,
-          message: errorResult.message || 'API 서버에서 오류가 발생했습니다.',
+          message: errorResult.message || 'API 서버에서 오��가 발생했습니다.',
           drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유그리기',
           coordinates: area.type === 'click' && area.clickPoint
             ? `(${area.clickPoint.x}, ${area.clickPoint.y})`
@@ -300,18 +388,13 @@ export default function VideoPlayer({
         throw new Error(`HTTP ${response.status}: ${errorResult.message || 'API 전송 실패'}`);
       }
     } catch (error) {
-      console.error('API 전송 오류:', error);
+      // 네트워크 에러를 조용히 처리하고 로컬에서 계속 진행
+      console.log('ℹ️ 그리기 데이터 전송 실패, 로컬에서 계속 진행:', error instanceof Error ? error.message : 'Unknown error');
 
+      // API 에러가 발���해도 로컬에서 작업 계속 진행
       if (!apiResponseData || apiResponseData.success !== false) {
-        // API 통신 자체 오류 (네트워�� 등)
-        setApiResponseData({
-          success: false,
-          message: error instanceof Error ? error.message : '알 수 없는 ��류가 발생했습니다.',
-          drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유그리기',
-          coordinates: '통신 오류로 전송 실패',
-          timestamp: new Date().toLocaleString('ko-KR')
-        });
-        setShowApiResponseModal(true);
+        // 조용히 처리하고 모달은 표시하지 않음
+        console.log('📝 로컬에서 그리기 작업 계속 진행');
       }
 
       toast.error('서버로 데이터를 전송하는 중 오류가 발생했습니다.');
@@ -376,7 +459,7 @@ export default function VideoPlayer({
         const height = area.endPoint.y - area.startPoint.y;
         ctx.strokeRect(area.startPoint.x, area.startPoint.y, width, height);
       } else if (area.type === "click" && area.clickPoint) {
-        // 클릭 포인트 그���기 (십자가 ���크 + 원)
+        // 클릭 포인트 그리기 (십자가 마크 + 원)
         const point = area.clickPoint;
         const size = 8;
 
@@ -689,7 +772,7 @@ export default function VideoPlayer({
           };
           setDrawnAreas((prev) => [...prev, newArea]);
 
-          // 그리기 ��료 시 API로 전송
+          // 그리기 완료 시 API로 전송
           sendDrawingToApi(newArea);
         }
 
@@ -771,9 +854,30 @@ export default function VideoPlayer({
     try {
       const apiUrl = window.location.origin;
 
+      console.log(`🎬🎬🎬 VTT 저장 시 video 객체 상태:`, {
+        videoId: video.id,
+        fileName: video.file.name,
+        serverFileName: video.serverFileName,
+        videoFolder: video.videoFolder,
+        uploadDate: video.uploadDate
+      });
+
+      // videoFolder��� undefined일 때 파일명 기반으로 폴더명 추정
+      let finalVideoFolder = video.videoFolder;
+      const finalFileName = video.serverFileName || video.file.name;
+
+      if (!finalVideoFolder) {
+        // 파일명에서 확장자 제거하고 폴더명으로 사용
+        const fileNameWithoutExt = finalFileName.replace(/\.[^/.]+$/, "");
+        // 공백을 언더스코어로 변경하여 폴더명 형식에 맞춤
+        finalVideoFolder = fileNameWithoutExt.replace(/\s+/g, '_');
+        console.log(`🔧 videoFolder undefined, 파일명 기반 추정: "${finalVideoFolder}"`);
+      }
+
       const webvttData = {
         videoId: video.id,
-        videoFileName: video.file.name,
+        videoFileName: finalFileName, // 서버 파일명 우선 사용
+        videoFolder: finalVideoFolder, // 실제 업로드된 폴더명 또는 추정된 폴더명
         objects: detectedObjects.map(obj => ({
           id: obj.id,
           name: obj.name,
@@ -791,7 +895,7 @@ export default function VideoPlayer({
             endPoint: objectDrawingMap.get(obj.id)?.endPoint,
             clickPoint: objectDrawingMap.get(obj.id)?.clickPoint
           } : null,
-          polygon: null  // 각 객체의 실제 생성 시�� 사용
+          polygon: null  // 각 객체의 실제 생성 시점 사용
         })),
         duration: videoDuration,
         timestamp: Date.now()
@@ -807,7 +911,8 @@ export default function VideoPlayer({
 
       if (response.ok) {
         const result = await response.json();
-        toast.success('WebVTT 파일이 서버에 저장되었습니다.');
+        // WebVTT 저장 성공 알림 제거 (불필요)
+        console.log('✅ WebVTT ���일이 서버에 저장되었습니다.');
         console.log('WebVTT API response:', result);
       } else {
         throw new Error('WebVTT API 전송 실패');
@@ -818,7 +923,15 @@ export default function VideoPlayer({
     }
   };
 
-  // 편집 데이터 DB 저장 API 호출
+  /**
+   * �� 편집 데이터 DB 저장 API 호출
+   *
+   * 📝 수정 포인트:
+   * - API URL 변경: window.location.origin 수정
+   * - 저장 데이터 구조 변경: saveData 객체 수정
+   * - 응답 처리 변경: response 처리 로직 수정
+   * - 에러 처리 개선: try-catch 블록 수정
+   */
   const saveDataToDb = async () => {
     if (!video) return;
 
@@ -861,7 +974,8 @@ export default function VideoPlayer({
 
       if (response.ok) {
         const result = await response.json();
-        toast.success('편집 데이��가 DB에 저장되었습니다.');
+        // 편집 데이터 저장 성공 알림 제거 (불필요)
+        console.log('✅ 편집 데이터가 DB에 저장되었��니다.');
         console.log('Save data API response:', result);
       } else {
         throw new Error('Save data API 전송 실패');
@@ -887,8 +1001,8 @@ export default function VideoPlayer({
       setDrawnAreas([]);
       setHasObjectChanges(false);
 
-      // 최종 저장 완�� 메시지 표시
-      toast.success("모든 데이터가 저장되었습니��.");
+      // 최종 저장 완료 메시지 표시
+      toast.success("모든 데이터가 저장되었습니다.");
 
       console.log("저장 후 비디오 정보:", {
         duration: currentDuration,
@@ -918,7 +1032,7 @@ export default function VideoPlayer({
           setDetectionProgress(100);
           onRunObjectDetection(video.id);
           toast.success(
-            "객체 탐지가 완료되었���니다! 새로운 객체들이 발견되었습니다.",
+            "객체 탐지가 완료되었습니다! 새로운 객체들이 발견되었습니다.",
           );
 
           setTimeout(() => {
@@ -947,7 +1061,7 @@ export default function VideoPlayer({
         category?: string;
       } = {};
 
-      // ��집된 값이 있을 때만 업데이트에 포함
+      // 편집된 값이 있을 때만 업데이���에 포함
       if (editedObjectName.trim()) updates.name = editedObjectName.trim();
       if (editedObjectCode.trim()) updates.code = editedObjectCode.trim();
       if (editedObjectInfo.trim()) updates.additionalInfo = editedObjectInfo.trim();
@@ -958,20 +1072,21 @@ export default function VideoPlayer({
       if (Object.keys(updates).length > 0) {
         onUpdateObject(video.id, selectedObjectId, updates);
         setHasObjectChanges(true);
-        toast.success(`객체 정보가 업데이트되었습니다.`);
+        // 객체 정보 업데이트 알림 제거 (불필요)
+        console.log('✅ 객체 정보가 업데이트되었습니다.');
       }
     }
     setIsEditing(false);
   };
 
-  // 뒤로가기 핸들러 - 탐지된 객체 목록으로만 이동하��� 버튼 활성화 상태 유��
+  // 뒤로가기 핸들러 - 탐지된 객체 목록으로만 이동하고 버튼 활성화 상태 유지
   const handleBackToObjectList = () => {
     setSelectedObjectId(null);
     setIsEditing(false);
     // showObjectList true로 유지하여 "탐지된 객체" 버튼 활성화 상태 유지
   };
 
-  // 삭제 확인 모달 관련 핸들러들
+  // 삭제 확인 모달 관련 핸들러���
   const handleDeleteClick = (objectId: string) => {
     setObjectToDelete(objectId);
     setShowDeleteConfirmModal(true);
@@ -988,7 +1103,7 @@ export default function VideoPlayer({
         });
         setSelectedObjectIds([]);
         setHasObjectChanges(true);
-        toast.success(`${deleteCount}개 객체가 삭제되었���니다.`);
+        toast.success(`${deleteCount}개 객체가 삭제되었습니다.`);
 
         // 즉시 서버에 저장
         await saveDataToDb();
@@ -999,7 +1114,7 @@ export default function VideoPlayer({
         handleBackToObjectList();
         toast.success("객체가 삭제되었습니다.");
 
-        // 즉시 서버에 저장
+        // ��시 서버에 저장
         await saveDataToDb();
       }
       setShowDeleteConfirmModal(false);
@@ -1067,7 +1182,7 @@ export default function VideoPlayer({
       setShowDeleteConfirmModal(false);
       setObjectToDelete(null);
       setDeleteConfirmed(false);
-      // 초기에는 ��체 목록을 닫은 상태로 시작
+      // 초기에는 객체 목록을 닫은 상태로 시작
       setShowObjectList(false);
 
       if (videoDuration === 0) {
@@ -1123,14 +1238,14 @@ export default function VideoPlayer({
   // 비디오 모달 열릴 때 VTT 좌표 자동 로드
   useEffect(() => {
     if (isOpen && video && canvasInitialized) {
-      // 잠시 후 VTT 좌표 로드 (캔버스 초기화 완료 후)
+      // 잠시 후 VTT 좌표 로드 (캔버스 초기화 완�� 후)
       const timer = setTimeout(() => {
         loadVttCoordinates();
       }, 1000);
 
       return () => clearTimeout(timer);
     }
-  }, [isOpen, video, canvasInitialized]);
+  }, [isOpen, video, canvasInitialized, loadVttCoordinates]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -1228,7 +1343,7 @@ export default function VideoPlayer({
               position: "relative",
             }}
           >
-            {/* 비디오 컨테��너 */}
+            {/* 비디오 컨테이너 */}
             <div
               ref={containerRef}
               style={{
@@ -1276,7 +1391,7 @@ export default function VideoPlayer({
               />
             </div>
 
-            {/* ���트롤 버튼들 */}
+            {/* 컨트롤 버튼들 */}
             <div
               style={{
                 display: "flex",
@@ -1389,39 +1504,7 @@ export default function VideoPlayer({
 최종저장
               </button>
 
-              <button
-                onClick={loadVttCoordinates}
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: "6px",
-                  border: "1px solid #d1d5db",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  background: "white",
-                  color: "#374151",
-                  fontSize: "0.9rem",
-                }}
-              >
-                VTT 좌표 불러오기
-              </button>
-
-              {vttCoordinates.length > 0 && (
-                <button
-                  onClick={() => setVttOverlayEnabled(!vttOverlayEnabled)}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: "6px",
-                    border: "none",
-                    fontWeight: "500",
-                    cursor: "pointer",
-                    background: vttOverlayEnabled ? "#ef4444" : "#3b82f6",
-                    color: "white",
-                    fontSize: "0.9rem",
-                  }}
-                >
-                  {vttOverlayEnabled ? "오버레이 끄기" : "오버레이 켜기"}
-                </button>
-              )}
+              {/* VTT 좌표 불러오기와 오버레이 버튼 제거됨 */}
             </div>
 
             {drawnAreas.length > 0 && (
@@ -1436,19 +1519,7 @@ export default function VideoPlayer({
               </div>
             )}
 
-            {vttCoordinates.length > 0 && (
-              <div
-                style={{
-                  textAlign: "center",
-                  fontSize: "0.875rem",
-                  color: vttOverlayEnabled ? "#3b82f6" : "#6b7280",
-                  fontWeight: vttOverlayEnabled ? "600" : "normal",
-                }}
-              >
-                📍 VTT 좌표: {vttCoordinates.length}개
-                {vttOverlayEnabled && " (오버레이 활성화)"}
-              </div>
-            )}
+
 
             {isDrawing && (
               <div
@@ -1464,15 +1535,15 @@ export default function VideoPlayer({
                 }}
               >
                 {isErasing
-                  ? "🗑️ ���우개 모드 - 그려진 영역을 클릭하여 삭제하세요"
+                  ? "🗑️ 지우개 모드 - 그려진 영역을 클릭하여 삭제하세요"
                   : drawingMode === "click"
                   ? "📍 클릭 모드 활성화 - 마우스로 클릭하여 좌표를 찍어보세요"
-                  : "🎨 그리기 모드 활성화 - 마우스�� 드래그하여 영역을 그려보세요"}
+                  : "🎨 그리기 모드 활성화 - 마우스로 드래그하여 영역을 그려보세요"}
               </div>
             )}
           </div>
 
-          {/* 관리�� 패널 토글 버튼 */}
+          {/* 관리자 패널 토글 버튼 */}
           {!showAdminPanel && (
             <div
               style={{
@@ -1587,11 +1658,11 @@ export default function VideoPlayer({
                 <button
                   onClick={() => {
                     if (!showObjectList && !selectedObjectId) {
-                      // 처음 클릭 시 객체 목�� 열기
+                      // 처음 클릭 �� 객체 목�� 열기
                       setShowObjectList(true);
                       setSelectedObjectId(null);
                     } else if (showObjectList && !selectedObjectId) {
-                      // 객체 목목이 열려있을 때 닫기
+                      // 객체 ��목이 열려있��� 때 닫기
                       setShowObjectList(false);
                     } else if (selectedObjectId) {
                       // 객�� ��세 정보에서 ��기
@@ -1677,7 +1748,7 @@ export default function VideoPlayer({
                     }}
                   >
                     {selectedObjectId
-                      ? "선택된 객체 정보"
+                      ? "선택된 ���체 정보"
                       : `탐지된 객체 목록(${displayObjects.length}개)`}
                   </h4>
                   {showObjectList && !selectedObjectId && (
@@ -1720,7 +1791,7 @@ export default function VideoPlayer({
                         gap: "4px",
                         transition: "background-color 0.2s ease",
                       }}
-                      title="탐���� 객체 목록으로 돌아가기"
+                      title="탐지된 객체 목록으로 돌아가기"
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = "#f3f4f6";
                       }}
@@ -1755,7 +1826,7 @@ export default function VideoPlayer({
               >
                 {showObjectList && !selectedObjectId ? (
                   !hasRunDetection ? (
-                    // 탐지 실행 전 안내문구
+                    // 탐지 실행 전 안내 구조
                     <div
                       style={{
                         display: "flex",
@@ -1892,14 +1963,14 @@ export default function VideoPlayer({
                               justifyContent: "center",
                               transition: "color 0.2s ease",
                             }}
-                            title="정보 보���"
+                            title="정보 보기"
                           >
                             <ChevronRight style={{ width: 16, height: 16 }} />
                           </button>
                         </div>
                       ))}
 
-                      {/* 삭제제 버튼을 스크롤 영역 밖으로 이동 */}
+                      {/* 삭제제 버튼을 스크롤 영역 ���으로 이동 */}
                       {false && (
                         <div
                           style={{
@@ -1937,7 +2008,7 @@ export default function VideoPlayer({
                           </div>
                           <button
                             onClick={() => {
-                              // 일괄 삭제를 위해 확인 모달을 열어서 전체 선택 삭제 처리
+                              // 일괄 삭제를 위��� 확인 모달��� 열어서 ��체 선택 삭제 처리
                               if (selectedObjectIds.length > 0) {
                                 setObjectToDelete("BULK_DELETE");
                                 setShowDeleteConfirmModal(true);
@@ -1975,7 +2046,7 @@ export default function VideoPlayer({
                             }}
                           >
                             <Trash2 style={{ width: 16, height: 16 }} />
-                            ���택된 객체 ����제
+                            선택된 객체 삭제
                           </button>
                         </div>
                       )}
@@ -1996,10 +2067,10 @@ export default function VideoPlayer({
                         🔍
                       </div>
                       <div style={{ fontWeight: "500", marginBottom: "4px" }}>
-                        탐지��� 객체가 없습니다.
+                        탐지된 객체가 없습니다.
                       </div>
                       <div style={{ fontSize: "0.85rem" }}>
-                        �����을 그려서 객체를 추가해보세요
+                        영역을 그려서 객체를 추가해보세요
                       </div>
                     </div>
                   )
@@ -2048,7 +2119,7 @@ export default function VideoPlayer({
                                 marginBottom: "6px",
                               }}
                             >
-                              이��
+                              이름
                             </div>
                             {isEditing ? (
                               <input
@@ -2114,7 +2185,7 @@ export default function VideoPlayer({
                                     color: "#475569",
                                   }}
                                 >
-                                  카테��리:{" "}
+                                  카테고리:{" "}
                                   {selectedObject.category ||
                                     editedCategory ||
                                     "기타"}
@@ -2317,7 +2388,7 @@ export default function VideoPlayer({
                                 marginBottom: "8px",
                               }}
                             >
-                              💡 추가정보
+                              📝 추가정보
                             </div>
                             {isEditing ? (
                               <textarea
@@ -2344,7 +2415,7 @@ export default function VideoPlayer({
                                   fontSize: "0.85rem",
                                   resize: "none",
                                 }}
-                                placeholder="수정 할  정보를 입력��세요"
+                                placeholder="수정 할  정보를 입력하세요"
                               />
                             ) : (
                               <div
@@ -2360,7 +2431,7 @@ export default function VideoPlayer({
                                 }}
                               >
                                 {selectedObject.additionalInfo ||
-                                  "AI가 자동으로 탐���한 객체입니다."}
+                                  "AI가 자동으로 탐지된 객체입니다."}
                               </div>
                             )}
                           </div>
@@ -2447,10 +2518,10 @@ export default function VideoPlayer({
                       🔍
                     </div>
                     <div style={{ fontWeight: "500", marginBottom: "4px" }}>
-                      ���지된 객체 없음
+                      탐지된 객체 없음
                     </div>
                     <div style={{ fontSize: "0.85rem" }}>
-                      "탐지된 객체" 버튼�� 클릭하여
+                      "탐지된 객체" 버튼을 클릭하여
                       <br />
                       객체 목록을 확인해주세요
                     </div>
@@ -2536,7 +2607,7 @@ export default function VideoPlayer({
         </div>
       </div>
 
-      {/* 삭제 ���인 모달 */}
+      {/* 삭제 확인 모달 */}
       {showDeleteConfirmModal && (
         <div
           style={{
@@ -2580,7 +2651,7 @@ export default function VideoPlayer({
                 lineHeight: 1.5,
               }}
             >
-              진짜 삭제하시���습니까?
+              진짜 삭제하시겠습니까?
             </p>
 
             <div
@@ -2668,7 +2739,7 @@ export default function VideoPlayer({
                   fontStyle: "italic",
                 }}
               >
-                ⚠️ 체크박스를 선택해야 삭����� 수 있습니다
+                ⚠️ 체크박스를 선택해야 삭제할 수 있습니다
               </div>
             )}
           </div>
@@ -2732,7 +2803,7 @@ export default function VideoPlayer({
                   margin: 0,
                 }}
               >
-                �� 객체 정보 입력
+                새 객체 정보 입력
               </h3>
               <button
                 onClick={() => setShowInfoModal(false)}
@@ -2790,7 +2861,7 @@ export default function VideoPlayer({
                   }}
                 />
 
-                {/* ���테고리 드롭다운 */}
+                {/* 카테고리 드롭다운 */}
                 <div style={{ marginTop: "8px" }}>
                   <select
                     value={modalObjectInfo.category}
@@ -2809,7 +2880,7 @@ export default function VideoPlayer({
                       background: "#ffffff",
                     }}
                   >
-                    <option value="��타">기타 (00)</option>
+                    <option value="기타">기타 (00)</option>
                     <option value="GTIN">GTIN (01)</option>
                     <option value="GLN">GLN (02)</option>
                     <option value="GIAI">GIAI (03)</option>
@@ -2818,7 +2889,7 @@ export default function VideoPlayer({
                 </div>
               </div>
 
-              {/* 코드 섹션 */}
+              {/* 코드 섹�� */}
               <div style={{ marginBottom: "16px" }}>
                 <div
                   style={{
@@ -2934,7 +3005,7 @@ export default function VideoPlayer({
                     marginBottom: "8px",
                   }}
                 >
-                  💡 추가정���
+                  💡 추가정보
                 </div>
                 <textarea
                   value={modalObjectInfo.additionalInfo}
@@ -2953,7 +3024,7 @@ export default function VideoPlayer({
                     fontSize: "0.85rem",
                     resize: "none",
                   }}
-                  placeholder="추�� 정보를 입력하세요"
+                  placeholder="추가 정보를 입력하세요"
                 />
               </div>
             </div>
@@ -2968,7 +3039,12 @@ export default function VideoPlayer({
               }}
             >
               <button
-                onClick={() => {
+                onClick={async () => {
+                  // 임시 좌표 취소
+                  if (currentDrawingArea) {
+                    await cancelTemporaryCoordinates(currentDrawingArea.id);
+                  }
+
                   // 취소 시 그려진 영역들을 모두 제거
                   setDrawnAreas([]);
                   setCurrentPath([]);
@@ -2978,7 +3054,7 @@ export default function VideoPlayer({
                   redrawCanvas();
                   setShowInfoModal(false);
                   setModalObjectInfo(null);
-                  toast.info('등록이 취소되었습니다. 그����� 영역이 삭제되었습니다.');
+                  toast.info('등록이 취소되었습니다. 그��진 영역이 삭제되었습니다.');
                 }}
                 style={{
                   padding: "10px 20px",
@@ -2994,9 +3070,9 @@ export default function VideoPlayer({
                 취소
               </button>
               <button
-                onClick={() => {
+                onClick={async () => {
                   if (modalObjectInfo && video && onAddNewObject) {
-                    // 그리기 영역을 새로운 객체로 추가 - 팝업창에서 입력한 모든 정보 포함
+                    // 그리기 영역을 ���로운 객����로 추가 - 팝업창에서 입력한 모든 ��보 포함
                     const addedObjectId = onAddNewObject(video.id, modalObjectInfo.name, {
                       code: modalObjectInfo.code,
                       additionalInfo: modalObjectInfo.additionalInfo,
@@ -3005,12 +3081,20 @@ export default function VideoPlayer({
                       videoCurrentTime: modalObjectInfo.videoCurrentTime,
                     });
 
-                    // 그리기 영역과 객체 매핑 저장
+                    // 그리기 영역��� 객체 매핑 저장
                     if (currentDrawingArea && addedObjectId) {
                       setObjectDrawingMap(prev => new Map(prev.set(addedObjectId, currentDrawingArea)));
                     }
 
-                    toast.success('새로운 객체��� 추가되었습니다.');
+                    // 좌표를 객체명과 연결
+                    if (currentDrawingArea && addedObjectId) {
+                      const linked = await linkCoordinatesWithObject(currentDrawingArea.id, modalObjectInfo.name);
+                      if (linked) {
+                        console.log(`🔗 Coordinates linked: ${currentDrawingArea.id} -> ${modalObjectInfo.name}`);
+                      }
+                    }
+
+                    toast.success('새로운 객체가 추가되었�����니다.');
                     setShowInfoModal(false);
                     setModalObjectInfo(null);
                     setCurrentDrawingArea(null);
@@ -3076,7 +3160,7 @@ export default function VideoPlayer({
                   marginBottom: "8px",
                 }}
               >
-                {apiResponseData.success ? "API 전송 성공!" : "API 전�� 실패"}
+                {apiResponseData.success ? "API 전송 성공!" : "API 전송 실패"}
               </h3>
               <p
                 style={{

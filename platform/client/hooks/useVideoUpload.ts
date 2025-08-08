@@ -1,6 +1,6 @@
 /**
  * ===================================
- * 🎬 동영상 업로드 및 관리 메인 훅
+ * 🎬 동영상 업로드 및 관리 메��� 훅
  * ===================================
  *
  * 이 파일의 기능:
@@ -11,8 +11,8 @@
  * 5. 로컬 상태 관리 (videos, uploads, selectedVideo 등)
  *
  * 📝 수정 가이드:
- * - API URL 변경: window.location.origin 부분 수정
- * - 업로드 로직 변경: uploadVideoFile 함수 수정
+ * - API URL ���경: window.location.origin 부분 수정
+ * - ��로드 로직 변경: uploadVideoFile 함수 수정
  * - 상태 구조 변경: useState 초기값들 수정
  * - 객체 탐지 로직 변경: runObjectDetection 함수 수정
  */
@@ -75,11 +75,70 @@ export function useVideoUpload() {
   }, []);
 
   /**
-   * 📤 실제 파일 업로드 API 호출
+   * ===================================
+   * 📝 파일명 충돌 체크 및 자동 리네임
+   * ===================================
+   *
+   * 🔧 다른 API 서버 연결 방법:
+   * 1. window.location.origin 부분을 실제 API 서버 URL로 변경
+   * 2. 예시: const apiUrl = "https://your-api-server.com";
+   * 3. CORS 설정이 올바르게 되어있는지 확인
+   *
+   * 📡 API 엔드포인트:
+   * - GET /api/check-filename?filename={파일명}
+   * - 응답: { success: boolean, exists: boolean, originalName: string, suggestedName: string }
+   *
+   * 🎯 사용 목적:
+   * - 동일한 파일명의 비디오가 이미 존재하는지 확인
+   * - 충돌 시 자동으로 (1), (2) 등의 번호를 붙여 새 이름 생성
+   */
+  const checkAndRenameFile = useCallback(async (file: File): Promise<File> => {
+    console.log(`🔍🔍🔍 파일명 체크 함수 호출됨!!! 원본 파일명: "${file.name}"`);
+
+    try {
+      // 🌐 API 서버 URL - 다른 서버 사용 시 여기를 수정하세요
+      const apiUrl = window.location.origin; // 현재는 같은 도메인 사용
+      const checkUrl = `${apiUrl}/api/check-filename?filename=${encodeURIComponent(file.name)}`;
+      console.log(`🌐 API 호출 URL: ${checkUrl}`);
+
+      const response = await fetch(checkUrl);
+      console.log(`📡 API 응답 상태: ${response.status}`);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log(`📄 API 응답 데이터:`, result);
+
+        if (result.exists) {
+          // 파일명 충돌 발생 - 새로운 이름으로 변경
+          const newFileName = result.suggestedName;
+          console.log(`🚨🚨🚨 파일명 충돌 감지: "${file.name}" → "${newFileName}"`);
+
+          // 새로운 File 객체 생성
+          const renamedFile = new File([file], newFileName, { type: file.type });
+          console.log(`✅ 새로운 File 객체 생성 완료: "${renamedFile.name}"`);
+
+          toast.info(`파일명이 자동으로 변경되었습니다: ${newFileName}`);
+          return renamedFile;
+        } else {
+          console.log(`✅ 파일명 충돌 없음, 원본 파일 사용: "${file.name}"`);
+        }
+      } else {
+        console.log(`❌ API 호출 ��패: ${response.status}`);
+      }
+
+      return file; // 충돌 없으면 원본 파일 반환
+    } catch (error) {
+      console.error('🚨 파일명 체크 오류:', error);
+      return file; // 에러 발생 시 원본 파일 사용
+    }
+  }, []);
+
+  /**
+   * 📤 실제 파일 ���로드 API 호출
    *
    * 📝 수정 포인트:
    * - API URL 변경: window.location.origin 수정
-   * - 요청 데이터 변경: formData 구성 수정
+   * - ��청 데이터 변경: formData 구성 수정
    * - 응답 처리 변경: response 처리 로직 수정
    * - 에러 처리 개선: catch 블록 수정
    */
@@ -135,9 +194,8 @@ export function useVideoUpload() {
       uploadDate: new Date(),
     };
 
-    // 새 업로드만 유지하고 기존 데이터 초기화
+    // 새 업로드만 유지하고 현재 선택 해제 (기존 비디오는 유지)
     setUploads([newUpload]);
-    setVideos([]);
     setSelectedVideoId(null);
     setAdminPanelVisible(false);
 
@@ -182,20 +240,41 @@ export function useVideoUpload() {
             // 비디오 메타데이터 추출 및 파일 업로드
             extractVideoMetadata(file).then(async (metadata) => {
               try {
+                console.log(`🎬 업로드 프로세스 시작 - 원본 파일: "${file.name}"`);
+
+                // 파일명 충돌 체크 및 자동 리네임
+                const renamedFile = await checkAndRenameFile(file);
+                console.log(`📝 체크 완료 - 최종 파일명: "${renamedFile.name}"`);
+
                 // 실제 파일을 서버에 업로드
-                await uploadVideoFile(file, uploadId, metadata);
-                
+                const uploadResult = await uploadVideoFile(renamedFile, uploadId, metadata);
+
                 const newVideo: VideoInfo = {
                   id: uploadId,
-                  file,
+                  file: renamedFile, // 리네임된 파일 사용
                   duration: metadata.duration,
                   currentTime: 0,
                   detectedObjects: [],
                   totalObjectsCreated: 0,
                   uploadDate: new Date(),
+                  videoFolder: uploadResult?.videoFolder, // 서버에서 받은 실제 폴더명
+                  serverFileName: uploadResult?.processedData?.fileName, // 서버에서 받은 실제 파일명
                 };
 
-                setVideos([newVideo]);
+                console.log(`🎬🎬🎬 생성된 video 객체:`, {
+                  id: newVideo.id,
+                  fileName: newVideo.file.name,
+                  serverFileName: newVideo.serverFileName,
+                  videoFolder: newVideo.videoFolder,
+                  uploadResult: uploadResult
+                });
+
+                setVideos(prev => [...prev, newVideo]);
+
+                // 업로드 완료된 비디오 자동 선택 및 관리자 패널 열기
+                setSelectedVideoId(newVideo.id);
+                setAdminPanelVisible(true);
+
                 toast.success(`동영상 업로드 완료! (길이: ${Math.round(metadata.duration)}초)`);
               } catch (error) {
                 console.error('Upload process failed:', error);
@@ -237,7 +316,7 @@ export function useVideoUpload() {
       clearInterval(uploadInterval);
       clearTimeout(processTimeoutId);
     };
-  }, [extractVideoMetadata, uploadVideoFile]);
+  }, [extractVideoMetadata, uploadVideoFile, checkAndRenameFile]);
 
   // 파일 선택 처리
   const handleFileSelect = useCallback(
@@ -273,7 +352,7 @@ export function useVideoUpload() {
         return () => clearTimeout(timeoutId);
       } else {
         setSelectedVideoId(videoId);
-        // 해당 비디오에 이미 탐지된 객체가 있으면 hasRunDetection을 true로 설정
+        // 해당 비디오에 이��� 탐지된 객체가 있으면 hasRunDetection을 true로 설정
         const video = videos.find(v => v.id === videoId);
         const hasDetectedObjects = video && video.detectedObjects.length > 0;
         setHasRunDetection(hasDetectedObjects);
@@ -304,7 +383,7 @@ export function useVideoUpload() {
     return () => clearTimeout(timeoutId);
   }, []);
 
-  // ���택된 객체들 삭제
+  // 선택된 객체들 삭제
   const deleteSelectedObjects = useCallback(() => {
     if (!selectedVideoId) return;
 
@@ -325,7 +404,7 @@ export function useVideoUpload() {
     toast.success("선택된 객체가 삭제되었습니다.");
   }, [selectedVideoId]);
 
-  // 시간을 WebVTT 형식으로 변환하는 함수
+  // 시간�� WebVTT 형식으로 변환하는 함수
   const formatTimeForVTT = useCallback((seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -348,7 +427,7 @@ export function useVideoUpload() {
 
       vttContent += `${index + 1}\n`;
       vttContent += `${startTime} --> ${endTime}\n`;
-      vttContent += `${obj.name} (신뢰도: ${(obj.confidence * 100).toFixed(1)}%)\n`;
+      vttContent += `${obj.name} (신뢰���: ${(obj.confidence * 100).toFixed(1)}%)\n`;
       if (obj.category) {
         vttContent += `카테고리: ${obj.category}\n`;
       }
@@ -384,7 +463,7 @@ export function useVideoUpload() {
         closeAdminPanel();
       }
 
-      // 삭제할 비디오 정보 찾기
+      // ���제할 비디오 정보 찾기
       const videoToDelete = videos.find(v => v.id === videoId) || uploads.find(u => u.id === videoId);
       const videoFileName = videoToDelete ?
         ('file' in videoToDelete ? videoToDelete.file.name : videoToDelete.filename) :
@@ -416,7 +495,7 @@ export function useVideoUpload() {
         }
       } catch (error) {
         console.error('Server delete error:', error);
-        toast.warning("서버 삭제 중 오류가 발생했지만 로컬에서 제거합니다.");
+        toast.warning("서�� 삭제 중 오류가 발생했지만 로컬에서 제���합니다.");
       }
 
       // 로컬 상태에서 제거
@@ -451,7 +530,7 @@ export function useVideoUpload() {
                 if (video.detectedObjects.length > 0) return video;
                 
                 // 비디오 duration에 기반한 시간 설정
-                const videoDuration = video.duration || 60; // 기본값 60초
+                const videoDuration = video.duration || 60; // 기본값 60���
                 
                 return {
                   ...video,
@@ -558,7 +637,34 @@ export function useVideoUpload() {
 
   // 객체 삭제
   const deleteObjectFromVideo = useCallback(
-    (videoId: string, objectId: string) => {
+    async (videoId: string, objectId: string) => {
+      // 먼저 객체 이름 찾기
+      const currentVideo = videos.find(v => v.id === videoId);
+      const objectToDelete = currentVideo?.detectedObjects.find(obj => obj.id === objectId);
+
+      if (objectToDelete && currentVideo) {
+        // 좌표 파일에서도 삭제
+        try {
+          const apiUrl = window.location.origin;
+          const response = await fetch(`${apiUrl}/api/coordinate/delete`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              videoId: currentVideo.file.name,
+              objectName: objectToDelete.name
+            })
+          });
+
+          if (response.ok) {
+            console.log('좌표 파일에서 객체 삭제됨');
+          }
+        } catch (error) {
+          console.error('좌표 파일 삭제 오류:', error);
+        }
+      }
+
       setVideos((prev) =>
         prev.map((video) =>
           video.id === videoId
@@ -572,12 +678,12 @@ export function useVideoUpload() {
         ),
       );
     },
-    [],
+    [videos],
   );
 
   // 객체 정보 업데이트
   const updateObjectInVideo = useCallback(
-    (
+    async (
       videoId: string,
       objectId: string,
       updates: {
@@ -590,6 +696,35 @@ export function useVideoUpload() {
         endTime?: number;
       },
     ) => {
+      // 이름이 변경되는 경우 좌표 파일도 업데이트
+      if (updates.name) {
+        const currentVideo = videos.find(v => v.id === videoId);
+        const objectToUpdate = currentVideo?.detectedObjects.find(obj => obj.id === objectId);
+
+        if (objectToUpdate && currentVideo && objectToUpdate.name !== updates.name) {
+          try {
+            const apiUrl = window.location.origin;
+            const response = await fetch(`${apiUrl}/api/coordinate/update`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                videoId: currentVideo.file.name,
+                oldName: objectToUpdate.name,
+                newName: updates.name
+              })
+            });
+
+            if (response.ok) {
+              console.log('좌표 파일 객체 이름 업데이트됨');
+            }
+          } catch (error) {
+            console.error('좌표 파일 업데이트 오류:', error);
+          }
+        }
+      }
+
       setVideos((prev) =>
         prev.map((video) =>
           video.id === videoId
@@ -603,7 +738,7 @@ export function useVideoUpload() {
         ),
       );
     },
-    [],
+    [videos],
   );
 
   // 계산된 값들

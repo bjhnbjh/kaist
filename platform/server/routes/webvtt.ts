@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import fs from "fs";
 import path from "path";
+import { normalizeFileName, findActualVideoFolder, getKoreaTimeISO, DATA_DIR } from "../utils/file-utils";
 
 /**
  * ===================================
@@ -14,57 +15,23 @@ import path from "path";
  * 4. 한글 파일명 지원 및 안전한 파일 저장
  * 
  * 📝 API 수정 가이드:
- * - VTT 형식 변경: generateCompleteVttContent 함��� 수정
+ * - VTT 형식 변경: generateCompleteVttContent 함수 수정
  * - 시간 형식 변경: formatDuration 함수 수정
  * - 병합 로직 변경: combineObjectsWithTimeDeduplication 함수 수정
- * - 파일 저장 경로 변경: DATA_DIR 상수 및 경로 로직 수정
+ * - 파일 저장 위치 변경: DATA_DIR 상수 및 경로 로직 수정
  */
 
 // ========================================
 // 🛠️ 유틸리티 함수들
 // ========================================
 
-/**
- * 한국시간(KST) 기준으로 ISO 문자열 반환
- * @returns {string} KST 시간대의 ISO 문자열
- */
-function getKoreaTimeISO(): string {
-  const now = new Date();
-  const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
-  return koreaTime.toISOString().replace('Z', '+09:00');
-}
-
-/**
- * 파일명을 안전하게 정규화하는 함수 (한글 지원)
- * 업로드 API와 동일한 로직 사용
- * 
- * @param {string} fileName - 원본 파일명
- * @returns {string} 정규화된 파일명
- */
-function normalizeFileName(fileName: string): string {
-  // 확장자 분리
-  const ext = path.extname(fileName);
-  const baseName = path.basename(fileName, ext);
-
-  // 파일명을 UTF-8로 정규화하고 불필요한 공백 제거
-  let normalized = baseName.normalize('NFC').trim();
-
-  // 특수문자를 안전한 문자로 대체
-  normalized = normalized
-    .replace(/[<>:"/\\|?*]/g, '_')  // 파일시스템에서 금지된 문자들
-    .replace(/\s+/g, '_')           // 공백을 언더스코어로
-    .replace(/[^\w가-힣\-_.()]/g, '') // 한글, 영숫자, 일부 특수문자만 허용
-    .replace(/_{2,}/g, '_')         // 연속된 언더스코어 정리
-    .replace(/^_+|_+$/g, '');       // 앞뒤 언더스코어 제거
-
-  return normalized || 'unnamed';
-}
+// 공통 유틸리티에서 가져옴: normalizeFileName, findActualVideoFolder, getKoreaTimeISO, DATA_DIR
 
 /**
  * 초 단위 시간을 WebVTT 형식으로 변환
  * 
  * 📝 수정 포인트:
- * - 시간 형식 변경: ��환 형식 수정 (현재: MM:SS:HH)
+ * - 시간 방식 변경: 변환 형식 수정 (현재: MM:SS:HH)
  * - 밀리초 정밀도 변경: ms 계산 로직 수정
  * 
  * @param {number} seconds - 초 단위 시간
@@ -92,6 +59,7 @@ function formatDuration(seconds: number): string {
 interface WebVTTData {
   videoId: string;
   videoFileName: string;
+  videoFolder?: string;  // 실제 업로드된 폴더명
   objects: Array<{
     id: string;
     name: string;
@@ -101,7 +69,7 @@ interface WebVTTData {
     category?: string;
     confidence?: number;
     videoCurrentTime?: number;  // 객체가 생성된 동영상 시점
-    finallink?: string;  // 최�� 링크
+    finallink?: string;  // 최종 링크
     coordinates?: {  // 그리기 좌표 정보 (VTT에만 저장, 화면에는 표시 안함)
       type: "path" | "rectangle" | "click";
       points?: Array<{ x: number; y: number }>;
@@ -120,8 +88,8 @@ interface WebVTTData {
 // 🗂️ 파일 시스템 설정
 // ========================================
 
-// 데이터 저장 디렉토리 설정 (upload API와 동일)
-const DATA_DIR = path.join(process.cwd(), 'data');
+// 데이터 저장 디렉터리 설정 (upload API와 동일)
+// DATA_DIR은 공통 유틸리티에서 가져옴
 
 /**
  * WebVTT 저장 디렉토리 초기화
@@ -145,7 +113,7 @@ function initializeWebVTTFiles() {
  * VTT에서 기존 객체 정보 추출 (단순화된 파싱)
  * 
  * 📝 수정 포인트:
- * - ��싱 규칙 변경: 이모지 패턴이나 라벨 형식 변경 시 여기 수정
+ * - 파싱 규칙 변경: 이모지 패턴이나 라벨 형식 변경 시 여기 수정
  * - 새로운 속성 파싱: 새로운 객체 속성 추가 시 파싱 로직 추가
  * 
  * @param {string} content - 기존 VTT 파일 내용
@@ -155,9 +123,8 @@ function extractObjectsFromVtt(content: string): any[] {
   const objects: any[] = [];
   const lines = content.split('\n');
 
-  // 📍 좌표 데이터 추출 (NOTE 섹션에서)
-  const coordinatesMap = new Map();
   let inCoordinatesSection = false;
+  let currentObjectLines: string[] = [];
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
@@ -167,58 +134,54 @@ function extractObjectsFromVtt(content: string): any[] {
       continue;
     } else if (line === 'COORDINATES_DATA_END') {
       inCoordinatesSection = false;
-      continue;
-    } else if (inCoordinatesSection && line.startsWith('{')) {
-      try {
-        const coordData = JSON.parse(line);
-        coordinatesMap.set(coordData.objectId, coordData.coordinates);
-      } catch (e) {
-        console.warn('Failed to parse coordinates data:', line);
+      // 마지막 객체 처리
+      if (currentObjectLines.length > 0) {
+        processVttObject(currentObjectLines, objects);
+        currentObjectLines = [];
       }
       continue;
-    }
-
-    // 🎯 이모지로 시작하는 객체 이름 라인 찾기
-    if (line.startsWith('🎯')) {
-      const obj: any = {
-        name: line.replace('🎯 ', ''),
-        id: `existing-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      };
-
-      // 이전 라인에서 시간 정보 찾기
-      if (i > 0 && lines[i-1].includes('-->')) {
-        const timeMatch = lines[i-1].match(/^([\d:]+)\s*-->/);
-        if (timeMatch) {
-          const startTime = timeMatch[1];
-          const timeParts = startTime.split(':');
-          obj.videoCurrentTime = parseInt(timeParts[0]) * 60 + parseInt(timeParts[1]) + parseInt(timeParts[2]) / 100;
+    } else if (inCoordinatesSection) {
+      if (line.startsWith('object')) {
+        // 이전 객체 처리
+        if (currentObjectLines.length > 0) {
+          processVttObject(currentObjectLines, objects);
         }
+        // 새 객체 시작
+        currentObjectLines = [];
+      } else if (line) {
+        currentObjectLines.push(line);
       }
-
-      // 다음 라인들에서 추가 정보 수집
-      for (let j = i + 1; j < lines.length && lines[j].trim() !== ''; j++) {
-        const infoLine = lines[j].trim();
-        if (infoLine.startsWith('🔧 코드:')) {
-          obj.code = infoLine.replace('🔧 코드: ', '');
-        } else if (infoLine.startsWith('📂 카테고리:')) {
-          obj.category = infoLine.replace('📂 카테고리: ', '');
-        } else if (infoLine.startsWith('🌐 도메인:')) {
-          obj.dlReservoirDomain = infoLine.replace('🌐 도메인: ', '');
-        } else if (infoLine.startsWith('💡 정보:')) {
-          obj.additionalInfo = infoLine.replace('💡 정보: ', '');
-        }
-      }
-
-      // 📍 저장된 좌표 정보가 있으면 추가
-      if (coordinatesMap.has(obj.id)) {
-        obj.coordinates = coordinatesMap.get(obj.id);
-      }
-
-      objects.push(obj);
     }
   }
 
   return objects;
+}
+
+/**
+ * VTT 객체 데이터 처리
+ */
+function processVttObject(objectLines: string[], objects: any[]): void {
+  try {
+    const jsonString = objectLines.join('\n');
+    const objectData = JSON.parse(jsonString);
+
+    const obj = {
+      id: `existing-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      name: objectData["이름"] || objectData.name,
+      code: objectData.code,
+      category: objectData["catefory"] || objectData.category,
+      dlReservoirDomain: objectData["도메인"] || objectData.domain,
+      additionalInfo: objectData["정보"] || objectData.info,
+      videoCurrentTime: objectData["시간"] || objectData.videoTime || 0,
+      coordinates: objectData.position,
+      position: objectData.position,
+      polygon: objectData.polygon
+    };
+
+    objects.push(obj);
+  } catch (e) {
+    console.warn('Failed to parse coordinates data:', objectLines.join(' '));
+  }
 }
 
 /**
@@ -231,7 +194,7 @@ function extractObjectsFromVtt(content: string): any[] {
  * 
  * @param {Array} existingObjects - 기존 객체들
  * @param {Array} newObjects - 새로운 객체들
- * @returns {Array} 병합되고 시간 조정된 객체 배열
+ * @returns {Array} 병합되고 시간 지정된 객체 배열
  */
 function combineObjectsWithTimeDeduplication(existingObjects: any[], newObjects: any[]): any[] {
   const combined = [...existingObjects];
@@ -290,7 +253,51 @@ function generateCompleteVttContent(data: WebVTTData, objects: any[]): string {
   // 📍 객체 정보를 NOTE 섹션에 새로운 JSON 형태로 저장
   if (objects.length > 0) {
     vttLines.push('COORDINATES_DATA_START');
-    objects.forEach(obj => {
+    objects.forEach((obj, index) => {
+      // 카테고리에 따른 숫자 코드 매핑
+      const getCategoryCode = (category: string): string => {
+        const categoryMap: { [key: string]: string } = {
+          "기타": "00",
+          "GTIN": "01",
+          "GLN": "02",
+          "SSCC": "03",
+          "GTIN-8": "04",
+          "GTIN-12": "05",
+          "GTIN-13": "06",
+          "GTIN-14": "07"
+        };
+        return categoryMap[category] || "00";
+      };
+
+      const categoryCode = getCategoryCode(obj.category || "기타");
+
+      // 좌표 파일에서 해당 객체의 position 데이터 찾기
+      let positionData = obj.coordinates || obj.position || null;
+
+      // 좌표 파일에서 추가 좌표 정보 확인
+      try {
+        const actualFolderName = findActualVideoFolder(data.videoFileName);
+        const videoFolderPath = path.join(DATA_DIR, actualFolderName);
+        const coordinateFilePath = path.join(videoFolderPath, `${actualFolderName}-좌표.json`);
+
+        if (fs.existsSync(coordinateFilePath)) {
+          const coordinateFileContent = fs.readFileSync(coordinateFilePath, 'utf8');
+          const coordinateArray = JSON.parse(coordinateFileContent);
+
+          // 객체 이름으로 매칭되는 좌표 찾기
+          for (const coordItem of coordinateArray) {
+            for (const objectKey in coordItem) {
+              if (coordItem[objectKey]["이름"] === obj.name) {
+                positionData = coordItem[objectKey].position;
+                break;
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('좌표 파일 읽기 실패:', error);
+      }
+
       const objectData = {
         "이름": obj.name,
         "시간": obj.videoCurrentTime || 0,
@@ -298,11 +305,14 @@ function generateCompleteVttContent(data: WebVTTData, objects: any[]): string {
         "catefory": obj.category || "기타",
         "도메인": obj.dlReservoirDomain || "http://www.naver.com",
         "정보": obj.additionalInfo || "AI가 자동으로 탐지한 객체입니다.",
-        "finallink": `${obj.dlReservoirDomain || "http://www.naver.com"}/00/${obj.code || `CODE_RECT-${Math.floor(Math.random() * 1000)}`}`,
-        "position": obj.coordinates || obj.position || null,
+        "finallink": `${obj.dlReservoirDomain || "http://www.naver.com"}/${categoryCode}/${obj.code || `CODE_RECT-${Math.floor(Math.random() * 1000)}`}`,
+        "position": positionData,
         "polygon": obj.polygon || null
       };
-      vttLines.push(JSON.stringify(objectData));
+
+      // object1, object2 형식으로 출력
+      vttLines.push(`object${index + 1}`);
+      vttLines.push(JSON.stringify(objectData, null, 2));
     });
     vttLines.push('COORDINATES_DATA_END');
   }
@@ -310,36 +320,16 @@ function generateCompleteVttContent(data: WebVTTData, objects: any[]): string {
   vttLines.push('');
 
   if (objects.length > 0) {
-    // 📋 전체 개요 (첫 번째 큐)
+    // VTT 기본 정보만 포함 (이모지 섹션 제거)
     vttLines.push('1');
     vttLines.push(`00:00:00.000 --> ${formatDuration(data.duration)}`);
-    vttLines.push(`📋 탐지된 객체: ${objects.map(obj => obj.name).join(', ')}`);
+    vttLines.push(`탐지된 객체: ${objects.map(obj => obj.name).join(', ')}`);
     vttLines.push('');
-
-    // 🎯 각 객체별 상세 정보
-    objects.forEach((obj, index) => {
-      const currentTime = obj.videoCurrentTime || 0;
-      const startTime = formatDuration(currentTime);
-      const endTime = formatDuration(currentTime); // 정확한 시간만 사용
-
-      vttLines.push(`${index + 2}`); // 큐 번호 (1은 개요용이므로 2부터 시작)
-      vttLines.push(`${startTime} --> ${endTime}`);
-
-      // 📝 객체 정보 구성 (이모지와 함께)
-      const objectInfo = [`🎯 ${obj.name}`];
-      if (obj.code) objectInfo.push(`🔧 코드: ${obj.code}`);
-      if (obj.category) objectInfo.push(`📂 카테고리: ${obj.category}`);
-      if (obj.dlReservoirDomain) objectInfo.push(`🌐 도메인: ${obj.dlReservoirDomain}`);
-      if (obj.additionalInfo) objectInfo.push(`💡 정보: ${obj.additionalInfo}`);
-
-      vttLines.push(objectInfo.join('\n'));
-      vttLines.push('');
-    });
   } else {
     // ❌ 객체가 없는 경우
     vttLines.push('1');
     vttLines.push(`00:00:00.000 --> ${formatDuration(data.duration)}`);
-    vttLines.push('❌ 탐지된 객체가 없습니다.');
+    vttLines.push('탐지된 객체가 없습니다.');
     vttLines.push('');
   }
 
@@ -364,14 +354,14 @@ function createUpdatedVttContent(existingContent: string, newData: WebVTTData): 
   // 🔄 새로운 객체들과 병합 (시간 중복 방지)
   const allObjects = combineObjectsWithTimeDeduplication(existingObjects, newData.objects);
   
-  // ✨ 새로운 VTT 파일 생��
+  // ✨ 새로운 VTT 파일 생성
   return generateCompleteVttContent(newData, allObjects);
 }
 
 /**
  * WebVTT 파일을 로컬에 저장
  * 
- * 📝 수정 포인트:
+ * 📝 수정 인인트:
  * - 파일 저장 위치 변경: 폴더 구조 변경
  * - 파일명 규칙 변경: VTT 파일명 형식 수정
  * - 백업 로직 추가: 기존 파일 백업 후 저장
@@ -385,30 +375,58 @@ function saveWebVTTFile(webvttData: WebVTTData) {
   // 📄 WebVTT 콘텐츠 생성
   const vttContent = generateCompleteVttContent(webvttData, webvttData.objects);
 
-  // 📁 동영상 파일명을 정규화하여 폴더 찾기
-  const normalizedName = normalizeFileName(webvttData.videoFileName);
-  const videoFolderPath = path.join(DATA_DIR, normalizedName);
+  // 📁 실제 업로드된 동영상 폴더 찾기 (videoFolder 우선 사용)
+  let actualFolderName = webvttData.videoFolder;
+
+  if (!actualFolderName) {
+    console.log(`⚠️ videoFolder가 없음, findActualVideoFolder 사용`);
+    actualFolderName = findActualVideoFolder(webvttData.videoFileName);
+  }
+
+  // 폴더가 여전히 존재하지 않거나 비디오 파일이 없으면 더 똑똑하게 찾기
+  const videoFolderPath = path.join(DATA_DIR, actualFolderName);
+  const videoFilePath = path.join(videoFolderPath, webvttData.videoFileName);
+
+  if (!fs.existsSync(videoFolderPath) || !fs.existsSync(videoFilePath)) {
+    console.log(`🔍 기본 폴더에 비디오 파일이 없음, 다른 폴더들 검색...`);
+
+    // data 폴더의 모든 하위 폴더 검색
+    const dataFiles = fs.readdirSync(DATA_DIR);
+    for (const folder of dataFiles) {
+      const folderPath = path.join(DATA_DIR, folder);
+      const stats = fs.statSync(folderPath);
+
+      if (stats.isDirectory()) {
+        const testVideoPath = path.join(folderPath, webvttData.videoFileName);
+        if (fs.existsSync(testVideoPath)) {
+          console.log(`✅ 비디오 파일 발견: ${testVideoPath}`);
+          actualFolderName = folder;
+          break;
+        }
+      }
+    }
+  }
+
+  const finalVideoFolderPath = path.join(DATA_DIR, actualFolderName);
+
+  console.log(`📁 VTT saving to folder: ${actualFolderName} (videoFolder: ${webvttData.videoFolder})`);
 
   // 동영상 폴더가 없으면 생성
-  if (!fs.existsSync(videoFolderPath)) {
-    fs.mkdirSync(videoFolderPath, { recursive: true });
+  if (!fs.existsSync(finalVideoFolderPath)) {
+    fs.mkdirSync(finalVideoFolderPath, { recursive: true });
   }
 
   // 💾 VTT 파일 업데이트 (기존 파일과 비교하여 변경된 부분만 반영)
-  const singleVttFileName = `${normalizedName}-webvtt.vtt`;
-  const singleVttFilePath = path.join(videoFolderPath, singleVttFileName);
+  const singleVttFileName = `${actualFolderName}-webvtt.vtt`;
+  const singleVttFilePath = path.join(finalVideoFolderPath, singleVttFileName);
 
-  let finalVttContent = '';
+  // 각 폴더별로 독립적인 VTT 파일 생성 (기존 파일과 병합하지 않음)
+  const finalVttContent = vttContent;
 
-  // 기존 VTT 파일이 있으면 기존 객체들과 병합
   if (fs.existsSync(singleVttFilePath)) {
-    const existingContent = fs.readFileSync(singleVttFilePath, 'utf8');
-    finalVttContent = createUpdatedVttContent(existingContent, webvttData);
-    console.log(`🔄 Updated existing VTT file: ${singleVttFilePath}`);
+    console.log(`🔄 Overwriting VTT file for this folder: ${singleVttFilePath}`);
   } else {
-    // 첫 번째 저장인 경우 그대로 사용
-    finalVttContent = vttContent;
-    console.log(`✨ Created new VTT file: ${singleVttFilePath}`);
+    console.log(`✨ Creating new VTT file for this folder: ${singleVttFilePath}`);
   }
 
   // 📝 파일 저장 (UTF-8 인코딩으로)
@@ -420,7 +438,7 @@ function saveWebVTTFile(webvttData: WebVTTData) {
     videoFileName: webvttData.videoFileName,
     vttFileName: singleVttFileName,
     filePath: singleVttFilePath,
-    videoFolder: normalizedName,
+    videoFolder: actualFolderName,
     objectCount: webvttData.objects.length,
     duration: webvttData.duration,
     createdAt: getKoreaTimeISO(),
@@ -502,13 +520,13 @@ export const handleWebVTTSave: RequestHandler = (req, res) => {
  * 📝 WebVTT API 사용법 및 수정 가이드
  * ===================================
  * 
- * 🔧 주요 수정 포인트:
+ *  주요 수정 포인트:
  * 
  * 1. VTT 형식 변경:
  *    - generateCompleteVttContent 함수의 vttLines 배열 수정
  *    - 이모지나 라벨 형식 변경
  * 
- * 2. 시간 형식 변경:
+ * 2. 시간 방식 변경:
  *    - formatDuration 함수 수정
  *    - 현재: MM:SS:HH (분:초:100분의1초)
  * 
@@ -517,7 +535,7 @@ export const handleWebVTTSave: RequestHandler = (req, res) => {
  *    - 시간 조정 간격이나 병합 규칙 변경
  * 
  * 4. 파일 저장 위치 변경:
- *    - DATA_DIR 상수 수정
+ *    - DATA_DIR 변수 수정
  *    - 폴더 구조나 파일명 규칙 변경
  * 
  * 5. API 응답 구조 변경:

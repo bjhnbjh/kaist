@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import fs from "fs";
 import path from "path";
+import { normalizeFileName, findActualVideoFolder, DATA_DIR } from "../utils/file-utils";
 
 /**
  * ===================================
@@ -14,13 +15,13 @@ import path from "path";
  */
 
 // ========================================
-// 🛠️ 유틸리티 함수들
+// 🛠️ 공통 유틸리티 사용
 // ========================================
 
 /**
  * 파일명을 안전하게 정규화하는 함수 (한글 지원)
  * @param {string} fileName - 원본 파일명
- * @returns {string} 정규화��� 파일명
+ * @returns {string} 정규화된 파일명
  */
 function normalizeFileName(fileName: string): string {
   const ext = path.extname(fileName);
@@ -38,6 +39,39 @@ function normalizeFileName(fileName: string): string {
 }
 
 /**
+ * 실제 업로드된 비디오 폴더명 찾기 함수
+ * 같은 파일명으로 중복 업로드된 경우 정확한 폴더를 찾기
+ */
+function findActualVideoFolder(videoFileName: string): string {
+  const DATA_DIR = path.join(process.cwd(), 'data');
+  const normalizedName = normalizeFileName(videoFileName);
+  let actualFolderName = normalizedName;
+
+  // 기본 폴더가 있는지 확인
+  const baseFolderPath = path.join(DATA_DIR, normalizedName);
+  if (fs.existsSync(baseFolderPath)) {
+    return normalizedName;
+  }
+
+  // 중복 폴더들 중에서 찾기 (1), (2), (3) 등
+  for (let i = 1; i <= 20; i++) {
+    const candidateFolderName = `${normalizedName}(${i})`;
+    const candidateFolderPath = path.join(DATA_DIR, candidateFolderName);
+
+    if (fs.existsSync(candidateFolderPath)) {
+      // 해당 폴더에 실제 영상 파일이 있는지 확인
+      const videoFilePath = path.join(candidateFolderPath, videoFileName);
+      if (fs.existsSync(videoFilePath)) {
+        // 가장 최근에 수정된 폴더를 사용
+        actualFolderName = candidateFolderName;
+      }
+    }
+  }
+
+  return actualFolderName;
+}
+
+/**
  * VTT 파일에서 좌표 데이터 추출
  * @param {string} content - VTT 파일 내용
  * @returns {Array} 좌표 데이터 배열
@@ -47,6 +81,8 @@ function extractCoordinatesFromVtt(content: string): any[] {
   const lines = content.split('\n');
 
   let inCoordinatesSection = false;
+  let currentObjectLines: string[] = [];
+  let isCollectingObject = false;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
@@ -56,30 +92,54 @@ function extractCoordinatesFromVtt(content: string): any[] {
       continue;
     } else if (line === 'COORDINATES_DATA_END') {
       inCoordinatesSection = false;
+      // 마지막 객체 처리
+      if (currentObjectLines.length > 0) {
+        processCollectedObject(currentObjectLines, coordinates);
+        currentObjectLines = [];
+      }
       continue;
-    } else if (inCoordinatesSection && line.startsWith('{')) {
-      try {
-        const objectData = JSON.parse(line);
-        // Transform to the format expected by client
-        const transformedData = {
-          "이름": objectData["이름"] || objectData.name,
-          "시간": objectData["시간"] || objectData.videoTime,
-          "code": objectData.code,
-          "catefory": objectData["catefory"] || objectData.category,
-          "도메인": objectData["도메인"] || objectData.domain,
-          "정보": objectData["정보"] || objectData.info,
-          "finallink": objectData.finallink,
-          "position": objectData.position,
-          "polygon": objectData.polygon
-        };
-        coordinates.push(transformedData);
-      } catch (e) {
-        console.warn('Failed to parse object data:', line);
+    } else if (inCoordinatesSection) {
+      if (line.startsWith('object')) {
+        // 이전 객체 처리
+        if (currentObjectLines.length > 0) {
+          processCollectedObject(currentObjectLines, coordinates);
+        }
+        // 새 객체 시작
+        currentObjectLines = [];
+        isCollectingObject = true;
+      } else if (isCollectingObject && line) {
+        currentObjectLines.push(line);
       }
     }
   }
 
   return coordinates;
+}
+
+/**
+ * 수집된 객체 라인들을 파싱하여 좌표 배열에 추가
+ */
+function processCollectedObject(objectLines: string[], coordinates: any[]): void {
+  try {
+    const jsonString = objectLines.join('\n');
+    const objectData = JSON.parse(jsonString);
+
+    // Transform to the format expected by client
+    const transformedData = {
+      "이름": objectData["이름"] || objectData.name,
+      "시간": objectData["시간"] || objectData.videoTime,
+      "code": objectData.code,
+      "catefory": objectData["catefory"] || objectData.category,
+      "도메인": objectData["도메인"] || objectData.domain,
+      "정보": objectData["정보"] || objectData.info,
+      "finallink": objectData.finallink,
+      "position": objectData.position,
+      "polygon": objectData.polygon
+    };
+    coordinates.push(transformedData);
+  } catch (e) {
+    console.warn('Failed to parse coordinates data:', objectLines.join(' '));
+  }
 }
 
 // ========================================
@@ -104,9 +164,9 @@ interface CoordinatesRequest {
  */
 export const handleVttCoordinatesRead: RequestHandler = (req, res) => {
   try {
-    const { videoId, videoFileName } = req.query as any;
+    const { videoId, videoFileName, videoFolder } = req.query as any;
 
-    // 필수 파��미터 검증
+    // 필수 파라미터 검증
     if (!videoId || !videoFileName) {
       return res.status(400).json({
         success: false,
@@ -114,23 +174,27 @@ export const handleVttCoordinatesRead: RequestHandler = (req, res) => {
       });
     }
 
-    // VTT 파일 경로 생성
-    const DATA_DIR = path.join(process.cwd(), 'data');
-    const normalizedName = normalizeFileName(videoFileName);
-    const videoFolderPath = path.join(DATA_DIR, normalizedName);
-    const vttFilePath = path.join(videoFolderPath, `${normalizedName}-webvtt.vtt`);
+    // VTT 파일 경로 생성 (videoFolder 우선 사용)
+    const actualFolderName = videoFolder || findActualVideoFolder(videoFileName);
+    const videoFolderPath = path.join(DATA_DIR, actualFolderName);
+    const vttFilePath = path.join(videoFolderPath, `${actualFolderName}-webvtt.vtt`);
 
     console.log('🔍 VTT 좌표 읽기 요청:', {
       videoId,
       videoFileName,
-      vttFilePath
+      videoFolder,
+      actualFolderName,
+      vttFilePath,
+      folderExists: fs.existsSync(path.join(DATA_DIR, actualFolderName)),
+      vttFileExists: fs.existsSync(vttFilePath)
     });
 
     // VTT 파일 존재 확인
     if (!fs.existsSync(vttFilePath)) {
+      console.log(`📄 VTT 파일이 아직 생성되지 않음: ${vttFilePath}`);
       return res.status(404).json({
         success: false,
-        message: 'VTT 파일을 찾을 수 없습니다.',
+        message: 'VTT 파일이 아직 생성되지 않았습니다.',
         filePath: vttFilePath
       });
     }

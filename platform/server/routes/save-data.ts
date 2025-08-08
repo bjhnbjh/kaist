@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import fs from "fs";
 import path from "path";
+import { normalizeFileName, findActualVideoFolder, getKoreaTimeISO, DATA_DIR } from "../utils/file-utils";
 
 /**
  * ===================================
@@ -10,12 +11,12 @@ import path from "path";
  * 이 파일의 기능:
  * 1. 동영상 편집 세션의 모든 데이터 저장
  * 2. 객체 정보, 그리기 데이터, 메타데이터 통합 관리
- * 3. 버전 관리 (같은 비디오에 대한 여러 저장본 관리)
+ * 3. 버전 관리 (같은 비디오에 대한 여러 저��본 관리)
  * 4. 전역 인덱스와 개별 폴더 저장
  * 
  * 📝 API 수정 가이드:
  * - 저장 데이터 구조 변경: SaveDataRequest 인터페이스 수정
- * - 버전 관리 방식 변경: 버전 증가 로직 ���정
+ * - 버전 관리 방식 변경: 버전 증가 로직 수정
  * - 파일 저장 위치 변경: 폴더 구조 수정
  * - 인덱스 구조 변경: 전역 인덱스 파일 형식 수정
  */
@@ -55,15 +56,47 @@ function normalizeFileName(fileName: string): string {
   return normalized || 'unnamed';
 }
 
+/**
+ * 실제 업로드된 비디오 폴더명 찾기 함수
+ * 같은 파일명으로 중복 업로드된 경우 정확한 폴더를 찾음
+ */
+function findActualVideoFolder(videoFileName: string): string {
+  const normalizedName = normalizeFileName(videoFileName);
+  let actualFolderName = normalizedName;
+
+  // 기본 폴더가 있는지 확인
+  const baseFolderPath = path.join(DATA_DIR, normalizedName);
+  if (fs.existsSync(baseFolderPath)) {
+    return normalizedName;
+  }
+
+  // 중복 폴더들 중에서 찾기 (1), (2), (3) 등
+  for (let i = 1; i <= 20; i++) {
+    const candidateFolderName = `${normalizedName}(${i})`;
+    const candidateFolderPath = path.join(DATA_DIR, candidateFolderName);
+
+    if (fs.existsSync(candidateFolderPath)) {
+      // 해당 폴더에 실제 영상 파일이 있는지 확인
+      const videoFilePath = path.join(candidateFolderPath, videoFileName);
+      if (fs.existsSync(videoFilePath)) {
+        // 가장 최근에 수정된 폴더를 사용
+        actualFolderName = candidateFolderName;
+      }
+    }
+  }
+
+  return actualFolderName;
+}
+
 // ========================================
 // 📊 타입 정의
 // ========================================
 
 /**
- * 편집 데이터 저장 요청 인터페이스
+ * 편집 데이터 ���장 요청 인터페이스
  * 
  * 📝 수정 포인트:
- * - 새로운 데이터 타입 추가: 이 인터페이스에 필드 추가
+ * - 새로운 데이터 타입 추가: 이 인터페이스��� 필드 추가
  * - 객체나 그리기 구조 변경: 배열 요소 타입 수정
  * - 메타데이터 확장: 새로운 메타정보 필드 추가
  */
@@ -96,11 +129,10 @@ interface SaveDataRequest {
 }
 
 // ========================================
-// 🗂️ 파일 시스템 설정
+// 🗂️ 파일 시스템 설��
 // ========================================
 
-// 데이터 저장 디렉토리 설정
-const DATA_DIR = path.join(process.cwd(), 'data');
+// DATA_DIR은 공통 유틸리티에서 가져옴
 const SAVED_DATA_INDEX = path.join(DATA_DIR, 'saved-data-all.json');
 
 /**
@@ -137,7 +169,7 @@ function initializeSaveDataFiles() {
  * 
  * 📝 수정 포인트:
  * - 버전 관리 방식 변경: 버전 증가 로직 수정
- * - 프로젝트 레코드 구조 변경: projectRecord 객체 수정
+ * - 프로젝트 레코드 구조 변경: projectRecord 객�� 수정
  * - 파일명 규칙 변경: 저장 파일명 형식 수정
  * 
  * @param {SaveDataRequest} saveData - 저장할 편집 데이터
@@ -146,9 +178,9 @@ function initializeSaveDataFiles() {
 function saveEditedData(saveData: SaveDataRequest) {
   initializeSaveDataFiles();
 
-  // 동영상 파일명을 정규화하여 폴더 찾기
-  const normalizedName = normalizeFileName(saveData.videoFileName);
-  const videoFolderPath = path.join(DATA_DIR, normalizedName);
+  // 실제 업로드된 동영상 폴더 찾기
+  const actualFolderName = findActualVideoFolder(saveData.videoFileName);
+  const videoFolderPath = path.join(DATA_DIR, actualFolderName);
 
   // 동영상 폴더가 없으면 생성
   if (!fs.existsSync(videoFolderPath)) {
@@ -157,12 +189,12 @@ function saveEditedData(saveData: SaveDataRequest) {
   }
 
   // 동영상 폴더 내에 "동영상이름-saved-data.json" 저장
-  const savedDataFile = path.join(videoFolderPath, `${normalizedName}-saved-data.json`);
+  const savedDataFile = path.join(videoFolderPath, `${actualFolderName}-saved-data.json`);
 
   // 📊 새 저장 데이터 생성
   const projectRecord = {
     ...saveData,
-    videoFolder: normalizedName,
+    videoFolder: actualFolderName,
     savedAt: getKoreaTimeISO(),
     version: 1
   };
@@ -173,13 +205,13 @@ function saveEditedData(saveData: SaveDataRequest) {
       const existingContent = fs.readFileSync(savedDataFile, 'utf8');
       const existingData = JSON.parse(existingContent);
       projectRecord.version = (existingData.version || 1) + 1;
-      console.log(`🔄 Updated project in folder ${normalizedName}, version: ${projectRecord.version}`);
+      console.log(`🔄 Updated project in folder ${actualFolderName}, version: ${projectRecord.version}`);
     } catch (error) {
       console.warn('⚠️ Error reading existing saved data, creating new:', error);
       projectRecord.version = 1;
     }
   } else {
-    console.log(`✨ Created new project in folder ${normalizedName}`);
+    console.log(`✨ Created new project in folder ${actualFolderName}`);
   }
 
   // 💾 동영상 폴더에 저장
@@ -212,7 +244,7 @@ function updateProjectIndex(projectRecord: any) {
       (project: any) => project.videoId === projectRecord.videoId
     );
 
-    // 📝 인덱스용 요약 레코드 생성
+    // 📝 ��덱스용 요약 레코드 생성
     const indexRecord = {
       videoId: projectRecord.videoId,
       videoFileName: projectRecord.videoFileName,
@@ -330,13 +362,13 @@ export const handleSaveData: RequestHandler = (req, res) => {
  * 📝 Save Data API 사용법 및 수정 가이드
  * ===================================
  * 
- * 🔧 주요 수정 포인트:
+ * 🔧 주요 수정 ��인트:
  * 
  * 1. 저장 데이터 구조 변경:
  *    - SaveDataRequest 인터페이스 수정
  *    - objects나 drawings ��열의 요소 타입 변경
  * 
- * 2. 버전 관리 방식 변경:
+ * 2. 버전 관리 방식 변���:
  *    - saveEditedData 함수의 버전 증가 로직 수정
  *    - 날짜 기반이나 다른 버전 관리 방식 구현
  * 

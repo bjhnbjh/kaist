@@ -1,11 +1,12 @@
 import express from "express";
 import cors from "cors";
 // 핵심 API 라우터들만 import (demo 제거)
-import { handleDrawingSubmission } from "./routes/drawing";
+import { handleDrawingSubmission, handleCoordinateLinking, handleCoordinateCancellation, handleCoordinateUpdate, handleCoordinateDelete } from "./routes/drawing";
 import { handleVideoFileUpload, handleVideoDelete, uploadMiddleware } from "./routes/upload";
 import { handleWebVTTSave } from "./routes/webvtt";
 import { handleSaveData } from "./routes/save-data";
 import { handleVttCoordinatesRead } from "./routes/vtt-coordinates";
+import { handleFilenameCheck } from "./routes/check-filename";
 
 /**
  * ===================================
@@ -17,18 +18,28 @@ import { handleVttCoordinatesRead } from "./routes/vtt-coordinates";
  * 1. POST /api/upload-file      - 동영상 파일 업로드 (multer 사용)
  * 2. DELETE /api/video          - 동영상 및 관련 폴더 삭제
  * 3. POST /api/drawing          - 그리기 데이터 처리 (객체 영역 그리기)
- * 4. POST /api/webvtt           - WebVTT 자막 파일 생성/업데이트
- * 5. POST /api/save-data        - 편집 데이터 JSON 저장
- * 6. GET /api/vtt-coordinates   - VTT 파일에서 좌표 데이터 읽기
+ * 4. POST /api/drawing/link     - 좌표와 객체명 연결
+ * 5. POST /api/drawing/cancel   - 임시 좌표 취소/삭제
+ * 6. POST /api/coordinate/update - 좌표 파일 객체 이름 업데이트
+ * 7. POST /api/coordinate/delete - 좌표 파일 객체 삭제
+ * 8. POST /api/webvtt           - WebVTT 자막 파일 생성/업데이트
+ * 9. POST /api/save-data        - 편집 데이터 JSON 저장
+ * 10. GET /api/vtt-coordinates  - VTT 파일에서 좌표 데이터 읽기
+ * 11. GET /api/check-filename   - 파일명 충돌 체크 및 새 이름 제안
+ * 12. GET /api/ping             - 서버 상태 체크
  * 
  * 📂 데이터 저장 구조:
  * data/
- * ├── 동영상파일명/
+ * ├── 동영상파일명/                    (기본 폴더)
  * │   ├── 동영상파일명.mp4
  * │   ├── 동영상파일명-webvtt.vtt
+ * │   ├── 동영상파일명-좌표.json      (좌표 정보)
  * │   ├── 동영상파일명-saved-data.json
  * │   └── 동영상파일명-uploads.json
- * └── uploads-all.json (전체 업로드 인덱스)
+ * ├── 동영상파일명(1)/                (중복 업로드 시)
+ * │   └── ... (같은 구조)
+ * ├── uploads-all.json (전체 업로드 인덱스)
+ * └── saved-data-all.json (전체 저장 데이터 인덱스)
  */
 
 export function createServer() {
@@ -58,7 +69,7 @@ export function createServer() {
   /**
    * 서버 상태 체크용 엔드포인트
    * GET /api/ping
-   * ��도: 서버가 정상 작동하는지 확인
+   * 용도: 서버가 정상 작동하는지 확인
    */
   app.get("/api/ping", (_req, res) => {
     res.json({ 
@@ -91,12 +102,36 @@ export function createServer() {
   /**
    * 🎨 그리기 데이터 처리
    * POST /api/drawing
-   * 
+   *
    * 📝 수정 방법:
    * - server/routes/drawing.ts의 handleDrawingSubmission 함수 수정
    * - 그리기 데이터 처리 로직 변경 시 해당 파일 수정
    */
   app.post("/api/drawing", handleDrawingSubmission);
+
+  /**
+   * 🔗 좌표와 객체명 연결
+   * POST /api/drawing/link
+   */
+  app.post("/api/drawing/link", handleCoordinateLinking);
+
+  /**
+   * 🗑️ 임시 좌표 취소/삭제
+   * POST /api/drawing/cancel
+   */
+  app.post("/api/drawing/cancel", handleCoordinateCancellation);
+
+  /**
+   * 🔄 좌표 파일 객체 이름 업데이트
+   * POST /api/coordinate/update
+   */
+  app.post("/api/coordinate/update", handleCoordinateUpdate);
+
+  /**
+   *  좌표 파일 객체 삭제
+   * POST /api/coordinate/delete
+   */
+  app.post("/api/coordinate/delete", handleCoordinateDelete);
 
   /**
    * 📄 WebVTT 자막 파일 생성
@@ -128,6 +163,16 @@ export function createServer() {
    * - 좌표 데이터 파싱 로직 변경 시 extractCoordinatesFromVtt 함수 수정
    */
   app.get("/api/vtt-coordinates", handleVttCoordinatesRead);
+
+  /**
+   * 📍 파일명 충돌 체크 및 새 이름 제안
+   * GET /api/check-filename?filename=example.mp4
+   *
+   * 📝 수정 방법:
+   * - server/routes/check-filename.ts의 handleFilenameCheck 함수 수정
+   * - 파일명 생성 규칙 변경 시 해당 함수 수정
+   */
+  app.get("/api/check-filename", handleFilenameCheck);
 
   return app;
 }
