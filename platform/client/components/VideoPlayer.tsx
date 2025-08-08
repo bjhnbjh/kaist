@@ -435,7 +435,7 @@ export default function VideoPlayer({
       }
     } catch (error) {
       // 네트워크 에러나 파싱 에러를 조용히 처리
-      console.log('ℹ️ VTT 좌표 데이터를 불러올 수 없습니다:', error instanceof Error ? error.message : 'Unknown error');
+      console.log('ℹ️ VTT 좌표 데이터를 ��러올 수 없습니다:', error instanceof Error ? error.message : 'Unknown error');
       setVttCoordinates([]);
     }
   }, [video]);
@@ -612,7 +612,7 @@ export default function VideoPlayer({
     scale: number,
     previewSize: number
   ) => {
-    // 반투명 오버레이
+    // 반투��� 오버레이
     ctx.fillStyle = 'rgba(239, 68, 68, 0.2)';
 
     if (area.type === 'rectangle' && area.startPoint && area.endPoint) {
@@ -712,7 +712,7 @@ export default function VideoPlayer({
         setTimeout(async () => {
           setShowApiResponseModal(false);
 
-          // 현재 그리기 영역을 저장하여 객체 생성 시 좌표 정보 연결
+          // 현재 그리기 영역을 저장하여 객�� 생성 시 좌표 정보 연결
           setCurrentDrawingArea(area);
 
           // 저장된 스크린샷 조회
@@ -740,7 +740,7 @@ export default function VideoPlayer({
         // API 오��� 응답 상세 정보 설정
         setApiResponseData({
           success: false,
-          message: errorResult.message || 'API 서버에서 오��가 발생했습니다.',
+          message: errorResult.message || 'API 서버에서 오���가 발생했습니다.',
           drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유그리기',
           coordinates: area.type === 'click' && area.clickPoint
             ? `(${area.clickPoint.x}, ${area.clickPoint.y})`
@@ -958,7 +958,7 @@ export default function VideoPlayer({
               coords.y <= maxY
             );
           } else if (area.type === "click" && area.clickPoint) {
-            // 클릭 포인트 삭제를 위한 범위 체크 (15px 범위)
+            // 클릭 포인트 삭제를 위한 범위 체크 (15px ���위)
             return (
               Math.abs(area.clickPoint.x - coords.x) < 15 &&
               Math.abs(area.clickPoint.y - coords.y) < 15
@@ -1293,7 +1293,7 @@ export default function VideoPlayer({
    * 📝 수정 포인트:
    * - API URL 변경: window.location.origin 수정
    * - 저장 데이터 구조 변경: saveData 객체 수정
-   * - 응답 처리 변경: response ��리 로직 수정
+   * - 응답 처리 변경: response ����리 로직 수정
    * - 에러 처리 개선: try-catch 블록 수정
    */
   const saveDataToDb = async () => {
@@ -1338,7 +1338,7 @@ export default function VideoPlayer({
 
       if (response.ok) {
         const result = await response.json();
-        // 편집 데이터 저장 성공 ��림 제거 (불필요)
+        // 편집 데이터 저장 성공 ����림 제거 (불필요)
         console.log('✅ 편집 데이터가 DB에 저장되었��니다.');
         console.log('Save data API response:', result);
       } else {
@@ -1902,7 +1902,7 @@ export default function VideoPlayer({
                   ? "🗑️ 지우개 모드 - 그려진 영역을 클릭하여 삭제하세요"
                   : drawingMode === "click"
                   ? "📍 클릭 모드 활성화 - 마우스로 클릭하여 좌표를 찍어보세요"
-                  : "🎨 그리기 모드 활성화 - 마우스로 드래그하여 영역을 그려보세요"}
+                  : "🎨 ��리기 모드 활성화 - 마우스로 드래그하여 영역을 그려보세요"}
               </div>
             )}
           </div>
@@ -2211,7 +2211,7 @@ export default function VideoPlayer({
                       </div>
                     </div>
                   ) : displayObjects && displayObjects.length > 0 ? (
-                    // 실제 객체 목록 표시
+                    // 실제 객��� 목록 표시
                     <div style={{
                       display: "flex",
                       flexDirection: "column",
@@ -3005,7 +3005,7 @@ export default function VideoPlayer({
                 color: "#1f2937",
               }}
             >
-              삭제 확인
+              삭제 확���
             </h3>
 
             <p
@@ -3195,6 +3195,83 @@ export default function VideoPlayer({
                 maxHeight: "60vh",
               }}
             >
+              {/* 📸 스크린샷 미리보기 섹션 */}
+              {modalObjectInfo.imageUrl && (
+                <div style={{ marginBottom: "20px" }}>
+                  <div
+                    style={{
+                      fontSize: "0.9rem",
+                      fontWeight: "600",
+                      color: "#334155",
+                      marginBottom: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    📸 선택 영역 미리보기
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      padding: "12px",
+                      background: "white",
+                      borderRadius: "8px",
+                      border: "1px solid #d1d5db",
+                    }}
+                  >
+                    <img
+                      src={modalObjectInfo.imageUrl}
+                      alt="선택 영역 스크린샷"
+                      style={{
+                        maxWidth: "200px",
+                        maxHeight: "150px",
+                        objectFit: "contain",
+                        borderRadius: "4px",
+                        border: "1px solid #e5e7eb",
+                      }}
+                      onError={(e) => {
+                        console.warn('이미지 로드 실패:', modalObjectInfo.imageUrl);
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* 📍 스크린샷이 없는 경우 안내 */}
+              {!modalObjectInfo.imageUrl && (
+                <div style={{ marginBottom: "20px" }}>
+                  <div
+                    style={{
+                      fontSize: "0.9rem",
+                      fontWeight: "600",
+                      color: "#334155",
+                      marginBottom: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    📷 선택 영역 미리보기
+                  </div>
+                  <div
+                    style={{
+                      padding: "20px",
+                      background: "white",
+                      borderRadius: "8px",
+                      border: "1px solid #d1d5db",
+                      textAlign: "center",
+                      color: "#6b7280",
+                      fontSize: "0.85rem",
+                    }}
+                  >
+                    스크린샷을 불러올 수 없습니다.
+                  </div>
+                </div>
+              )}
+
               {/* 이름 섹션 */}
               <div style={{ marginBottom: "16px" }}>
                 <div
@@ -3436,7 +3513,7 @@ export default function VideoPlayer({
               <button
                 onClick={async () => {
                   if (modalObjectInfo && video && onAddNewObject) {
-                    // 그리기 영역을 ���로운 객�����로 추가 - 팝업창에서 입력한 모든 ��보 포함
+                    // 그리기 영역을 ���로운 객�����로 추가 - 팝업��에서 입력한 모든 ��보 포함
                     const addedObjectId = onAddNewObject(video.id, modalObjectInfo.name, {
                       code: modalObjectInfo.code,
                       additionalInfo: modalObjectInfo.additionalInfo,
