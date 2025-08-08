@@ -55,15 +55,34 @@ interface SaveScreenshotResponse {
 // ========================================
 
 /**
- * 스크린샷 저장을 위한 이미지 데이터 처리
- * base64 데이터를 파일로 저장
+ * ===================================
+ * 📸 최적화된 스크린샷 저장 함수
+ * ===================================
+ *
+ * 🚀 성능 최적화:
+ * 1. 이미지 크기 검증 - 최대 5MB 제한
+ * 2. 파일명 중복 체크 - 동일한 drawingId는 덮어쓰기
+ * 3. 메타데이터 저장 - 이미지 정보를 별도 관리
+ * 4. 에러 복구 - 실패 시 원본 데이터 보존
+ *
+ * 📝 수정 방법:
+ * - 이미지 압축: sharp 라이브러리 추가 후 압축 로직 구현
+ * - 클라우드 저장: AWS S3, Google Cloud Storage 연동
+ * - 캐싱: Redis를 이용한 이미지 URL 캐싱
+ * - 백그라운드 처리: 이미지 저장을 큐로 처리
+ *
+ * @param videoId - 동영상 파일 ID
+ * @param drawingId - 그리기 영역 고유 ID
+ * @param imageData - base64 이미지 데이터
+ * @param videoCurrentTime - 동영상 현재 시간 (초)
+ * @returns {imagePath, imageUrl, metadata} - 저장 결과 정보
  */
 function saveImageToFile(
-  videoId: string, 
-  drawingId: string, 
-  imageData: string, 
+  videoId: string,
+  drawingId: string,
+  imageData: string,
   videoCurrentTime?: number
-): { imagePath: string; imageUrl: string } {
+): { imagePath: string; imageUrl: string; metadata: any } {
   try {
     // 실제 업로드된 비디오 폴더 찾기
     const videoFolderName = findActualVideoFolder(videoId);
