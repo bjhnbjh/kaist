@@ -299,7 +299,7 @@ export default function VideoPlayer({
    * - 서버 오류: HTTP 상태 코드 확인 + 서버 메시지 전달
    * - 이미지 형식 오류: 서버에서 검증 후 400 오류 반환
    *
-   * 📝 수정 포인트:
+   * 📝 수정 포��트:
    * - 이미지 압축: canvas.toDataURL('image/jpeg', 0.8) 사용
    * - 재시도 로직: fetch 실패 시 최대 3회 재시도
    * - 진행률 표시: 업로드 진행률 UI 추가
@@ -410,7 +410,7 @@ export default function VideoPlayer({
    * @returns Promise<{success: boolean, imageUrl?: string, message?: string}>
    *   - success: true면 imageUrl 포함, false면 message로 오류 사유 제공
    *   - imageUrl: 웹에서 직접 접근 가능한 이미지 URL
-   *   - message: 사용자에게 표시할 수 있는 친화적 메시지
+   *   - message: 사용자에게 표시할 수 있는 ��화적 메시지
    */
   const getScreenshotFromServer = async (
     drawingId: string
@@ -486,7 +486,7 @@ export default function VideoPlayer({
           console.log('ℹ️ 저장된 좌표 데이터가 없습니다.');
         }
       } else {
-        // VTT 파일이 없는 경우 조용히 처리 (에러가 아님)
+        // VTT 파일이 없는 경우 조���히 처리 (에러가 아님)
         if (response.status === 404) {
           console.log('📄 VTT 파일이 아직 ��성되지 않았습니다.');
           setVttCoordinates([]);
@@ -550,7 +550,7 @@ export default function VideoPlayer({
         cropWidth = Math.abs(area.endPoint.x - area.startPoint.x) * scaleX;
         cropHeight = Math.abs(area.endPoint.y - area.startPoint.y) * scaleY;
       } else if (area.type === 'click' && area.clickPoint) {
-        // 클릭 포인트 주변 영역 캡쳐 (100x100 픽셀 영역)
+        // 클릭 포인트 주변 영역 ��쳐 (100x100 픽셀 영역)
         const surroundSize = 50; // 클릭 지점 주변 50픽셀씩
         cropX = Math.max(0, (area.clickPoint.x - surroundSize) * scaleX);
         cropY = Math.max(0, (area.clickPoint.y - surroundSize) * scaleY);
@@ -762,7 +762,7 @@ export default function VideoPlayer({
             ? `(${area.clickPoint.x}, ${area.clickPoint.y})`
             : area.type === 'rectangle' && area.startPoint && area.endPoint
             ? `(${area.startPoint.x}, ${area.startPoint.y}) ~ (${area.endPoint.x}, ${area.endPoint.y})`
-            : '복수 좌표',
+            : '복�� 좌표',
           videoTime: currentVideoTime,
           timestamp: new Date().toLocaleString('ko-KR')
         });
@@ -1170,7 +1170,7 @@ export default function VideoPlayer({
             };
             setDrawnAreas((prev) => [...prev, newArea]);
 
-            // 그리기 완료 시 확인 모달 표시
+            // 그리기 ��료 시 확인 모달 표시
             showConfirmationDialog(newArea);
           }
 
@@ -1271,7 +1271,7 @@ export default function VideoPlayer({
    * 📄 WebVTT 자막 파일 생성 API 호출
    *
    * 📝 수정 포인트:
-   * - API URL 변경: window.location.origin 수정
+   * - API URL 변경: window.location.origin 수���
    * - WebVTT 데이터 구조 변경: webvttData 객체 수정
    * - ��답 처리 변경: response 처리 로직 수정
    */
@@ -1506,7 +1506,7 @@ export default function VideoPlayer({
     setIsEditing(false);
   };
 
-  // 뒤로가기 핸들러 - 탐지된 객체 목록으로만 이동하고 버튼 활성화 상태 유지
+  // 뒤로가기 핸들러 - 탐지된 객체 목록으로만 이동하고 ��튼 활성화 상태 유지
   const handleBackToObjectList = () => {
     setSelectedObjectId(null);
     setIsEditing(false);
@@ -2092,7 +2092,7 @@ export default function VideoPlayer({
                       // 객체 ��목이 열려����� 때 닫기
                       setShowObjectList(false);
                     } else if (selectedObjectId) {
-                      // 객�� ��세 정보에서 ����기
+                      // 객�� ��세 정보에서 �������
                       setShowObjectList(false);
                       setSelectedObjectId(null);
                     }
@@ -3288,8 +3288,8 @@ export default function VideoPlayer({
                       src={modalObjectInfo.imageUrl}
                       alt="선택 영역 스크린샷"
                       style={{
-                        maxWidth: "200px",
-                        maxHeight: "150px",
+                        maxWidth: "280px",
+                        maxHeight: "200px",
                         objectFit: "contain",
                         borderRadius: "4px",
                         border: "1px solid #e5e7eb",
