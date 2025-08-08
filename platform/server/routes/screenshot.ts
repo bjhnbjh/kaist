@@ -224,7 +224,7 @@ function saveImageToFile(
  * 3. 클라우드 저장소 연동:
  *    - AWS S3: aws-sdk 사용
  *    - Google Cloud: @google-cloud/storage 사용
- *    - 라인 125-140 영역을 클라우드 업로드 로직으로 교체
+ *    - 라인 125-140 영역을 클라우드 업로드 로직으로 교���
  *
  * 4. 파일명 형식 변경:
  *    - 라인 113: imageFileName 생성 로직 수정
@@ -298,8 +298,89 @@ export const handleSaveScreenshot: RequestHandler = (req, res) => {
 };
 
 /**
- * 저장된 스크린샷 조회 핸들러
- * 
+ * ===================================
+ * 📷 저장된 스크린샷 조회 API 핸들러
+ * ===================================
+ *
+ * 🔧 기능 상세:
+ * 1. 특정 그리기 영역의 스크린샷 파일 검색
+ * 2. 파일 존재 여부 확인
+ * 3. 웹 접근 가능한 URL 반환
+ * 4. 파일 메타데이터 포함
+ *
+ * 📋 요청 형식 (GET):
+ * URL: /api/screenshot?videoId={동영상ID}&drawingId={그리기ID}
+ *
+ * 쿼리 파라미터:
+ * - videoId: 동영상 파일명 또는 폴더명 (필수)
+ * - drawingId: 그리기 영역 고유 ID (필수)
+ *
+ * 📤 성공 응답 (200):
+ * {
+ *   "success": true,
+ *   "message": "스크린샷을 찾았습니다.",
+ *   "imageUrl": "/data/폴더명/파일명.png",          // 웹에서 직접 접근 가능
+ *   "imagePath": "/절대/경로/파일명.png",
+ *   "drawingId": "drawing_abc123"
+ * }
+ *
+ * 📤 오류 응답:
+ * 400 Bad Request:
+ * {
+ *   "success": false,
+ *   "message": "videoId와 drawingId는 필수 쿼리 파라미터입니다."
+ * }
+ *
+ * 404 Not Found:
+ * {
+ *   "success": false,
+ *   "message": "해당 동영상 폴더를 찾을 수 없습니다."
+ * }
+ * 또는
+ * {
+ *   "success": false,
+ *   "message": "해당 그리기 영역의 스크린샷을 찾을 수 없습니다."
+ * }
+ *
+ * 500 Internal Server Error:
+ * {
+ *   "success": false,
+ *   "message": "스크린샷 조회 중 오류가 발생했습니다.",
+ *   "error": "구체적인 오류 메시지"
+ * }
+ *
+ * 📝 커스터마이징 방법:
+ *
+ * 1. 파일 검�� 패턴 변경:
+ *    - 라인 251: files.find() 조건 수정
+ *    - 예시: file.startsWith(drawingId) // drawingId로 시작하는 파일
+ *
+ * 2. 다중 이미지 반환:
+ *    const screenshotFiles = files.filter(file =>
+ *      file.includes('screenshot') && file.includes(drawingId)
+ *    );
+ *    return { imageUrls: screenshotFiles.map(file => `/data/${videoFolderName}/${file}`) };
+ *
+ * 3. 이미지 메타데이터 포함:
+ *    const stats = fs.statSync(imagePath);
+ *    return {
+ *      ...result,
+ *      fileSize: stats.size,
+ *      createdAt: stats.birthtime,
+ *      modifiedAt: stats.mtime
+ *    };
+ *
+ * 4. 캐싱 헤더 추가:
+ *    res.setHeader('Cache-Control', 'public, max-age=3600'); // 1시간 캐시
+ *    res.setHeader('ETag', `"${drawingId}-${stats.mtime.getTime()}"`);
+ *
+ * 5. 이미지 형식별 검색:
+ *    const screenshotFile = files.find(file =>
+ *      file.includes('screenshot') &&
+ *      file.includes(drawingId) &&
+ *      /\.(png|jpg|jpeg|webp)$/i.test(file)
+ *    );
+ *
  * @route GET /api/screenshot
  * @param {Request} req - Express 요청 객체
  * @param {Response} res - Express 응답 객체
@@ -315,7 +396,7 @@ export const handleGetScreenshot: RequestHandler = (req, res) => {
       });
     }
 
-    // 실제 비디오 폴더 찾기
+    // 실제 비디오 폴더 찾���
     const videoFolderName = findActualVideoFolder(videoId as string);
     const videoFolderPath = path.join(DATA_DIR, videoFolderName);
 
