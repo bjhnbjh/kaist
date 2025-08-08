@@ -261,7 +261,7 @@ export function useVideoUpload() {
                   serverFileName: uploadResult?.processedData?.fileName, // 서버에서 받은 실제 파일명
                 };
 
-                console.log(`🎬🎬🎬 생성된 video 객체:`, {
+                console.log(`🎬���🎬 생성된 video 객체:`, {
                   id: newVideo.id,
                   fileName: newVideo.file.name,
                   serverFileName: newVideo.serverFileName,
@@ -340,7 +340,7 @@ export function useVideoUpload() {
   const handleVideoSelect = useCallback(
     (videoId: string) => {
       if (videoId === "") {
-        // 선택 해제 - 닫기 애니메이션
+        // 선택 해제 - 닫기 애��메이션
         setPanelClosing(true);
         setPanelAnimating(true);
         const timeoutId = setTimeout(() => {
@@ -358,6 +358,29 @@ export function useVideoUpload() {
         setHasRunDetection(hasDetectedObjects);
 
         console.log('DEBUG: adminPanelVisible =', adminPanelVisible);
+
+        // videos 배열에 해당 ID의 비디오가 없다면 uploads에서 찾아서 추가
+        if (!video) {
+          const upload = uploads.find(u => u.id === videoId && u.status === 'completed');
+          console.log('DEBUG: Found upload for missing video:', upload);
+
+          if (upload) {
+            const newVideo: VideoInfo = {
+              id: upload.id,
+              file: upload.file!,
+              duration: 0, // 추후 메타데이터에서 얻을 수 있음
+              currentTime: 0,
+              detectedObjects: [],
+              totalObjectsCreated: 0,
+              uploadDate: upload.uploadDate || new Date(),
+              videoFolder: upload.filename,
+              serverFileName: upload.filename,
+            };
+            console.log('DEBUG: Creating missing video:', newVideo);
+            setVideos(prev => [...prev, newVideo]);
+          }
+        }
+
         if (!adminPanelVisible) {
           console.log('DEBUG: Opening admin panel...');
           setPanelAnimating(true);
