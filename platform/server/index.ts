@@ -22,7 +22,7 @@ import { handleSaveScreenshot, handleGetScreenshot } from "./routes/screenshot";
  * 3. POST /api/drawing          - 그리기 데이터 처리 (객체 영역 그리기)
  * 4. POST /api/drawing/link     - 좌표와 객체명 연결
  * 5. POST /api/drawing/cancel   - 임시 좌표 취소/삭제
- * 6. POST /api/coordinate/update - 좌표 파일 객체 이름 업데이트
+ * 6. POST /api/coordinate/update - 좌표 파일 객체 이름 업데이���
  * 7. POST /api/coordinate/delete - 좌표 파일 객체 삭제
  * 8. POST /api/webvtt           - WebVTT 자막 파일 생성/업데이트
  * 9. POST /api/save-data        - 편집 데이터 JSON 저장
@@ -65,6 +65,10 @@ export function createServer() {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     next();
   });
+
+  // 📸 정적 파일 서빙 - data 폴더의 이미지와 동영상 파일 접근 허용
+  // /data/폴더명/파일명 형태로 접근 가능
+  app.use('/data', express.static(path.join(__dirname, '../data')));
 
   // ========================================
   // 🌐 API 라우트 정의
@@ -132,7 +136,7 @@ export function createServer() {
   app.post("/api/coordinate/update", handleCoordinateUpdate);
 
   /**
-   *  좌표 파일 객체 삭제
+   *  좌표 파일 ���체 삭제
    * POST /api/coordinate/delete
    */
   app.post("/api/coordinate/delete", handleCoordinateDelete);
