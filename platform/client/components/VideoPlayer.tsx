@@ -369,7 +369,7 @@ export default function VideoPlayer({
       console.error('❌ Error saving screenshot:', error);
       return {
         success: false,
-        message: '네트워크 오류로 스크린샷 저장에 실패했���니다.'
+        message: '네트워크 오류로 스크린샷 저장에 ���패했���니다.'
       };
     }
   };
@@ -414,7 +414,7 @@ export default function VideoPlayer({
    * 📝 사용 시나리오:
    * - 정보 입력 모달 열 때: 이전에 저장된 스크린샷 표시
    * - 객체 편집 시: 해당 객체의 원본 스크린샷 표시
-   * - 미리보기 갤러리: 모든 객체의 스크린샷 목록 표시
+   * - 미리보기 갤러리: ���든 객체의 스크린샷 목록 표시
    *
    * @param drawingId - 그리기 영역 고유 ID (예: "drawing_abc123")
    * @returns Promise<{success: boolean, imageUrl?: string, message?: string}>
@@ -457,6 +457,9 @@ export default function VideoPlayer({
         success: false,
         message: '스크린샷 조회 중 오류가 ���생했습니다.'
       };
+    } finally {
+      // 🔄 로딩 종료
+      setIsScreenshotLoading(false);
     }
   };
 
@@ -818,7 +821,7 @@ export default function VideoPlayer({
         setApiResponseData({
           success: false,
           message: errorResult.message || 'API 서버에서 �����가 발생했습니다.',
-          drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유그리기',
+          drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유��리기',
           coordinates: area.type === 'click' && area.clickPoint
             ? `(${area.clickPoint.x}, ${area.clickPoint.y})`
             : '오류로 인해 처리되지 않음',
