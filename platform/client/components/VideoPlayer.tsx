@@ -267,6 +267,120 @@ export default function VideoPlayer({
     }
   };
 
+  /**
+   * ===================================
+   * 📸 스크린샷 저장 API 호출 함수
+   * ===================================
+   *
+   * 🔧 기능:
+   * 1. base64 이미지 데이터를 서버로 전송
+   * 2. 서버에서 이미지 파일로 저장
+   * 3. 저장된 이미지의 URL 반환
+   *
+   * 📝 수정 포인트:
+   * - 이미지 압축: 전송 전 이미지 크기 줄이기
+   * - 에러 처리: 네트워크 오류 시 재시도 로직
+   * - 진행률 표시: 업로드 진행률 UI 추가
+   *
+   * @param drawingId - 그리기 영역 ID
+   * @param imageData - base64 형태의 이미지 데이터
+   * @param videoCurrentTime - 현재 동영상 시간
+   * @returns Promise<{success: boolean, imageUrl?: string}>
+   */
+  const saveScreenshotToServer = async (
+    drawingId: string,
+    imageData: string,
+    videoCurrentTime?: number
+  ): Promise<{success: boolean; imageUrl?: string; message?: string}> => {
+    try {
+      const apiUrl = getApiUrl();
+
+      console.log('📸 Saving screenshot to server:', {
+        drawingId,
+        videoId: video?.serverFileName || video?.file.name,
+        videoCurrentTime,
+        imageDataLength: imageData.length
+      });
+
+      const response = await fetch(`${apiUrl}/api/save-screenshot`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          videoId: video?.serverFileName || video?.file.name,
+          drawingId: drawingId,
+          imageData: imageData,
+          videoCurrentTime: videoCurrentTime,
+          timestamp: Date.now()
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Screenshot saved successfully:', result);
+        return {
+          success: true,
+          imageUrl: result.imageUrl,
+          message: result.message
+        };
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Failed to save screenshot:', response.status, errorData);
+        return {
+          success: false,
+          message: errorData.message || '스크린샷 저장에 실패했습니다.'
+        };
+      }
+    } catch (error) {
+      console.error('❌ Error saving screenshot:', error);
+      return {
+        success: false,
+        message: '네트워크 오류로 스크린샷 저장에 실패했습니다.'
+      };
+    }
+  };
+
+  /**
+   * 저장된 스크린샷 조회 함수
+   *
+   * @param drawingId - 그리기 영역 ID
+   * @returns Promise<{success: boolean, imageUrl?: string}>
+   */
+  const getScreenshotFromServer = async (
+    drawingId: string
+  ): Promise<{success: boolean; imageUrl?: string; message?: string}> => {
+    try {
+      const apiUrl = getApiUrl();
+      const videoId = video?.serverFileName || video?.file.name;
+
+      const response = await fetch(`${apiUrl}/api/screenshot?videoId=${encodeURIComponent(videoId)}&drawingId=${encodeURIComponent(drawingId)}`);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Screenshot retrieved successfully:', result);
+        return {
+          success: true,
+          imageUrl: result.imageUrl,
+          message: result.message
+        };
+      } else {
+        const errorData = await response.json();
+        console.log('ℹ️ Screenshot not found:', errorData);
+        return {
+          success: false,
+          message: errorData.message || '스크린샷을 찾을 수 없습니다.'
+        };
+      }
+    } catch (error) {
+      console.error('❌ Error getting screenshot:', error);
+      return {
+        success: false,
+        message: '스크린샷 조회 중 오류가 발생했습니다.'
+      };
+    }
+  };
+
   // VTT 좌표 데이터 로드
   const loadVttCoordinates = useCallback(async () => {
     if (!video) return;
@@ -599,7 +713,7 @@ export default function VideoPlayer({
           // 현재 그리기 영역을 저장하여 객체 생성 시 좌표 정보 연결
           setCurrentDrawingArea(area);
 
-          // ��리기로 추가되는 객체는 totalObjectsCreated + 1로 번호 생성
+          // ����기로 추가되는 객체는 totalObjectsCreated + 1로 번호 생성
           const nextObjectNumber = video ? video.totalObjectsCreated + 1 : detectedObjects.length + 1;
           setModalObjectInfo({
             name: `Object(${nextObjectNumber})`,
@@ -737,7 +851,7 @@ export default function VideoPlayer({
     if (vttOverlayEnabled && vttCoordinates.length > 0) {
       const currentTime = videoRef.current?.currentTime || 0;
 
-      // 현재 시간에 해당하�� 좌표들 찾기 (±0.5초 범위)
+      // 현재 시간에 해당���� 좌표들 찾기 (±0.5초 범위)
       const activeCoordinates = vttCoordinates.filter(coord =>
         Math.abs(coord.videoTime - currentTime) <= 0.5
       );
@@ -1425,7 +1539,7 @@ export default function VideoPlayer({
       setShowDeleteConfirmModal(false);
       setObjectToDelete(null);
       setDeleteConfirmed(false);
-      // 초기에는 객체 목록을 닫은 상태로 시작
+      // 초기에는 객체 목록을 ��은 상태로 시작
       setShowObjectList(false);
 
       if (videoDuration === 0) {
