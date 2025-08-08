@@ -227,7 +227,7 @@ export function useVideoUpload() {
             ),
           );
 
-          // 처리 완료 후 비디오 추가
+          // 처��� 완료 후 비디오 추가
           processTimeoutId = setTimeout(() => {
             setUploads((prev) =>
               prev.map((upload) =>
@@ -359,25 +359,28 @@ export function useVideoUpload() {
 
         console.log('DEBUG: adminPanelVisible =', adminPanelVisible);
 
-        // videos 배열에 해당 ID의 비디오가 없다면 uploads에서 찾아서 추가
+        // videos 배열에 해당 ID의 비디오가 없다면 uploads에서 찾아서 추가 (비동기로 처리)
         if (!video) {
           const upload = uploads.find(u => u.id === videoId && u.status === 'completed');
           console.log('DEBUG: Found upload for missing video:', upload);
 
           if (upload && upload.file) {
-            const newVideo: VideoInfo = {
-              id: upload.id,
-              file: upload.file,
-              duration: 0, // 추후 메타데이터에서 얻을 수 있음
-              currentTime: 0,
-              detectedObjects: [],
-              totalObjectsCreated: 0,
-              uploadDate: upload.uploadDate || new Date(),
-              videoFolder: upload.filename,
-              serverFileName: upload.filename,
-            };
-            console.log('DEBUG: Creating missing video:', newVideo);
-            setVideos(prev => [...prev, newVideo]);
+            // 렌더링 후에 상태 업데이트 실행
+            setTimeout(() => {
+              const newVideo: VideoInfo = {
+                id: upload.id,
+                file: upload.file!,
+                duration: 0, // 추후 메타데이터에서 얻을 수 있음
+                currentTime: 0,
+                detectedObjects: [],
+                totalObjectsCreated: 0,
+                uploadDate: upload.uploadDate || new Date(),
+                videoFolder: upload.filename,
+                serverFileName: upload.filename,
+              };
+              console.log('DEBUG: Creating missing video:', newVideo);
+              setVideos(prev => [...prev, newVideo]);
+            }, 0);
           }
         }
 
@@ -556,7 +559,7 @@ export function useVideoUpload() {
                 if (video.id !== videoId) return video;
                 if (video.detectedObjects.length > 0) return video;
                 
-                // 비디오 duration에 기반한 시간 설정
+                // 비디오 duration에 ���반한 시간 설정
                 const videoDuration = video.duration || 60; // 기본값 60���
                 
                 return {
