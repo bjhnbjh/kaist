@@ -65,7 +65,7 @@ export function useVideoUpload() {
       };
       
       video.onerror = () => {
-        console.warn('비디오 메타데이터 추출 실패');
+        console.warn('비디�� 메타데이터 추출 실패');
         resolve({ duration: 0 });
         URL.revokeObjectURL(video.src);
       };
@@ -128,7 +128,7 @@ export function useVideoUpload() {
 
       return file; // 충돌 없으면 원본 파일 반환
     } catch (error) {
-      console.error('🚨 파일명 체크 오류:', error);
+      console.error('🚨 파일�� 체크 오류:', error);
       return file; // 에러 발생 시 원본 파일 사용
     }
   }, []);
@@ -352,7 +352,7 @@ export function useVideoUpload() {
         return () => clearTimeout(timeoutId);
       } else {
         setSelectedVideoId(videoId);
-        // 해당 비디오에 이��� 탐지된 객체가 있으면 hasRunDetection을 true로 설정
+        // 해당 비디오에 이��� 탐지된 객체가 ��으면 hasRunDetection을 true로 설정
         const video = videos.find(v => v.id === videoId);
         const hasDetectedObjects = video && video.detectedObjects.length > 0;
         setHasRunDetection(hasDetectedObjects);
@@ -367,7 +367,7 @@ export function useVideoUpload() {
           if (upload && upload.file) {
             const newVideo: VideoInfo = {
               id: upload.id,
-              file: upload.file!,
+              file: upload.file,
               duration: 0, // 추후 메타데이터에서 얻을 수 있음
               currentTime: 0,
               detectedObjects: [],
