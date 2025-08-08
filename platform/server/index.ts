@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
-// 핵심 API 라우터들만 import (demo 제거)
+// 핵심 API 라��터들만 import (demo 제거)
 import { handleDrawingSubmission, handleCoordinateLinking, handleCoordinateCancellation, handleCoordinateUpdate, handleCoordinateDelete } from "./routes/drawing";
 import { handleVideoFileUpload, handleVideoDelete, uploadMiddleware } from "./routes/upload";
 import { handleWebVTTSave } from "./routes/webvtt";
@@ -53,7 +53,7 @@ export function createServer() {
   // 🔧 미들웨어 설정
   // ========================================
   
-  // CORS 설정 - 클라이언트에서 API 호출 허용
+  // CORS 설��� - 클라이언트에서 API 호출 허용
   app.use(cors());
   
   // JSON 파싱 미들웨어 - 큰 용량 파일 처리를 위해 50MB 제한
@@ -108,7 +108,7 @@ export function createServer() {
   app.delete("/api/video", handleVideoDelete);
 
   /**
-   * 🎨 그리기 데이��� 처리
+   * 🎨 그리기 데이터 처리
    * POST /api/drawing
    *
    * 📝 수정 방법:
@@ -186,9 +186,29 @@ export function createServer() {
    * 📸 그리기 영역 스크린샷 저장
    * POST /api/save-screenshot
    *
+   * 📋 요청 데이터 (JSON):
+   * {
+   *   "videoId": "동영상파일명",           // 필수: 연관된 동영상 ID
+   *   "drawingId": "drawing_abc123",      // 필수: 그리기 영역 고유 ID
+   *   "imageData": "data:image/png;base64,iVBORw0KGgoAAAA...", // 필수: base64 이미지 데이터
+   *   "videoCurrentTime": 125.5,          // 선택: 동영상 현재 시간 (초)
+   *   "timestamp": 1642345678901          // 선택: 생성 타임스탬프
+   * }
+   *
+   * 📤 응답 데이터:
+   * {
+   *   "success": true,
+   *   "message": "스크린샷이 성공적으로 저장되었습니다.",
+   *   "imagePath": "/절대/경로/파일명.png",
+   *   "imageUrl": "/data/폴더명/파일명.png",  // 웹에서 접근 가능한 URL
+   *   "drawingId": "drawing_abc123",
+   *   "timestamp": "2024-01-16T12:34:56.789Z"
+   * }
+   *
    * 📝 수정 방법:
    * - server/routes/screenshot.ts의 handleSaveScreenshot 함수 수정
    * - 이미지 저장 경로나 처리 로직 변경 시 해당 파일 수정
+   * - 이미지 압축이나 리사이징 기능 추가 시 해당 함수에서 처리
    */
   app.post("/api/save-screenshot", handleSaveScreenshot);
 
@@ -196,9 +216,28 @@ export function createServer() {
    * 📷 저장된 스크린샷 조회
    * GET /api/screenshot?videoId=example&drawingId=abc123
    *
+   * 📋 쿼리 파라미터:
+   * - videoId: 동영상 파일명 (필수)
+   * - drawingId: 그리기 영역 ID (필수)
+   *
+   * 📤 응답 데이터 (성공 시):
+   * {
+   *   "success": true,
+   *   "message": "스크린샷을 찾았습니다.",
+   *   "imageUrl": "/data/폴더명/파일명.png",
+   *   "imagePath": "/절대/경로/파일명.png",
+   *   "drawingId": "drawing_abc123"
+   * }
+   *
+   * 📤 응답 데이터 (실패 시):
+   * {
+   *   "success": false,
+   *   "message": "해당 그리기 영역의 스크린샷을 찾을 수 없습니다."
+   * }
+   *
    * 📝 수정 방법:
    * - server/routes/screenshot.ts의 handleGetScreenshot 함수 수정
-   * - 이미지 조회 로직 변경 시 해당 파일 수정
+   * - 이미지 조회 로직이나 파일명 형식 변경 시 해당 파일 수정
    */
   app.get("/api/screenshot", handleGetScreenshot);
 
@@ -214,7 +253,7 @@ export function createServer() {
  *    - server/routes/ 폴더에 새 파일 생성
  *    - 여기 index.ts에 import 및 route 추가
  * 
- * 2. 기존 API 수정:
+ * 2. 기존 API 수���:
  *    - 각 routes/ 폴더의 해당 파일에서 핸들러 함수 수정
  *    - 인터페이스 변경 시 shared/types.ts도 함께 수정
  * 
