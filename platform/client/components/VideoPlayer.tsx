@@ -72,7 +72,7 @@ const formatTime = (seconds: number) => {
   return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}.${milliseconds.toString().padStart(2, "0")}`;
 };
 
-// CSS 애니메이션 스타일 추가
+// CSS 애��메이션 스타일 추가
 const spinnerStyles = `
   @keyframes spin {
     0% { transform: rotate(0deg); }
@@ -278,7 +278,7 @@ export default function VideoPlayer({
    * 1. base64 이미지 데이터를 서버로 전송
    * 2. 서버에서 이미지 파일로 저장 (PNG 형식)
    * 3. 저장된 이미지의 URL 반환
-   * 4. 동영상 시간 정보와 함께 저장
+   * 4. 동��상 시간 정보와 함께 저장
    *
    * 📂 저장 위치:
    * - 경로: data/{동영상폴더명}/{동영상파일명}-screenshot-{시간}-{drawingId}.png
@@ -396,7 +396,7 @@ export default function VideoPlayer({
    * }
    *
    * 🔄 에러 처리:
-   * - 404 Not Found: 스크린샷 파일이 존재하지 않음 (정상적인 상황)
+   * - 404 Not Found: 스크린샷 파일이 존���하지 않음 (정상적인 상황)
    * - 400 Bad Request: 필수 파라미터 누락
    * - 500 Server Error: 서버 내부 오류
    * - Network Error: 네트워크 연결 문제
@@ -498,7 +498,7 @@ export default function VideoPlayer({
       }
     } catch (error) {
       // 네트워크 에러나 파싱 에러를 조용히 처리
-      console.log('ℹ️ VTT 좌표 데이터를 불러올 수 없습니다:', error instanceof Error ? error.message : 'Unknown error');
+      console.log('ℹ️ VTT 좌표 데이��를 불러올 수 없습니다:', error instanceof Error ? error.message : 'Unknown error');
       setVttCoordinates([]);
     }
   }, [video]);
@@ -775,7 +775,7 @@ export default function VideoPlayer({
         setTimeout(async () => {
           setShowApiResponseModal(false);
 
-          // 현재 그리기 영역을 저장하여 객체 생성 시 좌표 정보 연결
+          // 현재 그리기 영역을 저장하�� 객체 생성 시 좌표 정보 연결
           setCurrentDrawingArea(area);
 
           // 저장된 스크린샷 조회
@@ -803,7 +803,7 @@ export default function VideoPlayer({
         // API 오��� 응답 상세 정보 설정
         setApiResponseData({
           success: false,
-          message: errorResult.message || 'API 서버에서 오��가 발생했습니다.',
+          message: errorResult.message || 'API 서버에서 �����가 발생했습니다.',
           drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유그리기',
           coordinates: area.type === 'click' && area.clickPoint
             ? `(${area.clickPoint.x}, ${area.clickPoint.y})`
@@ -1021,7 +1021,7 @@ export default function VideoPlayer({
               coords.y <= maxY
             );
           } else if (area.type === "click" && area.clickPoint) {
-            // 클릭 포인트 삭제를 위한 범위 체크 (15px 범위)
+            // 클릭 포인트 ��제를 위한 범위 체크 (15px 범위)
             return (
               Math.abs(area.clickPoint.x - coords.x) < 15 &&
               Math.abs(area.clickPoint.y - coords.y) < 15
@@ -3201,9 +3201,9 @@ export default function VideoPlayer({
               background: "white",
               borderRadius: "12px",
               padding: "24px",
-              maxWidth: "500px",
-              width: "100%",
-              maxHeight: "80vh",
+              maxWidth: "900px", // 더 넓게 확장
+              width: "95%",
+              maxHeight: "85vh",
               overflow: "hidden",
               boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
               display: "flex",
@@ -3981,7 +3981,7 @@ export default function VideoPlayer({
                         toast.success('그리기 영역과 스크린샷이 저장되었습니다.');
                       } else {
                         console.warn('⚠️ Screenshot save failed:', screenshotResult.message);
-                        toast.warning(`그리기 영역은 저장되었지만 스크린샷 저장에 실패했습니다: ${screenshotResult.message}`);
+                        toast.warning(`그리기 영역은 저장되었지만 스크린샷 저장에 실패���습니다: ${screenshotResult.message}`);
                       }
 
                     } catch (error) {
