@@ -144,7 +144,7 @@ export default function VideoPlayer({
     dlReservoirDomain: string;
     category: string;
     videoCurrentTime: number;
-    imageUrl?: string; // 스크린샷 이미지 URL 추가
+    imageUrl?: string; // 스크��샷 이미지 URL 추가
     drawingId?: string; // 그리기 영역 ID 추가 (스크린샷 조회용)
   } | null>(null);
   const [isApiLoading, setIsApiLoading] = useState(false);
@@ -157,6 +157,10 @@ export default function VideoPlayer({
     videoTime?: number;
     timestamp?: string;
   } | null>(null);
+
+  // 📸 스크린샷 관련 상태 추가
+  const [isScreenshotLoading, setIsScreenshotLoading] = useState(false);
+  const [screenshotError, setScreenshotError] = useState<string | null>(null);
 
   // 확인 모달 상태
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
@@ -398,7 +402,7 @@ export default function VideoPlayer({
    * 📤 실패 응답:
    * {
    *   "success": false,
-   *   "message": "해당 그리기 영역의 스크린샷을 찾을 ��� 없습니다."
+   *   "message": "해당 그리기 영역의 스크린샷을 찾을 수 없습니다."
    * }
    *
    * 🔄 에러 처리:
@@ -543,7 +547,7 @@ export default function VideoPlayer({
         return createFallbackPreview(area);
       }
 
-      // 캔버스 좌표��� 비디오 좌표로 변환하는 비율 계산
+      // 캔버스 좌표를 비디오 좌표로 변환하는 비율 계산
       const scaleX = videoNaturalWidth / videoRect.width;
       const scaleY = videoNaturalHeight / videoRect.height;
 
@@ -714,7 +718,7 @@ export default function VideoPlayer({
     }
   };
 
-  // 확인 모달을 표��하고 미리보기 생성
+  // 확인 모달을 표시하고 미리보기 생성
   const showConfirmationDialog = (area: DrawnArea) => {
     const previewDataUrl = createAreaPreview(area);
     setConfirmationModalData({ area, previewDataUrl });
@@ -777,7 +781,7 @@ export default function VideoPlayer({
         // 그리기 영역 전송 성공 로그만 남기고 알림 제거
         console.log(`✅ ${area.type === 'click' ? '클릭 좌표' : '그리기 영역'}가 서버에 전송되었습니다.`);
 
-        // 잠시 후 정보 입력 모달 표시
+        // 잠시 후 정보 입력 모�� 표시
         setTimeout(async () => {
           setShowApiResponseModal(false);
 
@@ -806,7 +810,7 @@ export default function VideoPlayer({
       } else {
         const errorResult = await response.json().catch(() => ({ message: 'API 응답 오류' }));
 
-        // API 오��� 응답 상세 정보 설정
+        // API 오��� 응��� 상세 정보 설정
         setApiResponseData({
           success: false,
           message: errorResult.message || 'API 서버에서 �����가 발생했습니다.',
@@ -1295,7 +1299,7 @@ export default function VideoPlayer({
         uploadDate: video.uploadDate
       });
 
-      // videoFolder��� undefined일 때 ��일명 기반으로 폴더명 추정
+      // videoFolder��� undefined일 때 파일명 기반으로 ���더명 추정
       let finalVideoFolder = video.videoFolder;
       const finalFileName = video.serverFileName || video.file.name;
 
@@ -1407,7 +1411,7 @@ export default function VideoPlayer({
 
       if (response.ok) {
         const result = await response.json();
-        // 편집 데이터 저장 성공 ��림 제��� (불필요)
+        // 편집 데이터 저장 성공 ��림 제거 (불필요)
         console.log('✅ 편집 데이터가 DB에 저장되었��니다.');
         console.log('Save data API response:', result);
       } else {
@@ -3323,7 +3327,7 @@ export default function VideoPlayer({
                       gap: "6px",
                     }}
                   >
-                    📷 선택 영역 미리보기
+                    📷 ��택 영역 미리보기
                   </div>
                   <div
                     style={{
@@ -3582,7 +3586,7 @@ export default function VideoPlayer({
               <button
                 onClick={async () => {
                   if (modalObjectInfo && video && onAddNewObject) {
-                    // 그리기 영역을 ���로운 객�������로 추가 - 팝업창에서 입력한 모든 ���보 포함
+                    // 그리기 영역을 ���로운 객�������로 추가 - 팝업창에서 입력한 모든 ��보 포함
                     const addedObjectId = onAddNewObject(video.id, modalObjectInfo.name, {
                       code: modalObjectInfo.code,
                       additionalInfo: modalObjectInfo.additionalInfo,
