@@ -1,0 +1,27 @@
+{
+  "savedProjects": [
+    {
+      "videoId": "video-1754638125453-jcj68euym",
+      "videoFileName": "첫번쨰 작품.mp4",
+      "videoFolder": "첫번쨰_작품",
+      "version": 1,
+      "savedAt": "2025-08-08T16:31:45.940+09:00",
+      "objectCount": 2,
+      "drawingCount": 0,
+      "duration": 35.041667,
+      "totalFrames": 1051
+    },
+    {
+      "videoId": "video-1754638330677-7s8kg1hdz",
+      "videoFileName": "첫번쨰 작품(1).mp4",
+      "videoFolder": "첫번쨰_작품(1)",
+      "version": 1,
+      "savedAt": "2025-08-08T16:33:30.896+09:00",
+      "objectCount": 2,
+      "drawingCount": 0,
+      "duration": 35.041667,
+      "totalFrames": 1051
+    }
+  ],
+  "lastUpdated": "2025-08-08T16:33:30.896+09:00"
+}

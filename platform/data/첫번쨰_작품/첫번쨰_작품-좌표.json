@@ -1,0 +1,41 @@
+[
+  {
+    "object1": {
+      "이름": "Object(1)",
+      "position": {
+        "type": "rectangle",
+        "points": [],
+        "startPoint": {
+          "x": 396,
+          "y": 124.5
+        },
+        "endPoint": {
+          "x": 914,
+          "y": 710.5
+        },
+        "clickPoint": null,
+        "videoCurrentTime": 10.046293
+      },
+      "polygon": null,
+      "drawingId": "rect-1754638148551-zkrlfmgaq"
+    }
+  },
+  {
+    "object2": {
+      "이름": "Object(2)",
+      "position": {
+        "type": "click",
+        "points": [],
+        "startPoint": null,
+        "endPoint": null,
+        "clickPoint": {
+          "x": 1037,
+          "y": 137.5
+        },
+        "videoCurrentTime": 10.046293
+      },
+      "polygon": null,
+      "drawingId": "click-1754638245650-mbw4nv2vj"
+    }
+  }
+]
