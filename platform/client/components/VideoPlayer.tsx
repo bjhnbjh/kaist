@@ -359,7 +359,7 @@ export default function VideoPlayer({
       console.error('❌ Error saving screenshot:', error);
       return {
         success: false,
-        message: '네트워크 오��로 스크린샷 저장에 실패했���니다.'
+        message: '네트워크 오류로 스크린샷 저장에 실패했���니다.'
       };
     }
   };
@@ -404,7 +404,7 @@ export default function VideoPlayer({
    * 📝 사용 시나리오:
    * - 정보 입력 모달 열 때: 이전에 저장된 스크린샷 표시
    * - 객체 편집 시: 해당 객체의 원본 스크린샷 표시
-   * - ��리보기 갤러리: 모든 객체의 스크린샷 목록 표시
+   * - 미리보기 갤러리: 모든 객체의 스크린샷 목록 표시
    *
    * @param drawingId - 그리기 영역 고유 ID (예: "drawing_abc123")
    * @returns Promise<{success: boolean, imageUrl?: string, message?: string}>
@@ -507,7 +507,7 @@ export default function VideoPlayer({
    * 비디오 프레임에서 선택된 영역을 캡쳐하여 미리보기 이미지 생성
    *
    * @param area - 그리기 영역 정보 (사각형, 클��, 자유그리기)
-   * @returns 캡��된 영역의 데이터 URL
+   * @returns 캡쳐된 영역의 데이터 URL
    *
    * 🎯 주요 기능:
    * - 실제 비디오 프레임에서 선택된 영역�� 잘라내기
@@ -1355,7 +1355,7 @@ export default function VideoPlayer({
    *
    * 📝 수정 포인트:
    * - API URL 변경: window.location.origin 수정
-   * - 저장 데이터 구조 변경: saveData 객체 수정
+   * - 저장 데이��� 구조 변경: saveData 객체 수정
    * - 응답 처리 변경: response ��리 로직 수정
    * - 에러 처리 개선: try-catch 블록 수정
    */
@@ -1439,7 +1439,7 @@ export default function VideoPlayer({
       });
     } catch (error) {
       console.error('Save error:', error);
-      toast.error("저장 중 오류��� 발생했습니다.");
+      toast.error("저장 중 오류��� 발��했습니다.");
     }
   };
 
@@ -1530,7 +1530,7 @@ export default function VideoPlayer({
         });
         setSelectedObjectIds([]);
         setHasObjectChanges(true);
-        toast.success(`${deleteCount}개 객체가 ���제되었습니다.`);
+        toast.success(`${deleteCount}개 객체가 삭제되었습니다.`);
 
         // 즉시 서버에 저장
         await saveDataToDb();
@@ -2397,7 +2397,7 @@ export default function VideoPlayer({
                         </div>
                       ))}
 
-                      {/* 삭제제 버튼을 스크롤 영역 ������로 이동 */}
+                      {/* 삭제제 버튼을 스크롤 영역 ���으로 이동 */}
                       {false && (
                         <div
                           style={{
@@ -2497,7 +2497,7 @@ export default function VideoPlayer({
                         탐지된 객체가 없습니다.
                       </div>
                       <div style={{ fontSize: "0.85rem" }}>
-                        영역을 그려서 객체를 추가해보세요
+                        영역을 ��려서 객체를 추가해보세요
                       </div>
                     </div>
                   )
@@ -3365,7 +3365,7 @@ export default function VideoPlayer({
                   }}
                 />
 
-                {/* 카���고리 드롭다운 */}
+                {/* 카테고리 드롭다운 */}
                 <div style={{ marginTop: "8px" }}>
                   <select
                     value={modalObjectInfo.category}
@@ -3549,7 +3549,7 @@ export default function VideoPlayer({
                     await cancelTemporaryCoordinates(currentDrawingArea.id);
                   }
 
-                  // 취�� 시 그려진 영역들을 모두 제거
+                  // 취소 시 그려진 영역들을 모두 제거
                   setDrawnAreas([]);
                   setCurrentPath([]);
                   setCurrentRectangle(null);
@@ -3576,7 +3576,7 @@ export default function VideoPlayer({
               <button
                 onClick={async () => {
                   if (modalObjectInfo && video && onAddNewObject) {
-                    // 그리기 영역을 ���로운 객�����로 추가 - 팝업창에서 입력한 모든 ��보 포함
+                    // 그리기 영역을 ���로운 객�������로 추가 - 팝업창에서 입력한 모든 ��보 포함
                     const addedObjectId = onAddNewObject(video.id, modalObjectInfo.name, {
                       code: modalObjectInfo.code,
                       additionalInfo: modalObjectInfo.additionalInfo,
@@ -3981,7 +3981,7 @@ export default function VideoPlayer({
                         toast.success('그리기 영역과 스크린샷이 저장되었습니다.');
                       } else {
                         console.warn('⚠️ Screenshot save failed:', screenshotResult.message);
-                        toast.warning('그리기 영역은 저장되었지만 스크린샷 저장에 실패했습니다.');
+                        toast.warning(`그리기 영역은 저장되었지만 스크린샷 저장에 실패했습니다: ${screenshotResult.message}`);
                       }
 
                     } catch (error) {
