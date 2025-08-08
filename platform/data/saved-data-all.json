@@ -43,7 +43,18 @@
       "drawingCount": 0,
       "duration": 35.041667,
       "totalFrames": 1051
+    },
+    {
+      "videoId": "video-1754641649822-8u6j3wi58",
+      "videoFileName": "첫번쨰 작품(6).mp4",
+      "videoFolder": "첫번쨰_작품(6)",
+      "version": 1,
+      "savedAt": "2025-08-08T17:27:55.780+09:00",
+      "objectCount": 1,
+      "drawingCount": 0,
+      "duration": 35.041667,
+      "totalFrames": 1051
     }
   ],
-  "lastUpdated": "2025-08-08T16:46:56.044+09:00"
+  "lastUpdated": "2025-08-08T17:27:55.781+09:00"
 }

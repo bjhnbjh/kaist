@@ -72,7 +72,7 @@ const formatTime = (seconds: number) => {
   return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}.${milliseconds.toString().padStart(2, "0")}`;
 };
 
-// CSS 애니메이션 스타일 추가
+// CSS 애��메이션 스타일 추가
 const spinnerStyles = `
   @keyframes spin {
     0% { transform: rotate(0deg); }
@@ -144,6 +144,8 @@ export default function VideoPlayer({
     dlReservoirDomain: string;
     category: string;
     videoCurrentTime: number;
+    imageUrl?: string; // 스크��샷 이미지 URL 추가
+    drawingId?: string; // 그리기 영역 ID 추가 (스크린샷 조회용)
   } | null>(null);
   const [isApiLoading, setIsApiLoading] = useState(false);
   const [showApiResponseModal, setShowApiResponseModal] = useState(false);
@@ -155,6 +157,10 @@ export default function VideoPlayer({
     videoTime?: number;
     timestamp?: string;
   } | null>(null);
+
+  // 📸 스크린샷 관련 상태 추가
+  const [isScreenshotLoading, setIsScreenshotLoading] = useState(false);
+  const [screenshotError, setScreenshotError] = useState<string | null>(null);
 
   // 확인 모달 상태
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
@@ -267,6 +273,196 @@ export default function VideoPlayer({
     }
   };
 
+  /**
+   * ===================================
+   * 📸 스크린샷 저장 API 호출 함수
+   * ===================================
+   *
+   * 🔧 기능:
+   * 1. base64 이미지 데이터를 서버로 전송
+   * 2. 서버에서 이미지 파일로 저장 (PNG 형식)
+   * 3. 저장된 이미지의 URL 반환
+   * 4. 동��상 시간 정보와 함께 저장
+   *
+   * 📂 저장 위치:
+   * - 경로: data/{동영상폴더명}/{동영상파일명}-screenshot-{시간}-{drawingId}.png
+   * - URL: /data/{동영상폴더��}/{파일명}.png
+   *
+   * 📝 API 요청 형식:
+   * POST /api/save-screenshot
+   * {
+   *   "videoId": "동영상파일명",
+   *   "drawingId": "drawing_abc123",
+   *   "imageData": "data:image/png;base64,iVBORw0KGgoAAAA...",
+   *   "videoCurrentTime": 125.5,
+   *   "timestamp": 1642345678901
+   * }
+   *
+   * 🔄 에러 처리:
+   * - 네트워크 오류: 콘솔 로그 + 사용자 친화적 메시지 반환
+   * - 서버 오류: HTTP 상태 코드 확인 + 서버 메시지 전달
+   * - 이미지 형식 오류: 서버에서 검증 후 400 오류 반환
+   *
+   * 📝 수정 포��트:
+   * - 이미지 압축: canvas.toDataURL('image/jpeg', 0.8) 사용
+   * - 재시도 로직: fetch 실패 시 최대 3회 재시도
+   * - 진행률 표시: 업로드 진행률 UI 추가
+   * - 캐싱: 동일한 drawingId의 중복 저장 방지
+   *
+   * @param drawingId - 그리기 영역 고유 ID (예: "drawing_abc123")
+   * @param imageData - base64 형태의 이미지 데이터 (data:image/png;base64,... 형식)
+   * @param videoCurrentTime - 현재 동영상 시간 (초 단위, 선택사항)
+   * @returns Promise<{success: boolean, imageUrl?: string, message?: string}>
+   */
+  const saveScreenshotToServer = async (
+    drawingId: string,
+    imageData: string,
+    videoCurrentTime?: number
+  ): Promise<{success: boolean; imageUrl?: string; message?: string}> => {
+    try {
+      const apiUrl = getApiUrl();
+
+      // 🔍 이미지 크기 검증 및 최적화 로그
+      const imageSizeKB = (imageData.length * 3 / 4) / 1024;
+      if (imageSizeKB > 500) {
+        console.warn('⚠️ Large image detected:', `${imageSizeKB.toFixed(2)}KB`);
+      }
+
+      console.log('📸 Saving screenshot to server:', {
+        drawingId: drawingId.slice(0, 12) + '...',
+        videoId: (video?.serverFileName || video?.file.name)?.slice(0, 20) + '...',
+        videoCurrentTime,
+        imageSizeKB: `${imageSizeKB.toFixed(2)}KB`
+      });
+
+      const response = await fetch(`${apiUrl}/api/save-screenshot`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          videoId: video?.serverFileName || video?.file.name,
+          drawingId: drawingId,
+          imageData: imageData,
+          videoCurrentTime: videoCurrentTime,
+          timestamp: Date.now()
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Screenshot saved successfully:', result);
+        return {
+          success: true,
+          imageUrl: result.imageUrl,
+          message: result.message
+        };
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Failed to save screenshot:', response.status, errorData);
+        return {
+          success: false,
+          message: errorData.message || '스크린샷 저장에 실패했습니다.'
+        };
+      }
+    } catch (error) {
+      console.error('❌ Error saving screenshot:', error);
+      return {
+        success: false,
+        message: '네트워크 오류로 스크린샷 저장에 ���패했���니다.'
+      };
+    }
+  };
+
+  /**
+   * ===================================
+   * 📷 저장된 스크린샷 조회 API 호출 함수
+   * ===================================
+   *
+   * 🔧 기능:
+   * 1. 특정 그리기 영역의 저장된 스크린샷 파일 검색
+   * 2. 해당 파일의 웹 접근 URL 반환
+   * 3. 파일이 없는 경우 안전하게 실패 처리
+   *
+   * 📂 검색 위치:
+   * - 경로: data/{동영상폴더명}/
+   * - 파일명 패턴: *-screenshot-*-{drawingId}.png
+   *
+   * 📝 API 요청 형식:
+   * GET /api/screenshot?videoId={동영상파일명}&drawingId={그리기ID}
+   *
+   * 📤 성공 응답:
+   * {
+   *   "success": true,
+   *   "imageUrl": "/data/폴더명/파일명.png",
+   *   "imagePath": "/절대/���로/파일명.png",
+   *   "drawingId": "drawing_abc123"
+   * }
+   *
+   * 📤 실패 응답:
+   * {
+   *   "success": false,
+   *   "message": "해당 그리기 영역의 스크린샷을 찾을 수 없습니다."
+   * }
+   *
+   * 🔄 에러 처리:
+   * - 404 Not Found: 스크린샷 파일이 존���하지 않음 (정상적인 상황)
+   * - 400 Bad Request: 필수 파라미터 누락
+   * - 500 Server Error: 서버 내부 오류
+   * - Network Error: 네트워크 연결 문제
+   *
+   * 📝 사용 시나리오:
+   * - 정보 입력 모달 열 때: 이전에 저장된 스크린샷 표시
+   * - 객체 편집 시: 해당 객체의 원본 스크린샷 표시
+   * - 미리보기 갤러리: ���든 객체의 스크린샷 목록 표시
+   *
+   * @param drawingId - 그리기 영역 고유 ID (예: "drawing_abc123")
+   * @returns Promise<{success: boolean, imageUrl?: string, message?: string}>
+   *   - success: true면 imageUrl 포함, false면 message로 오류 사유 제공
+   *   - imageUrl: 웹에서 직접 접근 가능한 이미지 URL
+   *   - message: 사용자에게 표시할 수 있는 ��화적 메시지
+   */
+  const getScreenshotFromServer = async (
+    drawingId: string
+  ): Promise<{success: boolean; imageUrl?: string; message?: string}> => {
+    // 🔄 로딩 시작
+    setIsScreenshotLoading(true);
+    setScreenshotError(null);
+
+    try {
+      const apiUrl = getApiUrl();
+      const videoId = video?.serverFileName || video?.file.name;
+
+      const response = await fetch(`${apiUrl}/api/screenshot?videoId=${encodeURIComponent(videoId)}&drawingId=${encodeURIComponent(drawingId)}`);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Screenshot retrieved successfully:', result);
+        return {
+          success: true,
+          imageUrl: result.imageUrl,
+          message: result.message
+        };
+      } else {
+        const errorData = await response.json();
+        console.log('ℹ️ Screenshot not found:', errorData);
+        return {
+          success: false,
+          message: errorData.message || '스크린샷을 찾을 수 없습니다.'
+        };
+      }
+    } catch (error) {
+      console.error('❌ Error getting screenshot:', error);
+      return {
+        success: false,
+        message: '스크린샷 조회 중 오류가 ���생했습니다.'
+      };
+    } finally {
+      // 🔄 로딩 종료
+      setIsScreenshotLoading(false);
+    }
+  };
+
   // VTT 좌표 데이터 로드
   const loadVttCoordinates = useCallback(async () => {
     if (!video) return;
@@ -301,15 +497,15 @@ export default function VideoPlayer({
         if (result.success && result.coordinates) {
           setVttCoordinates(result.coordinates);
           // VTT 좌표 로드 성공 알림 제거 (불필요)
-          console.log(`✅ VTT에서 ${result.coordinatesCount}개��� 좌표 데이터를 ���러�����습니다.`);
+          console.log(`✅ VTT에서 ${result.coordinatesCount}개��� 좌표 데이터�� ���러�����습니다.`);
         } else {
           setVttCoordinates([]);
           console.log('ℹ️ 저장된 좌표 데이터가 없습니다.');
         }
       } else {
-        // VTT 파일이 없는 경우 조용히 처리 (에러가 아님)
+        // VTT 파일이 없는 경우 조���히 처리 (에러가 아님)
         if (response.status === 404) {
-          console.log('📄 VTT 파일이 아직 생성되지 않았습니다.');
+          console.log('📄 VTT 파일이 아직 ��성되지 않았습니다.');
           setVttCoordinates([]);
         } else {
           const errorText = await response.text();
@@ -319,7 +515,7 @@ export default function VideoPlayer({
       }
     } catch (error) {
       // 네트워크 에러나 파싱 에러를 조용히 처리
-      console.log('ℹ️ VTT 좌표 데이터를 불러올 수 없습니다:', error instanceof Error ? error.message : 'Unknown error');
+      console.log('ℹ️ VTT 좌표 데이��를 불러올 수 없습니다:', error instanceof Error ? error.message : 'Unknown error');
       setVttCoordinates([]);
     }
   }, [video]);
@@ -331,8 +527,8 @@ export default function VideoPlayer({
    * @returns 캡쳐된 영역의 데이터 URL
    *
    * 🎯 주요 기능:
-   * - 실제 비디오 프레임에서 선택된 영역만 잘라내기
-   * - 영역 위에 반투명 오버레이로 선택 표시
+   * - 실제 비디오 프레임에서 선택된 영역�� 잘라내기
+   * - 영역 위에 반투명 오버레이로 선택 표���
    * - 클릭의 경우 주변 영역을 포함하여 캡쳐
    */
   const createAreaPreview = (area: DrawnArea): string => {
@@ -371,7 +567,7 @@ export default function VideoPlayer({
         cropWidth = Math.abs(area.endPoint.x - area.startPoint.x) * scaleX;
         cropHeight = Math.abs(area.endPoint.y - area.startPoint.y) * scaleY;
       } else if (area.type === 'click' && area.clickPoint) {
-        // 클릭 포인트 주변 영역 캡쳐 (100x100 픽셀 영역)
+        // 클릭 포인트 주변 영역 ��쳐 (100x100 픽셀 영역)
         const surroundSize = 50; // 클릭 지점 주변 50픽셀씩
         cropX = Math.max(0, (area.clickPoint.x - surroundSize) * scaleX);
         cropY = Math.max(0, (area.clickPoint.y - surroundSize) * scaleY);
@@ -433,7 +629,7 @@ export default function VideoPlayer({
   };
 
   /**
-   * 비디오 캡쳐가 실패했을 때 사용하는 대체 미리보기 생성
+   * 비디��� 캡쳐가 실패했을 때 사용하는 대체 미리보기 생성
    */
   const createFallbackPreview = (area: DrawnArea): string => {
     const canvas = document.createElement('canvas');
@@ -559,7 +755,7 @@ export default function VideoPlayer({
         endPoint: area.endPoint,
         clickPoint: area.clickPoint, // 클��� 포인트 추가
         videoId: video?.serverFileName || video?.file.name,
-        videoCurrentTime: currentVideoTime,  // 실제 동영��� 시간 추가
+        videoCurrentTime: currentVideoTime,  // 실제 동영����� 시간 추가
         timestamp: Date.now()
       };
 
@@ -583,31 +779,36 @@ export default function VideoPlayer({
             ? `(${area.clickPoint.x}, ${area.clickPoint.y})`
             : area.type === 'rectangle' && area.startPoint && area.endPoint
             ? `(${area.startPoint.x}, ${area.startPoint.y}) ~ (${area.endPoint.x}, ${area.endPoint.y})`
-            : '복수 좌표',
+            : '복�� 좌표',
           videoTime: currentVideoTime,
           timestamp: new Date().toLocaleString('ko-KR')
         });
         setShowApiResponseModal(true);
 
         // 그리기 영역 전송 성공 로그만 남기고 알림 제거
-        console.log(`✅ ${area.type === 'click' ? '클릭 좌표' : '그리기 영역'}가 서버에 전송되었습니다.`);
+        console.log(`✅ ${area.type === 'click' ? '클릭 좌표' : '그리�� 영역'}가 서버에 전송되었습니다.`);
 
-        // 잠시 후 정보 입력 모달 표시
-        setTimeout(() => {
+        // 잠시 후 정보 입력 모�� 표시
+        setTimeout(async () => {
           setShowApiResponseModal(false);
 
-          // 현재 그리기 영역을 저장하여 객체 생성 시 좌표 정보 연결
+          // 현재 그리기 영역을 저장하�� 객체 생성 시 좌표 정보 연결
           setCurrentDrawingArea(area);
+
+          // 저장된 스크린샷 조회
+          const screenshotResult = await getScreenshotFromServer(area.id);
 
           // ��리기로 추가되는 객체는 totalObjectsCreated + 1로 번호 생성
           const nextObjectNumber = video ? video.totalObjectsCreated + 1 : detectedObjects.length + 1;
           setModalObjectInfo({
             name: `Object(${nextObjectNumber})`,
             code: `CODE_${area.id.slice(0, 8).toUpperCase()}`,
-            additionalInfo: area.type === 'click' ? '클릭으로 생성된 객체입니다.' : 'AI가 자동으로 탐지한 객체입니다.',
+            additionalInfo: area.type === 'click' ? '클릭으로 ��성된 객체입니다.' : 'AI가 자동으로 탐지한 객체입니다.',
             dlReservoirDomain: 'http://www.naver.com',
             category: '기타',
-            videoCurrentTime: currentVideoTime
+            videoCurrentTime: currentVideoTime,
+            imageUrl: screenshotResult.success ? screenshotResult.imageUrl : undefined,
+            drawingId: area.id
           });
           setShowInfoModal(true);
         }, 2000);
@@ -616,11 +817,11 @@ export default function VideoPlayer({
       } else {
         const errorResult = await response.json().catch(() => ({ message: 'API 응답 오류' }));
 
-        // API 오류 응답 상세 정보 설정
+        // API 오��� 응��� 상세 정보 설정
         setApiResponseData({
           success: false,
-          message: errorResult.message || 'API 서버에서 오��가 발생했습니다.',
-          drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유그리기',
+          message: errorResult.message || 'API 서버에서 �����가 발생했습니다.',
+          drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유��리기',
           coordinates: area.type === 'click' && area.clickPoint
             ? `(${area.clickPoint.x}, ${area.clickPoint.y})`
             : '오류로 인해 처리되지 않음',
@@ -632,11 +833,11 @@ export default function VideoPlayer({
       }
     } catch (error) {
       // 네트워크 에러를 조용히 처리하고 로컬에서 계속 진행
-      console.log('ℹ️ 그리기 데이터 전송 실패, 로컬에서 계속 진행:', error instanceof Error ? error.message : 'Unknown error');
+      console.log('ℹ️ 그리기 데이터 전송 실패, 로컬에서 ���속 진행:', error instanceof Error ? error.message : 'Unknown error');
 
       // API 에러가 발���해도 로컬에서 작업 계속 진행
       if (!apiResponseData || apiResponseData.success !== false) {
-        // 조용히 처리하고 모달은 표시하지 않음
+        // ���용히 처리하고 모달은 표시하지 않음
         console.log('📝 로컬에서 그리기 작업 계속 진행');
       }
 
@@ -755,7 +956,7 @@ export default function VideoPlayer({
           const height = coords.endPoint.y - coords.startPoint.y;
           ctx.strokeRect(coords.startPoint.x, coords.startPoint.y, width, height);
 
-          // 객체 이름 표시
+          // 객체 이름 표��
           ctx.fillStyle = ctx.strokeStyle;
           ctx.font = "12px Arial";
           ctx.fillText(coord.objectName, coords.startPoint.x, coords.startPoint.y - 5);
@@ -837,7 +1038,7 @@ export default function VideoPlayer({
               coords.y <= maxY
             );
           } else if (area.type === "click" && area.clickPoint) {
-            // 클릭 포인트 삭제를 위한 범위 체크 (15px 범위)
+            // 클릭 포인트 ��제를 위한 범위 체크 (15px 범위)
             return (
               Math.abs(area.clickPoint.x - coords.x) < 15 &&
               Math.abs(area.clickPoint.y - coords.y) < 15
@@ -861,7 +1062,7 @@ export default function VideoPlayer({
         setRectangleStart(coords);
         setCurrentRectangle(null);
       } else if (drawingMode === "click") {
-        // 클릭 모드에서는 즉시 클릭 포인트 생성
+        // 클릭 모드에서는 ���시 클릭 포인트 생성
         const newClickArea: DrawnArea = {
           id: `click-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           points: [],
@@ -986,7 +1187,7 @@ export default function VideoPlayer({
             };
             setDrawnAreas((prev) => [...prev, newArea]);
 
-            // 그리기 완료 시 확인 모달 표시
+            // 그리기 ��료 시 확인 모달 표시
             showConfirmationDialog(newArea);
           }
 
@@ -1087,9 +1288,9 @@ export default function VideoPlayer({
    * 📄 WebVTT 자막 파일 생성 API 호출
    *
    * 📝 수정 포인트:
-   * - API URL 변경: window.location.origin 수정
+   * - API URL 변경: window.location.origin 수���
    * - WebVTT 데이터 구조 변경: webvttData 객체 수정
-   * - 응답 처리 변경: response 처리 로직 수정
+   * - ��답 처리 변경: response 처리 로직 수정
    */
   const sendWebVTTToApi = async () => {
     if (!video) return;
@@ -1105,7 +1306,7 @@ export default function VideoPlayer({
         uploadDate: video.uploadDate
       });
 
-      // videoFolder��� undefined일 때 파일명 기반으로 폴더명 추정
+      // videoFolder��� undefined일 때 파일명 기반으로 ���더명 추정
       let finalVideoFolder = video.videoFolder;
       const finalFileName = video.serverFileName || video.file.name;
 
@@ -1155,7 +1356,7 @@ export default function VideoPlayer({
       if (response.ok) {
         const result = await response.json();
         // WebVTT 저장 성공 알림 제거 (불필요)
-        console.log('✅ WebVTT ���일이 서버에 저장되었습니다.');
+        console.log('✅ WebVTT ���일이 서버�� 저장되었습니다.');
         console.log('WebVTT API response:', result);
       } else {
         throw new Error('WebVTT API 전송 실패');
@@ -1171,7 +1372,7 @@ export default function VideoPlayer({
    *
    * 📝 수정 포인트:
    * - API URL 변경: window.location.origin 수정
-   * - 저장 데이터 구조 변경: saveData 객체 수정
+   * - 저장 데이��� 구조 변경: saveData 객체 수정
    * - 응답 처리 변경: response ��리 로직 수정
    * - 에러 처리 개선: try-catch 블록 수정
    */
@@ -1255,7 +1456,7 @@ export default function VideoPlayer({
       });
     } catch (error) {
       console.error('Save error:', error);
-      toast.error("저장 중 오류��� 발생했습니다.");
+      toast.error("저장 중 오류��� 발��했습니다.");
     }
   };
 
@@ -1304,7 +1505,7 @@ export default function VideoPlayer({
         category?: string;
       } = {};
 
-      // 편집된 값이 있을 때만 업데이���에 포함
+      // 편집된 값이 있을 때만 업데이����에 포함
       if (editedObjectName.trim()) updates.name = editedObjectName.trim();
       if (editedObjectCode.trim()) updates.code = editedObjectCode.trim();
       if (editedObjectInfo.trim()) updates.additionalInfo = editedObjectInfo.trim();
@@ -1322,7 +1523,7 @@ export default function VideoPlayer({
     setIsEditing(false);
   };
 
-  // 뒤로가기 핸들러 - 탐지된 객체 목록으로만 이동하고 버튼 활성화 상태 유지
+  // 뒤로가기 핸들러 - 탐지된 객체 목록으로만 이동하고 ��튼 활성화 상태 유지
   const handleBackToObjectList = () => {
     setSelectedObjectId(null);
     setIsEditing(false);
@@ -1550,7 +1751,7 @@ export default function VideoPlayer({
           <h2
             style={{ fontSize: "1.25rem", fontWeight: "600", color: "#1f2937" }}
           >
-            미리보기
+            미리보��
           </h2>
           <button
             onClick={onClose}
@@ -1908,7 +2109,7 @@ export default function VideoPlayer({
                       // 객체 ��목이 열려����� 때 닫기
                       setShowObjectList(false);
                     } else if (selectedObjectId) {
-                      // 객�� ��세 정보에서 ����기
+                      // 객�� ��세 정보에서 �������
                       setShowObjectList(false);
                       setSelectedObjectId(null);
                     }
@@ -2081,7 +2282,7 @@ export default function VideoPlayer({
                         textAlign: "center",
                       }}
                     >
-                      <div style={{ fontSize: "2rem", marginBottom: "8px" }}>🔍</div>
+                      <div style={{ fontSize: "2rem", marginBottom: "8px" }}>���</div>
                       <div style={{ fontWeight: "500", marginBottom: "4px" }}>
                         탐지된 객체가 없습니다.
                       </div>
@@ -2251,7 +2452,7 @@ export default function VideoPlayer({
                           </div>
                           <button
                             onClick={() => {
-                              // 일괄 삭제를 위��� 확인 모달��� 열어서 ��체 선택 삭제 처리
+                              // 일괄 삭제를 위��� 확인 모달��� 열어서 ���체 선택 삭제 처리
                               if (selectedObjectIds.length > 0) {
                                 setObjectToDelete("BULK_DELETE");
                                 setShowDeleteConfirmModal(true);
@@ -2313,7 +2514,7 @@ export default function VideoPlayer({
                         탐지된 객체가 없습니다.
                       </div>
                       <div style={{ fontSize: "0.85rem" }}>
-                        영역을 그려서 객체를 추가해보세요
+                        영역을 ��려서 객체를 추가해보세요
                       </div>
                     </div>
                   )
@@ -2772,7 +2973,7 @@ export default function VideoPlayer({
                 )}
               </div>
 
-              {/* 선택된 객체 삭제 버튼 - 스크롤 영역 밖 */}
+              {/* 선택된 객체 삭제 버튼 - ��크롤 영역 밖 */}
               {showObjectList && !selectedObjectId && selectedObjectIds.length > 0 && (
                 <div
                   style={{
@@ -3006,7 +3207,7 @@ export default function VideoPlayer({
             padding: "20px",
           }}
           onMouseDown={(e) => {
-            // 모달 배경 클릭 시에만 닫기 (드래그 방지)
+            // 모달 배경 클릭 ���에만 닫기 (드래그 방지)
             if (e.target === e.currentTarget) {
               setShowInfoModal(false);
             }
@@ -3017,9 +3218,9 @@ export default function VideoPlayer({
               background: "white",
               borderRadius: "12px",
               padding: "24px",
-              maxWidth: "500px",
-              width: "100%",
-              maxHeight: "80vh",
+              maxWidth: "900px", // 더 넓게 확장
+              width: "95%",
+              maxHeight: "85vh",
               overflow: "hidden",
               boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
               display: "flex",
@@ -3074,6 +3275,83 @@ export default function VideoPlayer({
                 maxHeight: "60vh",
               }}
             >
+              {/* 📸 스크린샷 미리보기 섹션 */}
+              {modalObjectInfo.imageUrl && (
+                <div style={{ marginBottom: "20px" }}>
+                  <div
+                    style={{
+                      fontSize: "0.9rem",
+                      fontWeight: "600",
+                      color: "#334155",
+                      marginBottom: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    📸 선택 영역 미리보기
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      padding: "12px",
+                      background: "white",
+                      borderRadius: "8px",
+                      border: "1px solid #d1d5db",
+                    }}
+                  >
+                    <img
+                      src={modalObjectInfo.imageUrl}
+                      alt="선택 영역 스크린샷"
+                      style={{
+                        maxWidth: "280px",
+                        maxHeight: "200px",
+                        objectFit: "contain",
+                        borderRadius: "4px",
+                        border: "1px solid #e5e7eb",
+                      }}
+                      onError={(e) => {
+                        console.warn('이미지 로드 실패:', modalObjectInfo.imageUrl);
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* 📍 스크린샷이 없는 경우 안내 */}
+              {!modalObjectInfo.imageUrl && (
+                <div style={{ marginBottom: "20px" }}>
+                  <div
+                    style={{
+                      fontSize: "0.9rem",
+                      fontWeight: "600",
+                      color: "#334155",
+                      marginBottom: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    📷 ��택 영역 미리보기
+                  </div>
+                  <div
+                    style={{
+                      padding: "20px",
+                      background: "white",
+                      borderRadius: "8px",
+                      border: "1px solid #d1d5db",
+                      textAlign: "center",
+                      color: "#6b7280",
+                      fontSize: "0.85rem",
+                    }}
+                  >
+                    스크린샷을 불러올 수 없습니다.
+                  </div>
+                </div>
+              )}
+
               {/* 이름 섹션 */}
               <div style={{ marginBottom: "16px" }}>
                 <div
@@ -3283,7 +3561,7 @@ export default function VideoPlayer({
             >
               <button
                 onClick={async () => {
-                  // 임시 좌표 취소
+                  // 임시 좌표 ���소
                   if (currentDrawingArea) {
                     await cancelTemporaryCoordinates(currentDrawingArea.id);
                   }
@@ -3315,7 +3593,7 @@ export default function VideoPlayer({
               <button
                 onClick={async () => {
                   if (modalObjectInfo && video && onAddNewObject) {
-                    // 그리기 영역을 ���로운 객����로 추가 - 팝업창에서 입력한 모든 ��보 포함
+                    // 그리기 영역을 ���로운 객�������로 추가 - 팝업창에서 입력한 모든 ��보 포함
                     const addedObjectId = onAddNewObject(video.id, modalObjectInfo.name, {
                       code: modalObjectInfo.code,
                       additionalInfo: modalObjectInfo.additionalInfo,
@@ -3662,7 +3940,7 @@ export default function VideoPlayer({
                     }}
                   >
                     <strong>📌 확인사항:</strong><br/>
-                    • 선택한 영역이 정확한지 확인해주세요<br/>
+                    • 선택한 영역�� 정확한지 확인해주세요<br/>
                     • 전송 후에는 되돌릴 수 없습니다<br/>
                     • API 응답을 받기까지 잠시 기다려주세요
                   </div>
@@ -3702,9 +3980,35 @@ export default function VideoPlayer({
               <button
                 onClick={async () => {
                   if (confirmationModalData) {
-                    setShowConfirmationModal(false);
-                    await sendDrawingToApi(confirmationModalData.area);
-                    setConfirmationModalData(null);
+                    setIsApiLoading(true);
+
+                    try {
+                      // 1. 먼저 그리기 데이터를 API로 전송
+                      await sendDrawingToApi(confirmationModalData.area);
+
+                      // 2. 스크린샷을 서버에 저장
+                      const screenshotResult = await saveScreenshotToServer(
+                        confirmationModalData.area.id,
+                        confirmationModalData.previewDataUrl,
+                        videoCurrentTime
+                      );
+
+                      if (screenshotResult.success) {
+                        console.log('✅ Screenshot saved with URL:', screenshotResult.imageUrl);
+                        toast.success('그리기 영역과 스크린샷이 저장되었습니다.');
+                      } else {
+                        console.warn('⚠️ Screenshot save failed:', screenshotResult.message);
+                        toast.warning(`그리기 영역은 저장되었지만 스크린샷 저장에 실패���습니다: ${screenshotResult.message}`);
+                      }
+
+                    } catch (error) {
+                      console.error('❌ Error in confirmation modal:', error);
+                      toast.error('전송 중 오류가 발생했습니다.');
+                    } finally {
+                      setIsApiLoading(false);
+                      setShowConfirmationModal(false);
+                      setConfirmationModalData(null);
+                    }
                   }
                 }}
                 disabled={isApiLoading}

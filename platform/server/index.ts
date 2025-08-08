@@ -1,12 +1,14 @@
 import express from "express";
 import cors from "cors";
-// 핵심 API 라우터들만 import (demo 제거)
+import path from "path";
+// 핵심 API 라��터들만 import (demo 제거)
 import { handleDrawingSubmission, handleCoordinateLinking, handleCoordinateCancellation, handleCoordinateUpdate, handleCoordinateDelete } from "./routes/drawing";
 import { handleVideoFileUpload, handleVideoDelete, uploadMiddleware } from "./routes/upload";
 import { handleWebVTTSave } from "./routes/webvtt";
 import { handleSaveData } from "./routes/save-data";
 import { handleVttCoordinatesRead } from "./routes/vtt-coordinates";
 import { handleFilenameCheck } from "./routes/check-filename";
+import { handleSaveScreenshot, handleGetScreenshot } from "./routes/screenshot";
 
 /**
  * ===================================
@@ -26,7 +28,9 @@ import { handleFilenameCheck } from "./routes/check-filename";
  * 9. POST /api/save-data        - 편집 데이터 JSON 저장
  * 10. GET /api/vtt-coordinates  - VTT 파일에서 좌표 데이터 읽기
  * 11. GET /api/check-filename   - 파일명 충돌 체크 및 새 이름 제안
- * 12. GET /api/ping             - 서버 상태 체크
+ * 12. POST /api/save-screenshot - 그리기 영역 스크린샷 저장 (base64 이미지)
+ * 13. GET /api/screenshot       - 저장된 스크린샷 조회
+ * 14. GET /api/ping             - 서버 상태 체크
  * 
  * 📂 데이터 저장 구조:
  * data/
@@ -49,7 +53,7 @@ export function createServer() {
   // 🔧 미들웨어 설정
   // ========================================
   
-  // CORS 설정 - 클라이언트에서 API 호출 허용
+  // CORS 설��� - 클라이언트에서 API 호출 허용
   app.use(cors());
   
   // JSON 파싱 미들웨어 - 큰 용량 파일 처리를 위해 50MB 제한
@@ -61,6 +65,23 @@ export function createServer() {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     next();
   });
+
+  // 📸 정적 파일 서빙 - data 폴더의 이미지와 동영상 파일 접근 허용
+  // /data/폴더명/파일명 형태��� 접근 가능
+  // 예시: http://localhost:8080/data/동영상폴더/스크린샷.png
+  app.use('/data', express.static(path.join(__dirname, '../data'), {
+    setHeaders: (res, filePath) => {
+      // 이미지 파일에 대한 CORS 헤더 설정
+      if (filePath.match(/\.(png|jpg|jpeg|gif|webp)$/i)) {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      }
+      // 동영상 파일에 대한 적절한 Content-Type 설정
+      if (filePath.match(/\.(mp4|webm|ogg)$/i)) {
+        res.setHeader('Accept-Ranges', 'bytes');
+      }
+    }
+  }));
 
   // ========================================
   // 🌐 API 라우트 정의
@@ -85,7 +106,7 @@ export function createServer() {
    * 📝 수정 방법:
    * - server/routes/upload.ts의 handleVideoFileUpload 함수 수정
    * - multer 설정 변경 시 uploadMiddleware 수정
-   * - 파일 저장 경로 변경 시 storage.destination 수정
+   * - ��일 저장 경로 변경 시 storage.destination 수정
    */
   app.post("/api/upload-file", uploadMiddleware, handleVideoFileUpload);
 
@@ -174,6 +195,65 @@ export function createServer() {
    */
   app.get("/api/check-filename", handleFilenameCheck);
 
+  /**
+   * 📸 그리기 영역 스크린샷 저장
+   * POST /api/save-screenshot
+   *
+   * 📋 요청 데이터 (JSON):
+   * {
+   *   "videoId": "동영상파일명",           // 필수: 연관된 동영상 ID
+   *   "drawingId": "drawing_abc123",      // 필수: 그리기 영역 고유 ID
+   *   "imageData": "data:image/png;base64,iVBORw0KGgoAAAA...", // 필수: base64 이미지 데이터
+   *   "videoCurrentTime": 125.5,          // 선택: 동영상 현재 시간 (초)
+   *   "timestamp": 1642345678901          // 선택: 생성 타임스탬프
+   * }
+   *
+   * 📤 응답 데이터:
+   * {
+   *   "success": true,
+   *   "message": "스크린샷이 성공적으로 저장되었습니다.",
+   *   "imagePath": "/절대/경로/파일명.png",
+   *   "imageUrl": "/data/폴더명/파일명.png",  // 웹에서 접근 가능한 URL
+   *   "drawingId": "drawing_abc123",
+   *   "timestamp": "2024-01-16T12:34:56.789Z"
+   * }
+   *
+   * 📝 수정 방법:
+   * - server/routes/screenshot.ts의 handleSaveScreenshot 함수 수정
+   * - 이미지 저장 경로나 처리 로직 변경 시 해당 파일 수정
+   * - 이미지 압축이나 리사이징 기능 추가 시 해당 함수에서 처리
+   */
+  app.post("/api/save-screenshot", handleSaveScreenshot);
+
+  /**
+   * 📷 저장된 스크린샷 조회
+   * GET /api/screenshot?videoId=example&drawingId=abc123
+   *
+   * 📋 쿼리 파라미터:
+   * - videoId: 동영상 파일명 (필수)
+   * - drawingId: 그리기 영역 ID (필수)
+   *
+   * 📤 응답 데이터 (성공 시):
+   * {
+   *   "success": true,
+   *   "message": "스크린샷을 찾았습니다.",
+   *   "imageUrl": "/data/폴더명/파일명.png",
+   *   "imagePath": "/절대/경로/파일명.png",
+   *   "drawingId": "drawing_abc123"
+   * }
+   *
+   * 📤 응답 데이터 (실패 시):
+   * {
+   *   "success": false,
+   *   "message": "해당 그리기 영역의 스크린샷을 찾을 수 없습니다."
+   * }
+   *
+   * 📝 수정 방법:
+   * - server/routes/screenshot.ts의 handleGetScreenshot 함수 수정
+   * - 이미지 조회 로직이나 파일명 형식 변경 시 해당 파일 수정
+   */
+  app.get("/api/screenshot", handleGetScreenshot);
+
   return app;
 }
 
@@ -186,7 +266,7 @@ export function createServer() {
  *    - server/routes/ 폴더에 새 파일 생성
  *    - 여기 index.ts에 import 및 route 추가
  * 
- * 2. 기존 API 수정:
+ * 2. 기존 API 수���:
  *    - 각 routes/ 폴더의 해당 파일에서 핸들러 함수 수정
  *    - 인터페이스 변경 시 shared/types.ts도 함께 수정
  * 

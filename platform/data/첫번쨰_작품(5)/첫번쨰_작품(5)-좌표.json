@@ -1,0 +1,23 @@
+[
+  {
+    "object1": {
+      "이름": "00:00",
+      "position": {
+        "type": "rectangle",
+        "points": [],
+        "startPoint": {
+          "x": 690,
+          "y": 261.5
+        },
+        "endPoint": {
+          "x": 1117,
+          "y": 621.5
+        },
+        "clickPoint": null,
+        "videoCurrentTime": 0
+      },
+      "polygon": null,
+      "drawingId": "rect-1754641039640-at6s9wys7"
+    }
+  }
+]
