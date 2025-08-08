@@ -75,7 +75,7 @@ interface SaveScreenshotResponse {
  * @param drawingId - 그리기 영역 고유 ID
  * @param imageData - base64 이미지 데이터
  * @param videoCurrentTime - 동영상 현재 시간 (초)
- * @returns {imagePath, imageUrl, metadata} - 저장 결과 정보
+ * @returns {imagePath, imageUrl, metadata} - 저장 결과 정��
  */
 function saveImageToFile(
   videoId: string,
@@ -84,38 +84,76 @@ function saveImageToFile(
   videoCurrentTime?: number
 ): { imagePath: string; imageUrl: string; metadata: any } {
   try {
-    // 실제 업로드된 비디오 폴더 찾기
+    // 🔍 1. 이미지 데이터 검증
+    const base64Data = imageData.replace(/^data:image\/[a-z]+;base64,/, '');
+    const imageSizeBytes = (base64Data.length * 3) / 4; // base64 크기 계산
+    const maxSizeBytes = 5 * 1024 * 1024; // 5MB 제한
+
+    if (imageSizeBytes > maxSizeBytes) {
+      throw new Error(`이미지 크기가 너무 큽니다. 최대 5MB까지 허용됩니다. 현재: ${(imageSizeBytes / 1024 / 1024).toFixed(2)}MB`);
+    }
+
+    // 🗂️ 2. 비디오 폴더 설정
     const videoFolderName = findActualVideoFolder(videoId);
     const videoFolderPath = path.join(DATA_DIR, videoFolderName);
 
-    // 폴더가 없으면 생성
+    // 폴더 생성 (존재하지 않는 경우)
     if (!fs.existsSync(videoFolderPath)) {
       fs.mkdirSync(videoFolderPath, { recursive: true });
+      console.log(`📁 Created folder: ${videoFolderPath}`);
     }
 
-    // 이미지 데이터에서 헤더 제거 (data:image/png;base64, 부분)
-    const base64Data = imageData.replace(/^data:image\/[a-z]+;base64,/, '');
-    
-    // 현재 시간을 이용한 파일명 생성
+    // ⏰ 3. 파일명 생성 (시간 기반)
     const currentTime = videoCurrentTime || 0;
     const minutes = Math.floor(currentTime / 60);
     const seconds = Math.floor(currentTime % 60);
     const timeString = `${minutes.toString().padStart(2, '0')}-${seconds.toString().padStart(2, '0')}`;
-    
-    // 이미지 파일명 생성: {videoFileName}-screenshot-{시간}-{drawingId}.png
+
+    // 📝 4. 중복 파일 체크 및 정리
     const imageFileName = `${videoFolderName}-screenshot-${timeString}-${drawingId}.png`;
     const imagePath = path.join(videoFolderPath, imageFileName);
 
-    // base64 데이터를 파일로 저장
+    // 동일한 drawingId의 기존 파일 찾아서 삭제 (중복 방지)
+    try {
+      const files = fs.readdirSync(videoFolderPath);
+      const existingFiles = files.filter(file =>
+        file.includes('screenshot') && file.includes(drawingId)
+      );
+      existingFiles.forEach(file => {
+        const oldFilePath = path.join(videoFolderPath, file);
+        fs.unlinkSync(oldFilePath);
+        console.log(`🗑️ Removed duplicate: ${file}`);
+      });
+    } catch (cleanupError) {
+      console.warn('⚠️ Cleanup warning:', cleanupError);
+    }
+
+    // 💾 5. 이미지 파일 저장
     fs.writeFileSync(imagePath, base64Data, 'base64');
 
-    // 웹에서 접근 가능한 URL 생성 (정적 파일 서빙용)
+    // 🌐 6. 웹 URL 생성
     const imageUrl = `/data/${videoFolderName}/${imageFileName}`;
 
-    console.log(`📸 Screenshot saved: ${imagePath}`);
-    
-    return { imagePath, imageUrl };
-    
+    // 📊 7. 메타데이터 생성
+    const metadata = {
+      drawingId,
+      videoId,
+      videoCurrentTime,
+      imageSizeBytes,
+      createdAt: new Date().toISOString(),
+      fileName: imageFileName,
+      filePath: imagePath
+    };
+
+    console.log(`✅ Screenshot saved successfully:`, {
+      file: imageFileName,
+      size: `${(imageSizeBytes / 1024).toFixed(2)}KB`,
+      time: `${timeString}`,
+      drawingId: drawingId.slice(0, 8) + '...'
+    });
+
+    return { imagePath, imageUrl, metadata };
+
   } catch (error) {
     console.error('❌ Failed to save screenshot:', error);
     throw error;
@@ -280,7 +318,7 @@ export const handleGetScreenshot: RequestHandler = (req, res) => {
  *    - 이미지 크기 제한: 최대 파일 크기 검증
  *    - 악성 파일 검사: 이미지 헤더 검증
  * 
- * 📡 클라이언트 연동:
+ * 📡 ��라이언트 연동:
  * - 그리기 완료 시 canvas.toDataURL()로 이미지 데이터 생성
  * - fetch API로 /api/save-screenshot 호출
  * - 반환된 imageUrl로 나중에 이미지 표시
