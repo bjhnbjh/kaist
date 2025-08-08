@@ -415,7 +415,7 @@ export default function VideoPlayer({
         if (result.success && result.coordinates) {
           setVttCoordinates(result.coordinates);
           // VTT 좌표 로드 성공 알림 제거 (불필요)
-          console.log(`✅ VTT에서 ${result.coordinatesCount}개��� 좌표 데이터를 ���러�����습니다.`);
+          console.log(`✅ VTT에서 ${result.coordinatesCount}개��� 좌표 데이터�� ���러�����습니다.`);
         } else {
           setVttCoordinates([]);
           console.log('ℹ️ 저장된 좌표 데이터가 없습니다.');
@@ -446,7 +446,7 @@ export default function VideoPlayer({
    *
    * 🎯 주요 기능:
    * - 실제 비디오 프레임에서 선택된 영역만 잘라내기
-   * - 영역 위에 반투명 오버레이로 선택 표시
+   * - 영역 위에 반투명 오버레이로 선택 표���
    * - 클릭의 경우 주변 영역을 포함하여 캡쳐
    */
   const createAreaPreview = (area: DrawnArea): string => {
@@ -713,7 +713,7 @@ export default function VideoPlayer({
           // 현재 그리기 영역을 저장하여 객체 생성 시 좌표 정보 연결
           setCurrentDrawingArea(area);
 
-          // ����기로 추가되는 객체는 totalObjectsCreated + 1로 번호 생성
+          // ��리기로 추가되는 객체는 totalObjectsCreated + 1로 번호 생성
           const nextObjectNumber = video ? video.totalObjectsCreated + 1 : detectedObjects.length + 1;
           setModalObjectInfo({
             name: `Object(${nextObjectNumber})`,
@@ -851,7 +851,7 @@ export default function VideoPlayer({
     if (vttOverlayEnabled && vttCoordinates.length > 0) {
       const currentTime = videoRef.current?.currentTime || 0;
 
-      // 현재 시간에 해당���� 좌표들 찾기 (±0.5초 범위)
+      // 현재 시간에 해당하�� 좌표들 찾기 (±0.5초 범위)
       const activeCoordinates = vttCoordinates.filter(coord =>
         Math.abs(coord.videoTime - currentTime) <= 0.5
       );
@@ -975,7 +975,7 @@ export default function VideoPlayer({
         setRectangleStart(coords);
         setCurrentRectangle(null);
       } else if (drawingMode === "click") {
-        // 클릭 모드에서는 즉시 클릭 포인트 생성
+        // 클릭 모드에서는 ���시 클릭 포인트 생성
         const newClickArea: DrawnArea = {
           id: `click-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           points: [],
@@ -1539,7 +1539,7 @@ export default function VideoPlayer({
       setShowDeleteConfirmModal(false);
       setObjectToDelete(null);
       setDeleteConfirmed(false);
-      // 초기에는 객체 목록을 ��은 상태로 시작
+      // 초기에는 객체 목록을 닫은 상태로 시작
       setShowObjectList(false);
 
       if (videoDuration === 0) {
@@ -2195,7 +2195,7 @@ export default function VideoPlayer({
                         textAlign: "center",
                       }}
                     >
-                      <div style={{ fontSize: "2rem", marginBottom: "8px" }}>🔍</div>
+                      <div style={{ fontSize: "2rem", marginBottom: "8px" }}>���</div>
                       <div style={{ fontWeight: "500", marginBottom: "4px" }}>
                         탐지된 객체가 없습니다.
                       </div>
@@ -2365,7 +2365,7 @@ export default function VideoPlayer({
                           </div>
                           <button
                             onClick={() => {
-                              // 일괄 삭제를 위��� 확인 모달��� 열어서 ��체 선택 삭제 처리
+                              // 일괄 삭제를 위��� 확인 모달��� 열어서 ���체 선택 삭제 처리
                               if (selectedObjectIds.length > 0) {
                                 setObjectToDelete("BULK_DELETE");
                                 setShowDeleteConfirmModal(true);
@@ -3120,7 +3120,7 @@ export default function VideoPlayer({
             padding: "20px",
           }}
           onMouseDown={(e) => {
-            // 모달 배경 클릭 시에만 닫기 (드래그 방지)
+            // 모달 배경 클릭 ���에만 닫기 (드래그 방지)
             if (e.target === e.currentTarget) {
               setShowInfoModal(false);
             }
@@ -3816,9 +3816,35 @@ export default function VideoPlayer({
               <button
                 onClick={async () => {
                   if (confirmationModalData) {
-                    setShowConfirmationModal(false);
-                    await sendDrawingToApi(confirmationModalData.area);
-                    setConfirmationModalData(null);
+                    setIsApiLoading(true);
+
+                    try {
+                      // 1. 먼저 그리기 데이터를 API로 전송
+                      await sendDrawingToApi(confirmationModalData.area);
+
+                      // 2. 스크린샷을 서버에 저장
+                      const screenshotResult = await saveScreenshotToServer(
+                        confirmationModalData.area.id,
+                        confirmationModalData.previewDataUrl,
+                        videoCurrentTime
+                      );
+
+                      if (screenshotResult.success) {
+                        console.log('✅ Screenshot saved with URL:', screenshotResult.imageUrl);
+                        toast.success('그리기 영역과 스크린샷이 저장되었습니다.');
+                      } else {
+                        console.warn('⚠️ Screenshot save failed:', screenshotResult.message);
+                        toast.warning('그리기 영역은 저장되었지만 스크린샷 저장에 실패했습니다.');
+                      }
+
+                    } catch (error) {
+                      console.error('❌ Error in confirmation modal:', error);
+                      toast.error('전송 중 오류가 발생했습니다.');
+                    } finally {
+                      setIsApiLoading(false);
+                      setShowConfirmationModal(false);
+                      setConfirmationModalData(null);
+                    }
                   }
                 }}
                 disabled={isApiLoading}
