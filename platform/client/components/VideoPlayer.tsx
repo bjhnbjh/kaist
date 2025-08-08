@@ -425,7 +425,7 @@ export default function VideoPlayer({
       } else {
         // VTT 파일이 없는 경우 조용히 처리 (에러가 아님)
         if (response.status === 404) {
-          console.log('📄 VTT 파일이 아직 생성되지 않았습니다.');
+          console.log('📄 VTT 파일이 아직 ��성되지 않았습니다.');
           setVttCoordinates([]);
         } else {
           const errorText = await response.text();
@@ -726,7 +726,9 @@ export default function VideoPlayer({
             additionalInfo: area.type === 'click' ? '클릭으로 ��성된 객체입니다.' : 'AI가 자동으로 탐지한 객체입니다.',
             dlReservoirDomain: 'http://www.naver.com',
             category: '기타',
-            videoCurrentTime: currentVideoTime
+            videoCurrentTime: currentVideoTime,
+            imageUrl: screenshotResult.success ? screenshotResult.imageUrl : undefined,
+            drawingId: area.id
           });
           setShowInfoModal(true);
         }, 2000);
@@ -1208,7 +1210,7 @@ export default function VideoPlayer({
    * 📝 수정 포인트:
    * - API URL 변경: window.location.origin 수정
    * - WebVTT 데이터 구조 변경: webvttData 객체 수정
-   * - 응답 처리 변경: response 처리 로직 수정
+   * - ��답 처리 변경: response 처리 로직 수정
    */
   const sendWebVTTToApi = async () => {
     if (!video) return;
