@@ -338,7 +338,7 @@ export default function VideoPlayer({
       console.error('❌ Error saving screenshot:', error);
       return {
         success: false,
-        message: '네트워크 오류로 스크린샷 저장에 실패했습니다.'
+        message: '네트워크 오류로 스크린샷 저장에 실패했���니다.'
       };
     }
   };
@@ -378,7 +378,7 @@ export default function VideoPlayer({
       console.error('❌ Error getting screenshot:', error);
       return {
         success: false,
-        message: '스크린샷 조회 중 오류가 발생했습니다.'
+        message: '스크린샷 조회 중 오류가 ���생했습니다.'
       };
     }
   };
@@ -549,7 +549,7 @@ export default function VideoPlayer({
   };
 
   /**
-   * 비디오 캡쳐가 실패했을 때 사용하는 대체 미리보기 생성
+   * 비디��� 캡쳐가 실패했을 때 사용하는 대체 미리보기 생성
    */
   const createFallbackPreview = (area: DrawnArea): string => {
     const canvas = document.createElement('canvas');
@@ -715,6 +715,9 @@ export default function VideoPlayer({
           // 현재 그리기 영역을 저장하여 객체 생성 시 좌표 정보 연결
           setCurrentDrawingArea(area);
 
+          // 저장된 스크린샷 조회
+          const screenshotResult = await getScreenshotFromServer(area.id);
+
           // ��리기로 추가되는 객체는 totalObjectsCreated + 1로 번호 생성
           const nextObjectNumber = video ? video.totalObjectsCreated + 1 : detectedObjects.length + 1;
           setModalObjectInfo({
@@ -752,7 +755,7 @@ export default function VideoPlayer({
 
       // API 에러가 발���해도 로컬에서 작업 계속 진행
       if (!apiResponseData || apiResponseData.success !== false) {
-        // 조용히 처리하고 모달은 표시하지 않음
+        // ���용히 처리하고 모달은 표시하지 않음
         console.log('📝 로컬에서 그리기 작업 계속 진행');
       }
 
@@ -871,7 +874,7 @@ export default function VideoPlayer({
           const height = coords.endPoint.y - coords.startPoint.y;
           ctx.strokeRect(coords.startPoint.x, coords.startPoint.y, width, height);
 
-          // 객체 이름 표시
+          // 객체 이름 표��
           ctx.fillStyle = ctx.strokeStyle;
           ctx.font = "12px Arial";
           ctx.fillText(coord.objectName, coords.startPoint.x, coords.startPoint.y - 5);
@@ -1271,7 +1274,7 @@ export default function VideoPlayer({
       if (response.ok) {
         const result = await response.json();
         // WebVTT 저장 성공 알림 제거 (불필요)
-        console.log('✅ WebVTT ���일이 서버에 저장되었습니다.');
+        console.log('✅ WebVTT ���일이 서버�� 저장되었습니다.');
         console.log('WebVTT API response:', result);
       } else {
         throw new Error('WebVTT API 전송 실패');
