@@ -1,0 +1,20 @@
+{
+  "videoFolder": "첫번쨰_작품(3)",
+  "uploadRecord": {
+    "id": "video-1754639174649-wv3qomevs",
+    "fileName": "첫번쨰 작품(3).mp4",
+    "fileSize": 6506422,
+    "fileType": "video/mp4",
+    "duration": 35.041667,
+    "timestamp": 1754639174649,
+    "metadata": {
+      "width": 1424,
+      "height": 720
+    },
+    "filePath": "/app/code/platform/data/첫번쨰_작품(3)/첫번쨰_작품(3).mp4",
+    "videoFolder": "첫번쨰_작품(3)",
+    "uploadedAt": "2025-08-08T16:46:14.649+09:00",
+    "status": "uploaded"
+  },
+  "savedAt": "2025-08-08T16:46:14.650+09:00"
+}
