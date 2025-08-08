@@ -709,7 +709,7 @@ export default function VideoPlayer({
         console.log(`✅ ${area.type === 'click' ? '클릭 좌표' : '그리기 영역'}가 서버에 전송되었습니다.`);
 
         // 잠시 후 정보 입력 모달 표시
-        setTimeout(() => {
+        setTimeout(async () => {
           setShowApiResponseModal(false);
 
           // 현재 그리기 영역을 저장하여 객체 생성 시 좌표 정보 연결
@@ -732,7 +732,7 @@ export default function VideoPlayer({
       } else {
         const errorResult = await response.json().catch(() => ({ message: 'API 응답 오류' }));
 
-        // API 오류 응답 상세 정보 설정
+        // API 오��� 응답 상세 정보 설정
         setApiResponseData({
           success: false,
           message: errorResult.message || 'API 서버에서 오��가 발생했습니다.',
@@ -1420,7 +1420,7 @@ export default function VideoPlayer({
         category?: string;
       } = {};
 
-      // 편집된 값이 있을 때만 업데이���에 포함
+      // 편집된 값이 있을 때만 업데이����에 포함
       if (editedObjectName.trim()) updates.name = editedObjectName.trim();
       if (editedObjectCode.trim()) updates.code = editedObjectCode.trim();
       if (editedObjectInfo.trim()) updates.additionalInfo = editedObjectInfo.trim();
@@ -2888,7 +2888,7 @@ export default function VideoPlayer({
                 )}
               </div>
 
-              {/* 선택된 객체 삭제 버튼 - 스크롤 영역 밖 */}
+              {/* 선택된 객체 삭제 버튼 - ��크롤 영역 밖 */}
               {showObjectList && !selectedObjectId && selectedObjectIds.length > 0 && (
                 <div
                   style={{
@@ -3399,7 +3399,7 @@ export default function VideoPlayer({
             >
               <button
                 onClick={async () => {
-                  // 임시 좌표 취소
+                  // 임시 좌표 ���소
                   if (currentDrawingArea) {
                     await cancelTemporaryCoordinates(currentDrawingArea.id);
                   }
@@ -3431,7 +3431,7 @@ export default function VideoPlayer({
               <button
                 onClick={async () => {
                   if (modalObjectInfo && video && onAddNewObject) {
-                    // 그리기 영역을 ���로운 객����로 추가 - 팝업창에서 입력한 모든 ��보 포함
+                    // 그리기 영역을 ���로운 객�����로 추가 - 팝업창에서 입력한 모든 ��보 포함
                     const addedObjectId = onAddNewObject(video.id, modalObjectInfo.name, {
                       code: modalObjectInfo.code,
                       additionalInfo: modalObjectInfo.additionalInfo,
@@ -3778,7 +3778,7 @@ export default function VideoPlayer({
                     }}
                   >
                     <strong>📌 확인사항:</strong><br/>
-                    • 선택한 영역이 정확한지 확인해주세요<br/>
+                    • 선택한 영역�� 정확한지 확인해주세요<br/>
                     • 전송 후에는 되돌릴 수 없습니다<br/>
                     • API 응답을 받기까지 잠시 기다려주세요
                   </div>
