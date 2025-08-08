@@ -276,7 +276,7 @@ export default function VideoPlayer({
    *
    * 🔧 기능:
    * 1. base64 이미지 데이터를 서버로 전송
-   * 2. 서버에서 이미지 파일로 저�� (PNG 형식)
+   * 2. 서버에서 이미지 파일로 저장 (PNG 형식)
    * 3. 저장된 이미지의 URL 반환
    * 4. 동영상 시간 정보와 함께 저장
    *
@@ -359,16 +359,58 @@ export default function VideoPlayer({
       console.error('❌ Error saving screenshot:', error);
       return {
         success: false,
-        message: '네트워크 오류로 스크린샷 저장에 실패했���니다.'
+        message: '네트워크 오��로 스크린샷 저장에 실패했���니다.'
       };
     }
   };
 
   /**
-   * 저장된 스크린샷 조회 함수
+   * ===================================
+   * 📷 저장된 스크린샷 조회 API 호출 함수
+   * ===================================
    *
-   * @param drawingId - 그리기 영역 ID
-   * @returns Promise<{success: boolean, imageUrl?: string}>
+   * 🔧 기능:
+   * 1. 특정 그리기 영역의 저장된 스크린샷 파일 검색
+   * 2. 해당 파일의 웹 접근 URL 반환
+   * 3. 파일이 없는 경우 안전하게 실패 처리
+   *
+   * 📂 검색 위치:
+   * - 경로: data/{동영상폴더명}/
+   * - 파일명 패턴: *-screenshot-*-{drawingId}.png
+   *
+   * 📝 API 요청 형식:
+   * GET /api/screenshot?videoId={동영상파일명}&drawingId={그리기ID}
+   *
+   * 📤 성공 응답:
+   * {
+   *   "success": true,
+   *   "imageUrl": "/data/폴더명/파일명.png",
+   *   "imagePath": "/절대/경로/파일명.png",
+   *   "drawingId": "drawing_abc123"
+   * }
+   *
+   * 📤 실패 응답:
+   * {
+   *   "success": false,
+   *   "message": "해당 그리기 영역의 스크린샷을 찾을 수 없습니다."
+   * }
+   *
+   * 🔄 에러 처리:
+   * - 404 Not Found: 스크린샷 파일이 존재하지 않음 (정상적인 상황)
+   * - 400 Bad Request: 필수 파라미터 누락
+   * - 500 Server Error: 서버 내부 오류
+   * - Network Error: 네트워크 연결 문제
+   *
+   * 📝 사용 시나리오:
+   * - 정보 입력 모달 열 때: 이전에 저장된 스크린샷 표시
+   * - 객체 편집 시: 해당 객체의 원본 스크린샷 표시
+   * - ��리보기 갤러리: 모든 객체의 스크린샷 목록 표시
+   *
+   * @param drawingId - 그리기 영역 고유 ID (예: "drawing_abc123")
+   * @returns Promise<{success: boolean, imageUrl?: string, message?: string}>
+   *   - success: true면 imageUrl 포함, false면 message로 오류 사유 제공
+   *   - imageUrl: 웹에서 직접 접근 가능한 이미지 URL
+   *   - message: 사용자에게 표시할 수 있는 친화적 메시지
    */
   const getScreenshotFromServer = async (
     drawingId: string
@@ -464,8 +506,8 @@ export default function VideoPlayer({
   /**
    * 비디오 프레임에서 선택된 영역을 캡쳐하여 미리보기 이미지 생성
    *
-   * @param area - 그리기 영역 정보 (사각형, 클���, 자유그리기)
-   * @returns 캡쳐된 영역의 데이터 URL
+   * @param area - 그리기 영역 정보 (사각형, 클��, 자유그리기)
+   * @returns 캡��된 영역의 데이터 URL
    *
    * 🎯 주요 기능:
    * - 실제 비디오 프레임에서 선택된 영역�� 잘라내기
@@ -552,7 +594,7 @@ export default function VideoPlayer({
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, previewSize, previewSize);
 
-      // 비디오 프레임의 해당 영역��� 그리기
+      // 비디오 프레임의 해당 영역을 그리기
       ctx.drawImage(
         videoElement,
         cropX, cropY, cropWidth, cropHeight,
@@ -714,7 +756,7 @@ export default function VideoPlayer({
         // API 응답 상세 정보 설정
         setApiResponseData({
           success: true,
-          message: result.message || '그리기 데이터가 성공적으로 처리되���습니다.',
+          message: result.message || '그리기 데이터가 성공적으로 처리되었습니다.',
           drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유그리기',
           coordinates: area.type === 'click' && area.clickPoint
             ? `(${area.clickPoint.x}, ${area.clickPoint.y})`
@@ -765,7 +807,7 @@ export default function VideoPlayer({
           drawingType: area.type === 'click' ? '클릭 좌표' : area.type === 'rectangle' ? '네모박스' : '자유그리기',
           coordinates: area.type === 'click' && area.clickPoint
             ? `(${area.clickPoint.x}, ${area.clickPoint.y})`
-            : '오류로 ���해 처리되지 않음',
+            : '오류로 인해 처리되지 않음',
           timestamp: new Date().toLocaleString('ko-KR')
         });
         setShowApiResponseModal(true);
@@ -1252,7 +1294,7 @@ export default function VideoPlayer({
       const finalFileName = video.serverFileName || video.file.name;
 
       if (!finalVideoFolder) {
-        // 파일명에서 확장자 제��하고 폴더명으로 사용
+        // 파일명에서 확장자 제거하고 폴더명으로 사용
         const fileNameWithoutExt = finalFileName.replace(/\.[^/.]+$/, "");
         // 공백을 언더스코어로 변경하여 폴더명 형식에 맞춤
         finalVideoFolder = fileNameWithoutExt.replace(/\s+/g, '_');
@@ -1488,7 +1530,7 @@ export default function VideoPlayer({
         });
         setSelectedObjectIds([]);
         setHasObjectChanges(true);
-        toast.success(`${deleteCount}개 객체가 삭제되었습니다.`);
+        toast.success(`${deleteCount}개 객체가 ���제되었습니다.`);
 
         // 즉시 서버에 저장
         await saveDataToDb();
@@ -2043,7 +2085,7 @@ export default function VideoPlayer({
                 <button
                   onClick={() => {
                     if (!showObjectList && !selectedObjectId) {
-                      // 처음 클�� �� 객체 목�� 열기
+                      // 처음 클릭 �� 객체 목�� 열기
                       setShowObjectList(true);
                       setSelectedObjectId(null);
                     } else if (showObjectList && !selectedObjectId) {
@@ -2355,7 +2397,7 @@ export default function VideoPlayer({
                         </div>
                       ))}
 
-                      {/* 삭제제 버튼을 스크롤 영역 ���으로 이동 */}
+                      {/* 삭제제 버튼을 스크롤 영역 ������로 이동 */}
                       {false && (
                         <div
                           style={{
@@ -3323,7 +3365,7 @@ export default function VideoPlayer({
                   }}
                 />
 
-                {/* 카테고리 드롭다운 */}
+                {/* 카���고리 드롭다운 */}
                 <div style={{ marginTop: "8px" }}>
                   <select
                     value={modalObjectInfo.category}
@@ -3507,7 +3549,7 @@ export default function VideoPlayer({
                     await cancelTemporaryCoordinates(currentDrawingArea.id);
                   }
 
-                  // 취소 시 그려진 영역들을 모두 제거
+                  // 취�� 시 그려진 영역들을 모두 제거
                   setDrawnAreas([]);
                   setCurrentPath([]);
                   setCurrentRectangle(null);
