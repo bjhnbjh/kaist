@@ -28,7 +28,9 @@ import { handleSaveScreenshot, handleGetScreenshot } from "./routes/screenshot";
  * 9. POST /api/save-data        - 편집 데이터 JSON 저장
  * 10. GET /api/vtt-coordinates  - VTT 파일에서 좌표 데이터 읽기
  * 11. GET /api/check-filename   - 파일명 충돌 체크 및 새 이름 제안
- * 12. GET /api/ping             - 서버 상태 체크
+ * 12. POST /api/save-screenshot - 그리기 영역 스크린샷 저장 (base64 이미지)
+ * 13. GET /api/screenshot       - 저장된 스크린샷 조회
+ * 14. GET /api/ping             - 서버 상태 체크
  * 
  * 📂 데이터 저장 구조:
  * data/
