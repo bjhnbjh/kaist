@@ -506,7 +506,7 @@ export default function VideoPlayer({
       }
     } catch (error) {
       // 네트워크 에러를 조용히 처리하고 로컬에서 계속 진행
-      console.log('ℹ️ 그리기 데이터 전송 실패, 로컬에서 계속 진행:', error instanceof Error ? error.message : 'Unknown error');
+      console.log('ℹ️ 그리기 데이터 전송 실패, ��컬에서 계속 진행:', error instanceof Error ? error.message : 'Unknown error');
 
       // API 에러가 발���해도 로컬에서 작업 계속 진행
       if (!apiResponseData || apiResponseData.success !== false) {
@@ -993,7 +993,7 @@ export default function VideoPlayer({
 
       const webvttData = {
         videoId: video.id,
-        videoFileName: finalFileName, // 서버 파일명 우선 사용
+        videoFileName: finalFileName, // 서버 파일명 우선 사��
         videoFolder: finalVideoFolder, // 실제 업로드된 폴더명 또는 추정된 폴더명
         objects: detectedObjects.map(obj => ({
           id: obj.id,
@@ -3349,6 +3349,268 @@ export default function VideoPlayer({
                 }}
               >
                 확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 전송 확인 모달 */}
+      {showConfirmationModal && confirmationModalData && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.8)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2000,
+            padding: "20px",
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowConfirmationModal(false);
+              setConfirmationModalData(null);
+            }
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              borderRadius: "12px",
+              padding: "24px",
+              maxWidth: "600px",
+              width: "100%",
+              maxHeight: "80vh",
+              overflow: "auto",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "20px",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 제목 */}
+            <div style={{ textAlign: "center" }}>
+              <h3
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: "600",
+                  color: "#374151",
+                  margin: 0,
+                  marginBottom: "8px",
+                }}
+              >
+                선택 영역 전송 확인
+              </h3>
+              <p
+                style={{
+                  fontSize: "0.9rem",
+                  color: "#6b7280",
+                  margin: 0,
+                }}
+              >
+                선택한 영역을 API로 전송하시겠습니까?
+              </p>
+            </div>
+
+            {/* 미리보기와 정보 */}
+            <div
+              style={{
+                display: "flex",
+                gap: "20px",
+                alignItems: "flex-start",
+              }}
+            >
+              {/* 왼쪽: 미리보기 이미지 */}
+              <div
+                style={{
+                  flex: "0 0 200px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                <div
+                  style={{
+                    background: "#f8fafc",
+                    border: "2px solid #e2e8f0",
+                    borderRadius: "8px",
+                    padding: "8px",
+                  }}
+                >
+                  <img
+                    src={confirmationModalData.previewDataUrl}
+                    alt="Selected area preview"
+                    style={{
+                      width: "200px",
+                      height: "200px",
+                      objectFit: "contain",
+                      display: "block",
+                    }}
+                  />
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "#6b7280",
+                    textAlign: "center",
+                    fontStyle: "italic",
+                  }}
+                >
+                  선택된 영역
+                </div>
+              </div>
+
+              {/* 오른쪽: 상세 정보 */}
+              <div
+                style={{
+                  flex: "1",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                }}
+              >
+                <div
+                  style={{
+                    background: "#f8fafc",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "8px",
+                    padding: "16px",
+                  }}
+                >
+                  <div style={{ marginBottom: "12px" }}>
+                    <strong style={{ color: "#374151" }}>그리기 타입:</strong>
+                    <span style={{ marginLeft: "8px", color: "#6b7280" }}>
+                      {confirmationModalData.area.type === 'click' ? '클릭 좌표'
+                        : confirmationModalData.area.type === 'rectangle' ? '네모박스'
+                        : '자유그리기'}
+                    </span>
+                  </div>
+
+                  <div style={{ marginBottom: "12px" }}>
+                    <strong style={{ color: "#374151" }}>좌표 정보:</strong>
+                    <span style={{ marginLeft: "8px", color: "#6b7280", fontFamily: "monospace" }}>
+                      {confirmationModalData.area.type === 'click' && confirmationModalData.area.clickPoint
+                        ? `(${confirmationModalData.area.clickPoint.x}, ${confirmationModalData.area.clickPoint.y})`
+                        : confirmationModalData.area.type === 'rectangle' && confirmationModalData.area.startPoint && confirmationModalData.area.endPoint
+                        ? `(${confirmationModalData.area.startPoint.x}, ${confirmationModalData.area.startPoint.y}) ~ (${confirmationModalData.area.endPoint.x}, ${confirmationModalData.area.endPoint.y})`
+                        : '복수 좌표'}
+                    </span>
+                  </div>
+
+                  <div style={{ marginBottom: "12px" }}>
+                    <strong style={{ color: "#374151" }}>동영상 시간:</strong>
+                    <span style={{ marginLeft: "8px", color: "#6b7280" }}>
+                      {formatTime(videoRef.current?.currentTime || 0)}
+                    </span>
+                  </div>
+
+                  <div>
+                    <strong style={{ color: "#374151" }}>동영상 파일:</strong>
+                    <span style={{ marginLeft: "8px", color: "#6b7280" }}>
+                      {video?.serverFileName || video?.file.name || 'Unknown'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 주의사항 */}
+                <div
+                  style={{
+                    background: "#fef3c7",
+                    border: "1px solid #f59e0b",
+                    borderRadius: "6px",
+                    padding: "12px",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "0.85rem",
+                      color: "#92400e",
+                      lineHeight: "1.4",
+                    }}
+                  >
+                    <strong>📌 확인사항:</strong><br/>
+                    • 선택한 영역이 정확한지 확인해주세요<br/>
+                    • 전송 후에는 되돌릴 수 없습니다<br/>
+                    • API 응답을 받기까지 잠시 기다려주세요
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 버튼 */}
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                justifyContent: "flex-end",
+                borderTop: "1px solid #e5e7eb",
+                paddingTop: "16px",
+              }}
+            >
+              <button
+                onClick={() => {
+                  setShowConfirmationModal(false);
+                  setConfirmationModalData(null);
+                }}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  border: "1px solid #d1d5db",
+                  background: "white",
+                  color: "#374151",
+                  fontSize: "0.9rem",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                취소
+              </button>
+              <button
+                onClick={async () => {
+                  if (confirmationModalData) {
+                    setShowConfirmationModal(false);
+                    await sendDrawingToApi(confirmationModalData.area);
+                    setConfirmationModalData(null);
+                  }
+                }}
+                disabled={isApiLoading}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  border: "none",
+                  background: isApiLoading ? "#9ca3af" : "#3b82f6",
+                  color: "white",
+                  fontSize: "0.9rem",
+                  fontWeight: "500",
+                  cursor: isApiLoading ? "not-allowed" : "pointer",
+                  opacity: isApiLoading ? 0.6 : 1,
+                  transition: "all 0.2s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                {isApiLoading && (
+                  <div
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      border: "2px solid transparent",
+                      borderTop: "2px solid white",
+                      borderRadius: "50%",
+                      animation: "spin 1s linear infinite",
+                    }}
+                  />
+                )}
+                {isApiLoading ? "전송 중..." : "전송"}
               </button>
             </div>
           </div>
