@@ -195,6 +195,14 @@ export const handleGetScreenshot: RequestHandler = (req, res) => {
     const videoFolderName = findActualVideoFolder(videoId as string);
     const videoFolderPath = path.join(DATA_DIR, videoFolderName);
 
+    // 비디오 폴더 존재 확인
+    if (!fs.existsSync(videoFolderPath)) {
+      return res.status(404).json({
+        success: false,
+        message: '해당 동영상 폴더를 찾을 수 없습니다.'
+      });
+    }
+
     // 해당 drawingId로 저장된 스크린샷 파일 찾기
     const files = fs.readdirSync(videoFolderPath);
     const screenshotFile = files.find(file => 
