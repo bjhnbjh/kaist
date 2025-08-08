@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import path from "path";
 // 핵심 API 라우터들만 import (demo 제거)
 import { handleDrawingSubmission, handleCoordinateLinking, handleCoordinateCancellation, handleCoordinateUpdate, handleCoordinateDelete } from "./routes/drawing";
 import { handleVideoFileUpload, handleVideoDelete, uploadMiddleware } from "./routes/upload";
@@ -7,6 +8,7 @@ import { handleWebVTTSave } from "./routes/webvtt";
 import { handleSaveData } from "./routes/save-data";
 import { handleVttCoordinatesRead } from "./routes/vtt-coordinates";
 import { handleFilenameCheck } from "./routes/check-filename";
+import { handleSaveScreenshot, handleGetScreenshot } from "./routes/screenshot";
 
 /**
  * ===================================
