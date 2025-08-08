@@ -286,7 +286,7 @@ export default function VideoPlayer({
    *
    * 📂 저장 위치:
    * - 경로: data/{동영상폴더명}/{동영상파일명}-screenshot-{시간}-{drawingId}.png
-   * - URL: /data/{동영상폴더명}/{파일명}.png
+   * - URL: /data/{동영상폴더��}/{파일명}.png
    *
    * 📝 API 요청 형식:
    * POST /api/save-screenshot
@@ -395,7 +395,7 @@ export default function VideoPlayer({
    * {
    *   "success": true,
    *   "imageUrl": "/data/폴더명/파일명.png",
-   *   "imagePath": "/절대/경로/파일명.png",
+   *   "imagePath": "/절대/���로/파일명.png",
    *   "drawingId": "drawing_abc123"
    * }
    *
@@ -425,6 +425,10 @@ export default function VideoPlayer({
   const getScreenshotFromServer = async (
     drawingId: string
   ): Promise<{success: boolean; imageUrl?: string; message?: string}> => {
+    // 🔄 로딩 시작
+    setIsScreenshotLoading(true);
+    setScreenshotError(null);
+
     try {
       const apiUrl = getApiUrl();
       const videoId = video?.serverFileName || video?.file.name;
@@ -748,7 +752,7 @@ export default function VideoPlayer({
         endPoint: area.endPoint,
         clickPoint: area.clickPoint, // 클��� 포인트 추가
         videoId: video?.serverFileName || video?.file.name,
-        videoCurrentTime: currentVideoTime,  // 실제 동영��� 시간 추가
+        videoCurrentTime: currentVideoTime,  // 실제 동영����� 시간 추가
         timestamp: Date.now()
       };
 
@@ -779,7 +783,7 @@ export default function VideoPlayer({
         setShowApiResponseModal(true);
 
         // 그리기 영역 전송 성공 로그만 남기고 알림 제거
-        console.log(`✅ ${area.type === 'click' ? '클릭 좌표' : '그리기 영역'}가 서버에 전송되었습니다.`);
+        console.log(`✅ ${area.type === 'click' ? '클릭 좌표' : '그리�� 영역'}가 서버에 전송되었습니다.`);
 
         // 잠시 후 정보 입력 모�� 표시
         setTimeout(async () => {
@@ -1744,7 +1748,7 @@ export default function VideoPlayer({
           <h2
             style={{ fontSize: "1.25rem", fontWeight: "600", color: "#1f2937" }}
           >
-            미리보기
+            미리보��
           </h2>
           <button
             onClick={onClose}
