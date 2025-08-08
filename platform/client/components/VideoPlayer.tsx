@@ -30,6 +30,11 @@ interface DrawnArea {
   clickPoint?: DrawingPoint;
 }
 
+interface ConfirmationModalData {
+  area: DrawnArea;
+  previewDataUrl: string;
+}
+
 interface VideoPlayerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -134,7 +139,12 @@ export default function VideoPlayer({
     videoTime?: number;
     timestamp?: string;
   } | null>(null);
-  // 그리기 영역과 생성된 객체 간의 매핑 추적
+
+  // 확인 모달 상태
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [confirmationModalData, setConfirmationModalData] = useState<ConfirmationModalData | null>(null);
+
+  // 그���기 영역과 생성된 객체 간의 매핑 추적
   const [currentDrawingArea, setCurrentDrawingArea] = useState<DrawnArea | null>(null);
   const [objectDrawingMap, setObjectDrawingMap] = useState<Map<string, DrawnArea>>(new Map());
   // VTT 기반 좌표 오버레이
@@ -347,7 +357,7 @@ export default function VideoPlayer({
         setShowApiResponseModal(true);
 
         // 그리기 영역 전송 성공 로그만 남기고 알림 제거
-        console.log(`✅ ${area.type === 'click' ? '클릭 좌표' : '그리기 영역'}가 서버에 전송되었습니다.`);
+        console.log(`✅ ${area.type === 'click' ? '클��� 좌표' : '그리기 영역'}가 서버에 전송되었습니다.`);
 
         // 잠시 후 정보 입력 모달 표시
         setTimeout(() => {
@@ -594,7 +604,7 @@ export default function VideoPlayer({
               coords.y <= maxY
             );
           } else if (area.type === "click" && area.clickPoint) {
-            // 클릭 포인트 삭제를 위한 범위 체크 (15px 범위)
+            // 클릭 포인��� 삭제를 위한 범위 체크 (15px 범위)
             return (
               Math.abs(area.clickPoint.x - coords.x) < 15 &&
               Math.abs(area.clickPoint.y - coords.y) < 15
@@ -930,7 +940,7 @@ export default function VideoPlayer({
    * - API URL 변경: window.location.origin 수정
    * - 저장 데이터 구조 변경: saveData 객체 수정
    * - 응답 처리 변경: response 처리 로직 수정
-   * - 에러 처리 개선: try-catch 블록 수정
+   * - 에러 처리 개선: try-catch 블��� 수정
    */
   const saveDataToDb = async () => {
     if (!video) return;
@@ -1791,7 +1801,7 @@ export default function VideoPlayer({
                         gap: "4px",
                         transition: "background-color 0.2s ease",
                       }}
-                      title="탐지된 객체 목록으로 돌아가기"
+                      title="탐지된 객체 목록으로 돌���가기"
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = "#f3f4f6";
                       }}
