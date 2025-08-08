@@ -324,8 +324,23 @@ export default function VideoPlayer({
     }
   }, [video]);
 
-  // 그리기 영역 미리보기 생성
+  /**
+   * 비디오 프레임에서 선택된 영역을 캡쳐하여 미리보기 이미지 생성
+   *
+   * @param area - 그리기 영역 정보 (사각형, 클��, 자유그리기)
+   * @returns 캡쳐된 영역의 데이터 URL
+   *
+   * 🎯 주요 기능:
+   * - 실제 비디오 프레임에서 선택된 영역만 잘라내기
+   * - 영역 위에 반투명 오버레이로 선택 표시
+   * - 클릭의 경우 주변 영역을 포함하여 캡쳐
+   */
   const createAreaPreview = (area: DrawnArea): string => {
+    const videoElement = videoRef.current;
+    if (!videoElement) {
+      return createFallbackPreview(area);
+    }
+
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d')!;
     const previewSize = 200;
@@ -333,90 +348,185 @@ export default function VideoPlayer({
     canvas.width = previewSize;
     canvas.height = previewSize;
 
-    // 배경을 흰색으로 설정
-    ctx.fillStyle = '#ffffff';
+    try {
+      // 비디오 크기 가져오기
+      const videoRect = videoElement.getBoundingClientRect();
+      const videoNaturalWidth = videoElement.videoWidth;
+      const videoNaturalHeight = videoElement.videoHeight;
+
+      if (videoNaturalWidth === 0 || videoNaturalHeight === 0) {
+        return createFallbackPreview(area);
+      }
+
+      // 캔버스 좌표를 비디오 좌표로 변환하는 비율 계산
+      const scaleX = videoNaturalWidth / videoRect.width;
+      const scaleY = videoNaturalHeight / videoRect.height;
+
+      let cropX, cropY, cropWidth, cropHeight;
+
+      if (area.type === 'rectangle' && area.startPoint && area.endPoint) {
+        // 사각형 영역 캡쳐
+        cropX = Math.min(area.startPoint.x, area.endPoint.x) * scaleX;
+        cropY = Math.min(area.startPoint.y, area.endPoint.y) * scaleY;
+        cropWidth = Math.abs(area.endPoint.x - area.startPoint.x) * scaleX;
+        cropHeight = Math.abs(area.endPoint.y - area.startPoint.y) * scaleY;
+      } else if (area.type === 'click' && area.clickPoint) {
+        // 클릭 포인트 주변 영역 캡쳐 (100x100 픽셀 영역)
+        const surroundSize = 50; // 클릭 지점 주변 50픽셀씩
+        cropX = Math.max(0, (area.clickPoint.x - surroundSize) * scaleX);
+        cropY = Math.max(0, (area.clickPoint.y - surroundSize) * scaleY);
+        cropWidth = Math.min(surroundSize * 2 * scaleX, videoNaturalWidth - cropX);
+        cropHeight = Math.min(surroundSize * 2 * scaleY, videoNaturalHeight - cropY);
+      } else if (area.type === 'path' && area.points.length > 1) {
+        // 자유그리기 영역의 바운딩 박스 캡쳐
+        const minX = Math.min(...area.points.map(p => p.x));
+        const maxX = Math.max(...area.points.map(p => p.x));
+        const minY = Math.min(...area.points.map(p => p.y));
+        const maxY = Math.max(...area.points.map(p => p.y));
+
+        // 약간의 패딩 추가
+        const padding = 10;
+        cropX = Math.max(0, (minX - padding) * scaleX);
+        cropY = Math.max(0, (minY - padding) * scaleY);
+        cropWidth = Math.min((maxX - minX + padding * 2) * scaleX, videoNaturalWidth - cropX);
+        cropHeight = Math.min((maxY - minY + padding * 2) * scaleY, videoNaturalHeight - cropY);
+      } else {
+        return createFallbackPreview(area);
+      }
+
+      // 잘린 영역이 너무 작으면 최소 크기 보장
+      if (cropWidth < 20 || cropHeight < 20) {
+        const centerX = cropX + cropWidth / 2;
+        const centerY = cropY + cropHeight / 2;
+        cropWidth = Math.max(cropWidth, 40);
+        cropHeight = Math.max(cropHeight, 40);
+        cropX = Math.max(0, centerX - cropWidth / 2);
+        cropY = Math.max(0, centerY - cropHeight / 2);
+      }
+
+      // 비디오 프레임을 캔버스에 그리기 (잘린 영역만)
+      const scale = Math.min(previewSize / cropWidth, previewSize / cropHeight);
+      const scaledWidth = cropWidth * scale;
+      const scaledHeight = cropHeight * scale;
+      const offsetX = (previewSize - scaledWidth) / 2;
+      const offsetY = (previewSize - scaledHeight) / 2;
+
+      // 배경을 검은색으로 설정
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, previewSize, previewSize);
+
+      // 비디오 프레임의 해당 영역을 그리기
+      ctx.drawImage(
+        videoElement,
+        cropX, cropY, cropWidth, cropHeight,
+        offsetX, offsetY, scaledWidth, scaledHeight
+      );
+
+      // 선택 영역 표시를 위한 오버레이 그리기
+      drawSelectionOverlay(ctx, area, cropX, cropY, scaleX, scaleY, offsetX, offsetY, scale, previewSize);
+
+      return canvas.toDataURL();
+    } catch (error) {
+      console.warn('비디오 프레임 캡쳐 실패:', error);
+      return createFallbackPreview(area);
+    }
+  };
+
+  /**
+   * 비디오 캡쳐가 실패했을 때 사용하는 대체 미리보기 생성
+   */
+  const createFallbackPreview = (area: DrawnArea): string => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d')!;
+    const previewSize = 200;
+
+    canvas.width = previewSize;
+    canvas.height = previewSize;
+
+    // 회색 배경
+    ctx.fillStyle = '#f3f4f6';
     ctx.fillRect(0, 0, previewSize, previewSize);
 
-    // 원본 캔버스 크기 가져오기
-    const originalCanvas = canvasRef.current;
-    if (!originalCanvas) return canvas.toDataURL();
+    // 중앙에 선택 영역 표시
+    const centerX = previewSize / 2;
+    const centerY = previewSize / 2;
 
-    const originalWidth = originalCanvas.width;
-    const originalHeight = originalCanvas.height;
+    ctx.strokeStyle = area.color || '#ef4444';
+    ctx.lineWidth = 3;
 
-    if (area.type === 'rectangle' && area.startPoint && area.endPoint) {
-      // 네모박스의 경우
-      const rectWidth = Math.abs(area.endPoint.x - area.startPoint.x);
-      const rectHeight = Math.abs(area.endPoint.y - area.startPoint.y);
-
-      // 비율 계산하여 미리보기 크기에 맞게 조정
-      const scale = Math.min(previewSize / rectWidth, previewSize / rectHeight) * 0.8;
-      const scaledWidth = rectWidth * scale;
-      const scaledHeight = rectHeight * scale;
-
-      const centerX = previewSize / 2;
-      const centerY = previewSize / 2;
-
-      ctx.strokeStyle = area.color;
-      ctx.lineWidth = 3;
-      ctx.strokeRect(
-        centerX - scaledWidth / 2,
-        centerY - scaledHeight / 2,
-        scaledWidth,
-        scaledHeight
-      );
-    } else if (area.type === 'click' && area.clickPoint) {
-      // 클릭 포인트의 경우
-      const centerX = previewSize / 2;
-      const centerY = previewSize / 2;
-      const size = 12;
-
-      ctx.strokeStyle = area.color;
-      ctx.lineWidth = 3;
-
-      // 십자가 그리기
+    if (area.type === 'rectangle') {
+      ctx.strokeRect(centerX - 40, centerY - 30, 80, 60);
+    } else if (area.type === 'click') {
       ctx.beginPath();
-      ctx.moveTo(centerX - size, centerY);
-      ctx.lineTo(centerX + size, centerY);
-      ctx.moveTo(centerX, centerY - size);
-      ctx.lineTo(centerX, centerY + size);
+      ctx.moveTo(centerX - 15, centerY);
+      ctx.lineTo(centerX + 15, centerY);
+      ctx.moveTo(centerX, centerY - 15);
+      ctx.lineTo(centerX, centerY + 15);
       ctx.stroke();
-
-      // 원 그리기
       ctx.beginPath();
-      ctx.arc(centerX, centerY, size/2, 0, 2 * Math.PI);
+      ctx.arc(centerX, centerY, 8, 0, 2 * Math.PI);
       ctx.stroke();
-    } else if (area.type === 'path' && area.points.length > 1) {
-      // 자유그리기의 경우
-      const minX = Math.min(...area.points.map(p => p.x));
-      const maxX = Math.max(...area.points.map(p => p.x));
-      const minY = Math.min(...area.points.map(p => p.y));
-      const maxY = Math.max(...area.points.map(p => p.y));
-
-      const pathWidth = maxX - minX;
-      const pathHeight = maxY - minY;
-
-      const scale = Math.min(previewSize / pathWidth, previewSize / pathHeight) * 0.8;
-
-      const offsetX = previewSize / 2 - (minX + pathWidth / 2) * scale;
-      const offsetY = previewSize / 2 - (minY + pathHeight / 2) * scale;
-
-      ctx.strokeStyle = area.color;
-      ctx.lineWidth = 2;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-
+    } else {
       ctx.beginPath();
-      const firstPoint = area.points[0];
-      ctx.moveTo(firstPoint.x * scale + offsetX, firstPoint.y * scale + offsetY);
-
-      area.points.forEach(point => {
-        ctx.lineTo(point.x * scale + offsetX, point.y * scale + offsetY);
-      });
+      ctx.arc(centerX, centerY, 40, 0, 2 * Math.PI);
       ctx.stroke();
     }
 
+    // "미리보기 없음" 텍스트
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('미리보기 없음', centerX, previewSize - 20);
+
     return canvas.toDataURL();
+  };
+
+  /**
+   * 캡쳐된 이미지 위에 선택 영역 오버레이 그리기
+   */
+  const drawSelectionOverlay = (
+    ctx: CanvasRenderingContext2D,
+    area: DrawnArea,
+    cropX: number,
+    cropY: number,
+    scaleX: number,
+    scaleY: number,
+    offsetX: number,
+    offsetY: number,
+    scale: number,
+    previewSize: number
+  ) => {
+    // 반투명 오버레이
+    ctx.fillStyle = 'rgba(239, 68, 68, 0.2)';
+
+    if (area.type === 'rectangle' && area.startPoint && area.endPoint) {
+      const rectX = ((Math.min(area.startPoint.x, area.endPoint.x) * scaleX) - cropX) * scale + offsetX;
+      const rectY = ((Math.min(area.startPoint.y, area.endPoint.y) * scaleY) - cropY) * scale + offsetY;
+      const rectWidth = Math.abs(area.endPoint.x - area.startPoint.x) * scaleX * scale;
+      const rectHeight = Math.abs(area.endPoint.y - area.startPoint.y) * scaleY * scale;
+
+      ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(rectX, rectY, rectWidth, rectHeight);
+    } else if (area.type === 'click' && area.clickPoint) {
+      const clickX = ((area.clickPoint.x * scaleX) - cropX) * scale + offsetX;
+      const clickY = ((area.clickPoint.y * scaleY) - cropY) * scale + offsetY;
+
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(clickX - 10, clickY);
+      ctx.lineTo(clickX + 10, clickY);
+      ctx.moveTo(clickX, clickY - 10);
+      ctx.lineTo(clickX, clickY + 10);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(clickX, clickY, 6, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.8)';
+      ctx.fill();
+    }
   };
 
   // 확인 모달을 표시하고 미리보기 생성
@@ -1206,7 +1316,7 @@ export default function VideoPlayer({
         onUpdateObject(video.id, selectedObjectId, updates);
         setHasObjectChanges(true);
         // 객체 정보 업데이트 알림 제거 (불필요)
-        console.log('✅ 객체 정보가 업데이트되었습니다.');
+        console.log('✅ 객체 정보가 업데이트되��습니다.');
       }
     }
     setIsEditing(false);
@@ -2700,7 +2810,7 @@ export default function VideoPlayer({
                   </div>
                   <button
                     onClick={() => {
-                      // 일괄 삭제를 위해 확인 모달을 열어서 전체 선택 삭제로 처리
+                      // 일괄 삭제를 위해 확인 모달을 열어서 ��체 선택 삭제로 처리
                       if (selectedObjectIds.length > 0) {
                         setObjectToDelete("BULK_DELETE");
                         setShowDeleteConfirmModal(true);
