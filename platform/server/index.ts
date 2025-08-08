@@ -22,7 +22,7 @@ import { handleSaveScreenshot, handleGetScreenshot } from "./routes/screenshot";
  * 3. POST /api/drawing          - 그리기 데이터 처리 (객체 영역 그리기)
  * 4. POST /api/drawing/link     - 좌표와 객체명 연결
  * 5. POST /api/drawing/cancel   - 임시 좌표 취소/삭제
- * 6. POST /api/coordinate/update - 좌표 파일 객체 이름 업데이���
+ * 6. POST /api/coordinate/update - 좌표 파일 객체 이름 업데이트
  * 7. POST /api/coordinate/delete - 좌표 파일 객체 삭제
  * 8. POST /api/webvtt           - WebVTT 자막 파일 생성/업데이트
  * 9. POST /api/save-data        - 편집 데이터 JSON 저장
@@ -108,7 +108,7 @@ export function createServer() {
   app.delete("/api/video", handleVideoDelete);
 
   /**
-   * 🎨 그리기 데이터 처리
+   * 🎨 그리기 데이��� 처리
    * POST /api/drawing
    *
    * 📝 수정 방법:
@@ -136,7 +136,7 @@ export function createServer() {
   app.post("/api/coordinate/update", handleCoordinateUpdate);
 
   /**
-   *  좌표 파일 ���체 삭제
+   *  좌표 파일 객체 삭제
    * POST /api/coordinate/delete
    */
   app.post("/api/coordinate/delete", handleCoordinateDelete);
@@ -181,6 +181,26 @@ export function createServer() {
    * - 파일명 생성 규칙 변경 시 해당 함수 수정
    */
   app.get("/api/check-filename", handleFilenameCheck);
+
+  /**
+   * 📸 그리기 영역 스크린샷 저장
+   * POST /api/save-screenshot
+   *
+   * 📝 수정 방법:
+   * - server/routes/screenshot.ts의 handleSaveScreenshot 함수 수정
+   * - 이미지 저장 경로나 처리 로직 변경 시 해당 파일 수정
+   */
+  app.post("/api/save-screenshot", handleSaveScreenshot);
+
+  /**
+   * 📷 저장된 스크린샷 조회
+   * GET /api/screenshot?videoId=example&drawingId=abc123
+   *
+   * 📝 수정 방법:
+   * - server/routes/screenshot.ts의 handleGetScreenshot 함수 수정
+   * - 이미지 조회 로직 변경 시 해당 파일 수정
+   */
+  app.get("/api/screenshot", handleGetScreenshot);
 
   return app;
 }
