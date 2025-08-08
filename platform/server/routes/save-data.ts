@@ -25,15 +25,7 @@ import { normalizeFileName, findActualVideoFolder, getKoreaTimeISO, DATA_DIR } f
 // 🛠️ 유틸리티 함수들
 // ========================================
 
-/**
- * 한국시간(KST) 기준으로 ISO 문자열 반환
- * @returns {string} KST 시간대의 ISO 문자열
- */
-function getKoreaTimeISO(): string {
-  const now = new Date();
-  const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
-  return koreaTime.toISOString().replace('Z', '+09:00');
-}
+// ⬆️ getKoreaTimeISO 함수는 file-utils.ts에서 import됩니다
 
 // 🔧 이미 import된 함수들을 사용합니다 (file-utils.ts에서)
 // - normalizeFileName: 파일명 정규화
@@ -45,7 +37,7 @@ function getKoreaTimeISO(): string {
 // ========================================
 
 /**
- * 편집 데이터 ���장 요청 인터페이스
+ * 편집 데이터 ���장 요청 인터페��스
  * 
  * 📝 수정 포인트:
  * - 새로운 데이터 타입 추가: 이 인터페이스��� 필드 추가
@@ -120,7 +112,7 @@ function initializeSaveDataFiles() {
  * 편집 데이터를 동영상 폴더에 저장
  * 
  * 📝 수정 포인트:
- * - 버전 관리 방식 변경: 버전 증가 로직 수정
+ * - 버전 관리 방식 변경: 버전 증�� 로직 수정
  * - 프로젝트 레코드 구조 변경: projectRecord 객�� 수정
  * - 파일명 규칙 변경: 저장 파일명 형식 수정
  * 
@@ -191,7 +183,7 @@ function updateProjectIndex(projectRecord: any) {
     const indexContent = fs.readFileSync(SAVED_DATA_INDEX, 'utf8');
     const indexData = JSON.parse(indexContent);
 
-    // 같은 비디오ID의 기존 레코드가 있으면 업데이트, 없으면 추가
+    // 같은 비디오ID의 기존 레코드가 있으면 업데이트, ���으면 추가
     const existingIndex = indexData.savedProjects.findIndex(
       (project: any) => project.videoId === projectRecord.videoId
     );
