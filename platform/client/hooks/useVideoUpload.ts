@@ -261,7 +261,7 @@ export function useVideoUpload() {
                   serverFileName: uploadResult?.processedData?.fileName, // 서버에서 받은 실제 파일명
                 };
 
-                console.log(`🎬���🎬 생성된 video 객체:`, {
+                console.log(`🎬🎬🎬 생성된 video 객체:`, {
                   id: newVideo.id,
                   fileName: newVideo.file.name,
                   serverFileName: newVideo.serverFileName,
@@ -340,7 +340,7 @@ export function useVideoUpload() {
   const handleVideoSelect = useCallback(
     (videoId: string) => {
       if (videoId === "") {
-        // 선택 해제 - 닫기 애��메이션
+        // 선택 해제 - 닫기 애니메이션
         setPanelClosing(true);
         setPanelAnimating(true);
         const timeoutId = setTimeout(() => {
@@ -364,7 +364,7 @@ export function useVideoUpload() {
           const upload = uploads.find(u => u.id === videoId && u.status === 'completed');
           console.log('DEBUG: Found upload for missing video:', upload);
 
-          if (upload) {
+          if (upload && upload.file) {
             const newVideo: VideoInfo = {
               id: upload.id,
               file: upload.file!,
