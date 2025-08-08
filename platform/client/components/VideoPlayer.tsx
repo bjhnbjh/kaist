@@ -144,6 +144,8 @@ export default function VideoPlayer({
     dlReservoirDomain: string;
     category: string;
     videoCurrentTime: number;
+    imageUrl?: string; // 스크린샷 이미지 URL 추가
+    drawingId?: string; // 그리기 영역 ID 추가 (스크린샷 조회용)
   } | null>(null);
   const [isApiLoading, setIsApiLoading] = useState(false);
   const [showApiResponseModal, setShowApiResponseModal] = useState(false);
@@ -445,7 +447,7 @@ export default function VideoPlayer({
    * @returns 캡쳐된 영역의 데이터 URL
    *
    * 🎯 주요 기능:
-   * - 실제 비디오 프레임에서 선택된 영역만 잘라내기
+   * - 실제 비디오 프레임에서 선택된 영역�� 잘라내기
    * - 영역 위에 반투명 오버레이로 선택 표���
    * - 클릭의 경우 주변 영역을 포함하여 캡쳐
    */
@@ -718,7 +720,7 @@ export default function VideoPlayer({
           setModalObjectInfo({
             name: `Object(${nextObjectNumber})`,
             code: `CODE_${area.id.slice(0, 8).toUpperCase()}`,
-            additionalInfo: area.type === 'click' ? '클릭으로 생성된 객체입니다.' : 'AI가 자동으로 탐지한 객체입니다.',
+            additionalInfo: area.type === 'click' ? '클릭으로 ��성된 객체입니다.' : 'AI가 자동으로 탐지한 객체입니다.',
             dlReservoirDomain: 'http://www.naver.com',
             category: '기타',
             videoCurrentTime: currentVideoTime
@@ -746,7 +748,7 @@ export default function VideoPlayer({
       }
     } catch (error) {
       // 네트워크 에러를 조용히 처리하고 로컬에서 계속 진행
-      console.log('ℹ️ 그리기 데이터 전송 실패, 로컬에서 계속 진행:', error instanceof Error ? error.message : 'Unknown error');
+      console.log('ℹ️ 그리기 데이터 전송 실패, 로컬에서 ���속 진행:', error instanceof Error ? error.message : 'Unknown error');
 
       // API 에러가 발���해도 로컬에서 작업 계속 진행
       if (!apiResponseData || apiResponseData.success !== false) {
